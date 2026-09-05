@@ -101,6 +101,40 @@ async function markStartup(stage: string) {
   await writeFile(startupStatusPath, `${new Date().toISOString()} ${stage}\n`, "utf8");
 }
 
+function startupErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+async function waitForPublishedSchema(db: StoryholdDb): Promise<void> {
+  const deadline = Date.now() + 45_000;
+  let lastFailure: unknown;
+  let attempt = 0;
+  while (Date.now() < deadline) {
+    attempt += 1;
+    try {
+      const schema = await db.query<{ release: string | null }>(
+        "SELECT to_regclass('storyhold.schema_release_1') AS release",
+      );
+      if (schema.rows[0]?.release) return;
+      lastFailure = new Error(
+        "Storyhold managed PostgreSQL schema release 1 is not available yet.",
+      );
+    } catch (error) {
+      lastFailure = error;
+    }
+    if (attempt === 1 || attempt % 5 === 0) {
+      process.stderr.write(
+        `[storyhold] Waiting for publish-time PostgreSQL schema readiness: ${startupErrorMessage(lastFailure)}\n`,
+      );
+    }
+    await new Promise((resolve) => setTimeout(resolve, 1_500));
+  }
+  throw new Error(
+    `Storyhold managed PostgreSQL did not become ready during startup: ${startupErrorMessage(lastFailure)}`,
+    { cause: lastFailure },
+  );
+}
+
 if (!Number.isInteger(port) || port < 1 || port > 65535) {
   throw new Error(`Invalid PORT value: ${process.env.PORT}`);
 }
@@ -376,14 +410,7 @@ try {
     // Published applications are read/write consumers of an already-published
     // schema. Schema changes belong to Replit's development/post-merge and
     // Publish flows, never to an application startup.
-    const schema = await db.query<{ release: string | null }>(
-      "SELECT to_regclass('storyhold.schema_release_1') AS release",
-    );
-    if (!schema.rows[0]?.release) {
-      throw new Error(
-        "Storyhold managed PostgreSQL schema release 1 is missing. Apply the development schema after merge, then publish the database schema before deploying.",
-      );
-    }
+    await waitForPublishedSchema(db);
     await markStartup("managed PostgreSQL schema verified");
     process.stdout.write("Managed PostgreSQL schema verified.\n");
   }
@@ -971,6 +998,9 @@ async function shutdown() {
 process.once("SIGINT", () => void shutdown());
 process.once("SIGTERM", () => void shutdown());
 } catch (startupError) {
+  process.stderr.write(
+    `[storyhold] Startup failed: ${startupErrorMessage(startupError)}\n`,
+  );
   await markStartup("startup failed; closing database").catch(() => undefined);
   try {
     await db.close();
