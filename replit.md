@@ -24,6 +24,7 @@ with prod-only Node SSR for SEO meta. Postgres + Drizzle; contract-first OpenAPI
 
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
+- `pnpm run storyhold:build && pnpm run storyhold:start` — build and run the complete Storyhold app on Replit (UI + API + embedded persistent database on port 3000)
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks + Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - `pnpm --filter @workspace/api-server run dev` — run the API server locally

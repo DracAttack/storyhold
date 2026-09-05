@@ -67,7 +67,9 @@ const storageRoot = repoRelativePath(
 );
 const isReplit = Boolean(process.env.REPL_ID || process.env.REPLIT_DEPLOYMENT);
 const isPublishedDeployment = process.env.REPLIT_DEPLOYMENT === "1";
-const configuredCausalSecret = process.env.STORYHOLD_CAUSAL_SECRET?.trim();
+const configuredCausalSecret =
+  process.env.STORYHOLD_CAUSAL_SECRET?.trim() ||
+  process.env.SESSION_SECRET?.trim();
 const host =
   process.env.STORYHOLD_HOST || (isReplit ? "0.0.0.0" : "127.0.0.1");
 const port = Number(process.env.PORT || "3000");
@@ -84,7 +86,7 @@ if (!Number.isInteger(port) || port < 1 || port > 65535) {
 }
 if (isReplit && (!configuredCausalSecret || configuredCausalSecret.length < 32)) {
   throw new Error(
-    "Set STORYHOLD_CAUSAL_SECRET to a private random value of at least 32 characters in Replit secrets before starting Storyhold.",
+    "Set SESSION_SECRET or STORYHOLD_CAUSAL_SECRET to a private random value of at least 32 characters in Replit secrets before starting Storyhold.",
   );
 }
 if (!existsSync(indexHtml)) {

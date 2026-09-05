@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "BrainHook"
+title = "Storyhold"
 version = "1.0.0"
 id = "artifacts/site"
 router = "path"
@@ -11,41 +11,31 @@ version = "1.0.0"
 
 [[services]]
 name = "web"
-paths = [ "/" ]
-localPort = 21238
+paths = ["/"]
+localPort = 3000
 
 [services.development]
-run = "pnpm --filter @workspace/site run dev"
+run = "pnpm -w run storyhold:build && pnpm -w run storyhold:start"
 
 [services.production]
 
 [services.production.build]
-args = ["pnpm", "--filter", "@workspace/site", "run", "build"]
+args = ["pnpm", "-w", "run", "storyhold:build"]
 
 [services.production.build.env]
 NODE_ENV = "production"
-PORT = "21238"
-BASE_PATH = "/"
-VITE_SITE_URL = "https://brainhook.net"
 
 [services.production.run]
-# Run the bundled meta-injecting server directly (no pnpm) for faster startup.
-args = ["node", "--enable-source-maps", "artifacts/site/dist/index.mjs"]
+args = ["pnpm", "-w", "run", "storyhold:start"]
 
 [services.production.run.env]
-PORT = "21238"
+PORT = "3000"
 NODE_ENV = "production"
-# The single preferred canonical origin. Setting this explicitly removes any
-# dependency on REPLIT_DOMAINS ordering, so canonical/OG URLs never drift.
-SITE_BASE_URL = "https://brainhook.net"
-# Reach the API server at its internal production port (the shared proxy on
-# :80 only exists in dev). The site server self-heals to the public base URL
-# if this address is ever unreachable.
-SEO_API_ORIGIN = "http://localhost:8080"
+STORYHOLD_HOST = "0.0.0.0"
 
 [services.production.health.startup]
-path = "/"
+path = "/api/healthz"
 
 [services.env]
-PORT = "21238"
-BASE_PATH = "/"
+PORT = "3000"
+STORYHOLD_HOST = "0.0.0.0"
