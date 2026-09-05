@@ -14,6 +14,7 @@
     "storyhold:audit-scenarios": "pnpm --dir artifacts/api-server exec tsx ../../scripts/audit-storyhold-scenarios.ts",
     "storyhold:build": "pnpm run storyhold:audit-scenarios && pnpm --filter @workspace/site exec vite build --config vite.config.ts --configLoader runner",
     "storyhold:start": "pnpm --filter @workspace/api-server run start:local",
+    "storyhold:schema:development": "pnpm --filter @workspace/api-server run schema:development",
     "typecheck:libs": "tsc --build",
     "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --filter \"!@workspace/mockup-sandbox\" --if-present run typecheck"
   },

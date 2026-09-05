@@ -7,6 +7,7 @@ import { PGlite } from "@electric-sql/pglite";
 import { vector } from "@electric-sql/pglite-pgvector";
 import { compare, hash } from "bcryptjs";
 import cookieParser from "cookie-parser";
+import { Pool } from "pg";
 import express, {
   type NextFunction,
   type Request,
@@ -22,6 +23,10 @@ import {
   type DemoSceneTurn,
 } from "./storyhold/worldAnalysis";
 import { acquireStoryholdVaultOwnership } from "./storyhold/vaultOwnership";
+import {
+  PostgresStoryholdAdapter,
+  type StoryholdDb,
+} from "./storyhold/postgresAdapter";
 
 const __dir = path.dirname(fileURLToPath(import.meta.url));
 const repoDir = path.resolve(__dir, "../../..");
@@ -67,6 +72,20 @@ const storageRoot = repoRelativePath(
 );
 const isReplit = Boolean(process.env.REPL_ID || process.env.REPLIT_DEPLOYMENT);
 const isPublishedDeployment = process.env.REPLIT_DEPLOYMENT === "1";
+const managedDatabaseUrl = process.env.DATABASE_URL?.trim();
+const usingManagedPostgres = Boolean(managedDatabaseUrl);
+const applyingDevelopmentSchema =
+  process.env.STORYHOLD_APPLY_DEVELOPMENT_SCHEMA === "1";
+const confirmedDevelopmentDatabase =
+  process.env.STORYHOLD_DATABASE_ENVIRONMENT === "development";
+if (
+  applyingDevelopmentSchema &&
+  (isPublishedDeployment || !usingManagedPostgres || !confirmedDevelopmentDatabase)
+) {
+  throw new Error(
+    "The Storyhold schema command requires the platform-bound development managed PostgreSQL environment.",
+  );
+}
 const configuredCausalSecret =
   process.env.STORYHOLD_CAUSAL_SECRET?.trim() ||
   process.env.SESSION_SECRET?.trim();
@@ -89,7 +108,7 @@ if (isReplit && (!configuredCausalSecret || configuredCausalSecret.length < 32))
     "Set SESSION_SECRET or STORYHOLD_CAUSAL_SECRET to a private random value of at least 32 characters in Replit secrets before starting Storyhold.",
   );
 }
-if (!existsSync(indexHtml)) {
+if (!applyingDevelopmentSchema && !existsSync(indexHtml)) {
   throw new Error(
     "The Storyhold frontend has not been built. Run `pnpm run storyhold:local` from the repository root.",
   );
@@ -99,23 +118,39 @@ async function loadStoryholdIndexHtml() {
   return readFile(indexHtml, "utf8");
 }
 
-await mkdir(dataDir, { recursive: true });
 // Data and file storage normally share a parent locally, but deployments and
 // maintenance proofs may place them separately. The startup marker is written
 // before World Studio initializes, so ensure its directory exists as well.
 await mkdir(storageRoot, { recursive: true });
-const vaultOwnership = await acquireStoryholdVaultOwnership(dataDir, {
-  purpose: `Storyhold local server on ${host}:${port}`,
-});
-await markStartup("opening local vault");
-process.stdout.write("Opening Storyhold's local vault...\n");
-const db = await PGlite.create({ dataDir: vaultOwnership.dataDir, extensions: { vector } });
+let vaultOwnership: Awaited<ReturnType<typeof acquireStoryholdVaultOwnership>> | undefined;
+let db: StoryholdDb;
+if (usingManagedPostgres) {
+  await markStartup("opening managed PostgreSQL");
+  process.stdout.write("Opening Storyhold managed PostgreSQL...\n");
+  db = new PostgresStoryholdAdapter(new Pool({ connectionString: managedDatabaseUrl }));
+} else {
+  await mkdir(dataDir, { recursive: true });
+  vaultOwnership = await acquireStoryholdVaultOwnership(dataDir, {
+    purpose: `Storyhold local server on ${host}:${port}`,
+  });
+  await markStartup("opening local vault");
+  process.stdout.write("Opening Storyhold's local vault...\n");
+  db = await PGlite.create({
+    dataDir: vaultOwnership.dataDir,
+    extensions: { vector },
+  }) as unknown as StoryholdDb;
+}
 try {
-process.env.STORYHOLD_PGLITE_RUNTIME = "true";
-await markStartup("local vault opened; checking core schema");
-process.stdout.write("Local vault opened. Checking Storyhold's schema...\n");
+  if (!usingManagedPostgres || applyingDevelopmentSchema) {
+    if (!usingManagedPostgres) {
+      process.env.STORYHOLD_PGLITE_RUNTIME = "true";
+    } else {
+      delete process.env.STORYHOLD_PGLITE_RUNTIME;
+    }
+    await markStartup("database opened; checking core schema");
+    process.stdout.write("Database opened. Checking Storyhold's schema...\n");
 
-const schemaSql = String.raw`
+  const schemaSql = String.raw`
   CREATE EXTENSION IF NOT EXISTS vector;
   CREATE SCHEMA IF NOT EXISTS storyhold;
 
@@ -312,16 +347,50 @@ const schemaSql = String.raw`
     FOR EACH ROW EXECUTE FUNCTION storyhold.reject_event_mutation();
 `;
 
-await db.exec(schemaSql);
-await markStartup("core schema ready; checking compatibility migrations");
-process.stdout.write("Core Storyhold schema ready. Checking world memory...\n");
-await db.exec(`
+  if (applyingDevelopmentSchema) {
+    // A stale marker must never survive a partially failed schema application.
+    await db.exec("DROP TABLE IF EXISTS storyhold.schema_release_1");
+  }
+  await db.exec(schemaSql);
+  await markStartup("core schema ready; checking compatibility migrations");
+  process.stdout.write("Core Storyhold schema ready. Checking world memory...\n");
+  await db.exec(`
   ALTER TABLE storyhold.players ADD COLUMN IF NOT EXISTS display_name text NOT NULL DEFAULT '';
   ALTER TABLE storyhold.players ADD COLUMN IF NOT EXISTS credits integer NOT NULL DEFAULT 40 CHECK (credits >= 0);
 `);
-await initializeWorldStudio(db, storageRoot);
-await markStartup("world memory ready; completing local account setup");
-process.stdout.write("World memory and campaign play ready.\n");
+  await initializeWorldStudio(db, storageRoot);
+  if (applyingDevelopmentSchema) {
+    // Create this schema-only release sentinel last. Production startup checks
+    // it so an interrupted development schema application cannot be published
+    // as though the complete Storyhold schema were present.
+    await db.exec(`
+      CREATE TABLE storyhold.schema_release_1 (
+        release integer PRIMARY KEY DEFAULT 1 CHECK (release = 1)
+      )
+    `);
+  }
+  await markStartup("world memory ready; completing local account setup");
+  process.stdout.write("World memory and campaign play ready.\n");
+  } else {
+    // Published applications are read/write consumers of an already-published
+    // schema. Schema changes belong to Replit's development/post-merge and
+    // Publish flows, never to an application startup.
+    const schema = await db.query<{ release: string | null }>(
+      "SELECT to_regclass('storyhold.schema_release_1') AS release",
+    );
+    if (!schema.rows[0]?.release) {
+      throw new Error(
+        "Storyhold managed PostgreSQL schema release 1 is missing. Apply the development schema after merge, then publish the database schema before deploying.",
+      );
+    }
+    await markStartup("managed PostgreSQL schema verified");
+    process.stdout.write("Managed PostgreSQL schema verified.\n");
+  }
+  if (applyingDevelopmentSchema) {
+    await db.close();
+    process.stdout.write("Storyhold development managed PostgreSQL schema applied.\n");
+    process.exit(0);
+  }
 await db.query("DELETE FROM storyhold.sessions WHERE expires_at <= now()");
 
 const configuredOwnerEmail =
@@ -359,7 +428,9 @@ if (existingPlayer.rows.length === 0) {
     );
   } else {
     await db.query(
-      "INSERT INTO storyhold.players (id, email, password_hash, display_name, credits, role) VALUES ($1, $2, $3, 'Storyhold Owner', 5000, 'owner')",
+      `INSERT INTO storyhold.players (id, email, password_hash, display_name, credits, role)
+       VALUES ($1, $2, $3, 'Storyhold Owner', 5000, 'owner')
+       ON CONFLICT (email) DO NOTHING`,
       [randomUUID(), localEmail, await hash(localPassword, 12)],
     );
   }
@@ -780,10 +851,10 @@ app.get(
       schemaVersion: 6,
       user: req.localUser,
       database: {
-        engine: "PostgreSQL-compatible PGlite",
+        engine: usingManagedPostgres ? "Managed PostgreSQL" : "PostgreSQL-compatible PGlite",
         persistent: true,
         vectorSearch: vectorVersion.rows[0]?.extversion ?? "unavailable",
-        location: ".storyhold-data/postgres",
+        location: usingManagedPostgres ? "managed PostgreSQL" : ".storyhold-data/postgres",
       },
       canonicalModel: {
         singleSharedVault: true,
@@ -819,9 +890,9 @@ app.get(
 
 registerWorldStudioRoutes({ app, db, requireUser, storageRoot });
 
-// The embedded local vault must be allowed to flush and close before its Node
-// process exits. This loopback-only endpoint lets the desktop stop script ask
-// for an orderly shutdown instead of terminating PGlite mid-write.
+// The embedded local vault must be allowed to flush, and managed PostgreSQL
+// must release its pool, before this Node process exits. This loopback-only
+// endpoint lets the desktop stop script ask for an orderly shutdown.
 if (!isPublishedDeployment) {
   app.post("/api/storyhold/local/shutdown", (_req, res) => {
     res.status(202).json({ status: "stopping" });
@@ -867,7 +938,9 @@ const server = app.listen(port, host, () => {
   process.stdout.write(
     `Storyhold server ready at http://${host}:${port}\n`,
   );
-  process.stdout.write(`Database: ${dataDir}\n`);
+  process.stdout.write(
+    usingManagedPostgres ? "Database: Managed PostgreSQL\n" : `Database: ${dataDir}\n`,
+  );
   if (isPublishedDeployment) {
     process.stdout.write("Owner sign-in configured through deployment secrets.\n");
   } else {
@@ -884,7 +957,7 @@ async function shutdown() {
   shutdownStarted = true;
   server.close(async () => {
     await db.close();
-    await vaultOwnership.release();
+    await vaultOwnership?.release();
     process.exit(0);
   });
 }
@@ -892,14 +965,11 @@ async function shutdown() {
 process.once("SIGINT", () => void shutdown());
 process.once("SIGTERM", () => void shutdown());
 } catch (startupError) {
-  // A failed schema migration still leaves an opened PGlite instance. Flush it
-  // before exiting, and never make the vault available to another process
-  // unless close completed successfully.
-  await markStartup("startup failed; closing local vault").catch(() => undefined);
+  await markStartup("startup failed; closing database").catch(() => undefined);
   try {
     await db.close();
-    await vaultOwnership.release();
-    await markStartup("startup failed; local vault closed").catch(() => undefined);
+    await vaultOwnership?.release();
+    await markStartup("startup failed; database closed").catch(() => undefined);
   } catch (closeError) {
     process.stderr.write(`[storyhold] Startup cleanup failed: ${closeError instanceof Error ? closeError.message : String(closeError)}\n`);
   }

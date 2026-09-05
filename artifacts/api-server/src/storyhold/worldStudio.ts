@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from "node:crypto";
 import { mkdir, rm, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { PGlite } from "@electric-sql/pglite";
+import type { StoryholdDb } from "./postgresAdapter";
 import express, {
   type Express,
   type Request,
@@ -301,8 +301,8 @@ import {
 
 type StudioUser = { id: string; email: string; role: string };
 type StudioRequest = Request & { localUser?: StudioUser };
-type StudioDb = Pick<PGlite, "exec" | "query">;
-type StudioRootDb = StudioDb & Pick<PGlite, "transaction">;
+type StudioDb = Pick<StoryholdDb, "exec" | "query">;
+type StudioRootDb = StudioDb & Pick<StoryholdDb, "transaction">;
 
 const MAX_UPLOAD_BYTES = 100 * 1024 * 1024;
 export const WORLD_ANALYSIS_VERSION = 5;
@@ -2592,7 +2592,7 @@ export function serializeClockEvent(
 }
 
 export async function readWorldClockEventsForEdition(
-  db: Pick<PGlite, "query">,
+  db: Pick<StoryholdDb, "query">,
   params: { worldId: string; editionId: string },
 ) {
   return db.query<Record<string, unknown>>(
@@ -2621,7 +2621,7 @@ export async function readWorldClockEventsForEdition(
 }
 
 export async function readWorldClockRelationsForEdition(
-  db: Pick<PGlite, "query">,
+  db: Pick<StoryholdDb, "query">,
   params: { worldId: string; editionId: string },
 ) {
   return db.query<Record<string, unknown>>(
@@ -2646,7 +2646,7 @@ export async function readWorldClockRelationsForEdition(
 }
 
 export async function readCampaignClockEventsForEdition(
-  db: Pick<PGlite, "query">,
+  db: Pick<StoryholdDb, "query">,
   params: {
     worldId: string;
     editionId: string;
@@ -7820,7 +7820,7 @@ export function factionMembershipEvidence(params: {
 }
 
 export async function persistGeneratedFactionMembership(params: {
-  db: Pick<PGlite, "query">;
+  db: Pick<StoryholdDb, "query">;
   entityId: string;
   factionId: string;
   assignmentSource: "local" | "ai";
@@ -9874,7 +9874,7 @@ async function syncCanonClockEvents(params: {
 }
 
 export async function reconcileAuthoritativeAiChapterMap(params: {
-  db: Pick<PGlite, "query">;
+  db: Pick<StoryholdDb, "query">;
   worldId: string;
   editionId: string;
   sourceId: string;

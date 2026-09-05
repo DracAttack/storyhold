@@ -52,3 +52,6 @@ externalPort = 80
 
 [userenv.shared]
 STORYHOLD_LOCAL_ADMIN_EMAIL = "animusargentis@outlook.com"
+
+[userenv.development]
+STORYHOLD_DATABASE_ENVIRONMENT = "development"
