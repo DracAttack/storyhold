@@ -108,7 +108,7 @@ function startupErrorMessage(error: unknown): string {
 }
 
 async function waitForPublishedSchema(db: StoryholdDb): Promise<void> {
-  const deadline = Date.now() + 45_000;
+  const deadline = Date.now() + 120_000;
   let lastFailure: unknown;
   let attempt = 0;
   while (Date.now() < deadline) {
@@ -164,7 +164,7 @@ app.disable("x-powered-by");
 if (isPublishedDeployment) app.set("trust proxy", 1);
 app.get("/api/healthz", async (_req, res, next) => {
   if (startupState === "starting" || !startupDb) {
-    res.status(200).json({ status: "starting", service: "storyhold" });
+    res.status(503).json({ status: "starting", service: "storyhold" });
     return;
   }
   try {
