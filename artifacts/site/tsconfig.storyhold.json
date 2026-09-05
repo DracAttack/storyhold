@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src/lib/storyholdApi.ts",
+    "src/pages/admin/Worlds.tsx",
+    "src/pages/admin/WorldStudio.tsx",
+    "src/pages/admin/StoryholdAdminLayout.tsx",
+    "src/pages/admin/Dashboard.tsx"
+  ],
+  "references": [],
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"],
+      "@workspace/content-utils": ["../../lib/content-utils/src/index.ts"],
+      "@workspace/api-client-react": ["../../lib/api-client-react/src/index.ts"]
+    }
+  }
+}

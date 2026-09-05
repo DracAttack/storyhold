@@ -1,0 +1,51 @@
+kind = "web"
+previewPath = "/"
+title = "BrainHook"
+version = "1.0.0"
+id = "artifacts/site"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21238
+
+[services.development]
+run = "pnpm --filter @workspace/site run dev"
+
+[services.production]
+
+[services.production.build]
+args = ["pnpm", "--filter", "@workspace/site", "run", "build"]
+
+[services.production.build.env]
+NODE_ENV = "production"
+PORT = "21238"
+BASE_PATH = "/"
+VITE_SITE_URL = "https://brainhook.net"
+
+[services.production.run]
+# Run the bundled meta-injecting server directly (no pnpm) for faster startup.
+args = ["node", "--enable-source-maps", "artifacts/site/dist/index.mjs"]
+
+[services.production.run.env]
+PORT = "21238"
+NODE_ENV = "production"
+# The single preferred canonical origin. Setting this explicitly removes any
+# dependency on REPLIT_DOMAINS ordering, so canonical/OG URLs never drift.
+SITE_BASE_URL = "https://brainhook.net"
+# Reach the API server at its internal production port (the shared proxy on
+# :80 only exists in dev). The site server self-heals to the public base URL
+# if this address is ever unreachable.
+SEO_API_ORIGIN = "http://localhost:8080"
+
+[services.production.health.startup]
+path = "/"
+
+[services.env]
+PORT = "21238"
+BASE_PATH = "/"

@@ -1,0 +1,25 @@
+{
+  "name": "workspace",
+  "version": "0.0.0",
+  "license": "MIT",
+  "scripts": {
+    "preinstall": "node ./scripts/ensure-pnpm.mjs",
+    "build": "pnpm run typecheck && pnpm -r --filter \"!@workspace/mockup-sandbox\" --if-present run build",
+    "storyhold:install-gliner": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/install-storyhold-gliner.ps1",
+    "storyhold:enable-cuda": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/enable-storyhold-cuda.ps1",
+    "storyhold:verify-cuda": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/enable-storyhold-cuda.ps1 -VerifyOnly",
+    "storyhold:enable-llama-gpu": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/enable-storyhold-llama-gpu.ps1",
+    "storyhold:verify-llama-gpu": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/enable-storyhold-llama-gpu.ps1 -VerifyOnly",
+    "storyhold:local": "node ./scripts/storyhold-local.mjs",
+    "storyhold:audit-scenarios": "pnpm --dir artifacts/api-server exec tsx ../../scripts/audit-storyhold-scenarios.ts",
+    "storyhold:build": "pnpm run storyhold:audit-scenarios && pnpm --filter @workspace/site exec vite build --config vite.config.ts --configLoader runner",
+    "storyhold:start": "pnpm --filter @workspace/api-server run start:local",
+    "typecheck:libs": "tsc --build",
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --filter \"!@workspace/mockup-sandbox\" --if-present run typecheck"
+  },
+  "private": true,
+  "devDependencies": {
+    "typescript": "~5.9.2",
+    "prettier": "^3.8.1"
+  }
+}

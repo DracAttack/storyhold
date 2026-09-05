@@ -1,0 +1,17 @@
+{
+  "name": "Storyhold",
+  "short_name": "Storyhold",
+  "description": "Worlds that remember.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0c0b0e",
+  "theme_color": "#0c0b0e",
+  "icons": [
+    {
+      "src": "/storyhold-mark.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

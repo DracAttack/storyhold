@@ -1,0 +1,24 @@
+{
+  "purpose": "Known failures captured before the owner-requested world reset. Evaluation cases, not name-based production exceptions.",
+  "cases": [
+    {
+      "name": "Named vehicle versus generic monster mentions",
+      "passages": [
+        "And no, it's a semi. We call her 'Beast.' And there were another twelve cars behind her.",
+        "Behind me lay Beast, Whiskey's semi, once loaded down with goods, it was now our makeshift home and fortification.",
+        "Alec and Ragger split apart, flanking the beast from either side."
+      ],
+      "expected": "Resolve the named vehicle Beast separately from generic beast references. Do not merge monster/form evidence into the vehicle dossier or classify the semi as a place."
+    },
+    {
+      "name": "Incidental object is not a setting dossier",
+      "passages": ["I stared into the toilet, watching the liquid swirl around the edges and sighed."],
+      "expected": "This incidental object alone does not justify a standalone place dossier."
+    },
+    {
+      "name": "Established settlement remains reachable",
+      "passages": ["I spun on my heel and marched towards the crumbling ruins of the once-thriving Sanctuary, Kondura shuffling at my heels."],
+      "expected": "Sanctuary remains a distinct place. The saved reset-time record was active, but the owner could not find it in the UI; verify both classification and rendering/pagination. Preserve temporal ruin state rather than rewriting all earlier history."
+    }
+  ]
+}

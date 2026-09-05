@@ -1,0 +1,12 @@
+# Storyhold
+
+> Storyhold is a persistent AI roleplaying and worldbuilding platform: create any world, become anyone, and play stories that remember consequential choices.
+
+## Public areas
+
+- Home: /
+- Play: /play
+- Credits: /credits
+- Account and worlds: /profile
+
+World manuscripts, character material, campaign state, private memories, hidden events, and owner tools are not public content and must not be indexed or exposed.

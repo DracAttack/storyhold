@@ -1,0 +1,80 @@
+# See https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files for more about ignoring files.
+
+# compiled output
+dist
+dist-test
+dist-export
+exports
+tmp
+out-tsc
+*.tsbuildinfo
+.expo
+.expo-shared
+
+# dependencies
+node_modules
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+__pycache__/
+*.py[cod]
+/.sass-cache
+/connect.lock
+/coverage
+/libpeerconnection.log
+npm-debug.log
+yarn-error.log
+testem.log
+/typings
+
+# System Files
+.DS_Store
+Thumbs.db
+
+.cursor/rules/nx-rules.mdc
+.github/instructions/nx.instructions.md
+
+# Replit
+.cache/
+.local/
+
+# Agent memory, local exports, and ad-hoc artifacts
+.agents/
+attached_assets/
+db-export/
+brainhook-project*.zip
+
+# Storyhold's embedded local-development database. Production/Replit continues
+# to use its configured PostgreSQL service; this directory never belongs in Git.
+.storyhold-data/
+.storyhold.env
+.storyhold-*smoke*/
+.storyhold-runtime/
+.storyhold-training-runs/
+.qa-chrome-*/
+.qa-edge-*/
+.pnpm-store/
+node_modules/
+dist/
+.cache/
+.local/
+.storyhold-data/
+.storyhold-runtime/
+.storyhold-training-runs/
+*.zip
+*.log

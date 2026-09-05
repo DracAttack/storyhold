@@ -1,0 +1,407 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-card-border: hsl(var(--card-border));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-popover-border: hsl(var(--popover-border));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-border: var(--primary-border);
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-secondary-border: var(--secondary-border);
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-muted-border: var(--muted-border);
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent-border: var(--accent-border);
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-destructive-border: var(--destructive-border);
+
+  --color-chart-1: hsl(var(--chart-1));
+  --color-chart-2: hsl(var(--chart-2));
+  --color-chart-3: hsl(var(--chart-3));
+  --color-chart-4: hsl(var(--chart-4));
+  --color-chart-5: hsl(var(--chart-5));
+
+  --color-sidebar: hsl(var(--sidebar));
+  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
+  --color-sidebar-border: hsl(var(--sidebar-border));
+  --color-sidebar-primary: hsl(var(--sidebar-primary));
+  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
+  --color-sidebar-primary-border: var(--sidebar-primary-border);
+  --color-sidebar-accent: hsl(var(--sidebar-accent));
+  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
+  --color-sidebar-accent-border: var(--sidebar-accent-border);
+  --color-sidebar-ring: hsl(var(--sidebar-ring));
+
+  --color-link-internal: hsl(var(--link-internal));
+
+  --font-sans: var(--app-font-sans);
+  --font-serif: var(--app-font-serif);
+  --font-body: var(--app-font-body);
+  --font-mono: var(--app-font-mono);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* ══════════════════════════════════════════════════
+   STORYHOLD NIGHT THEME
+   Primary palette: near-black, clean white, electric blue, and signal green.
+   ══════════════════════════════════════════════════ */
+:root {
+  --button-outline: rgba(255,255,255, .10);
+  --badge-outline: rgba(255,255,255, .05);
+  --opaque-button-border-intensity: 9;
+  --elevate-1: rgba(255,255,255, .03);
+  --elevate-2: rgba(255,255,255, .08);
+
+  /* ── Background: #0D0D10 ── */
+  --background: 240 11% 6%;
+  /* ── Foreground: #EEEBE4 ── */
+  --foreground: 43 27% 91%;
+  /* ── Border: #2A2A32 ── */
+  --border: 240 9% 18%;
+
+  /* ── Card: #161619 ── */
+  --card: 240 7% 9%;
+  --card-foreground: 43 27% 91%;
+  --card-border: 240 9% 18%;
+
+  /* ── Sidebar ── */
+  --sidebar: 240 7% 9%;
+  --sidebar-foreground: 43 27% 91%;
+  --sidebar-border: 240 9% 18%;
+  --sidebar-primary: 198 92% 62%;
+  --sidebar-primary-foreground: 240 11% 6%;
+  --sidebar-accent: 240 9% 13%;
+  --sidebar-accent-foreground: 43 27% 91%;
+  --sidebar-ring: 198 92% 62%;
+
+  --popover: 240 7% 9%;
+  --popover-foreground: 43 27% 91%;
+  --popover-border: 240 9% 18%;
+
+  /* ── Primary: luminous blue; secondary signal: green ── */
+  --primary: 198 92% 62%;
+  --primary-foreground: 240 11% 6%;
+
+  /* ── Secondary ── */
+  --secondary: 240 9% 13%;
+  --secondary-foreground: 43 27% 91%;
+
+  /* ── Muted: #9A9AAA ── */
+  --muted: 240 9% 18%;
+  --muted-foreground: 240 7% 62%;
+
+  --accent: 153 72% 48%;
+  --accent-foreground: 240 11% 6%;
+
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 43 27% 91%;
+
+  --input: 240 9% 18%;
+  --ring: 198 92% 62%;
+
+  --chart-1: 198 92% 62%;
+  --chart-2: 153 72% 48%;
+  --chart-3: 210 20% 88%;
+  --chart-4: 216 76% 55%;
+  --chart-5: 170 60% 44%;
+
+  /* ── Typography: Zilla Slab (serif), Lato (sans/body), JetBrains Mono ── */
+  --app-font-sans: "Lato", system-ui, sans-serif;
+  --app-font-serif: "Cormorant Garamond", Georgia, serif;
+  --app-font-body: "Lato", system-ui, sans-serif;
+  --app-font-mono: "JetBrains Mono", monospace;
+
+  /* Internal article link — sky blue */
+  --link-internal: 199 89% 48%;
+
+  /* Soft architectural corners and deep, diffused elevation. */
+  --radius: 0.875rem;
+
+  --shadow-2xs: 0 1px 2px hsl(240 20% 2% / 0.28);
+  --shadow-xs:  0 2px 8px hsl(240 20% 2% / 0.24);
+  --shadow-sm:  0 8px 22px -14px hsl(240 20% 1% / 0.86), inset 0 1px 0 hsl(0 0% 100% / 0.035);
+  --shadow:     0 16px 38px -24px hsl(240 20% 1% / 0.92), inset 0 1px 0 hsl(0 0% 100% / 0.04);
+  --shadow-md:  0 20px 48px -28px hsl(240 20% 1% / 0.96), 0 8px 20px -16px hsl(198 92% 62% / 0.12), inset 0 1px 0 hsl(0 0% 100% / 0.045);
+  --shadow-lg:  0 28px 64px -32px hsl(240 20% 1% / 0.98), 0 12px 32px -24px hsl(198 92% 62% / 0.16), inset 0 1px 0 hsl(0 0% 100% / 0.05);
+  --shadow-xl:  0 36px 86px -38px hsl(240 20% 1% / 1), 0 18px 44px -28px hsl(198 92% 62% / 0.18), inset 0 1px 0 hsl(0 0% 100% / 0.055);
+  --shadow-2xl: 0 44px 110px -42px hsl(240 20% 1% / 1), 0 24px 56px -32px hsl(153 72% 48% / 0.16), inset 0 1px 0 hsl(0 0% 100% / 0.06);
+
+  /* Fallbacks */
+  --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --sidebar-accent-border: hsl(from hsl(var(--sidebar-accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
+/* Keep .dark as an alias so any dark: variants still work */
+.dark {
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground selection:bg-primary/20 selection:text-primary;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    background-color: #09090d;
+    background-image:
+      radial-gradient(circle at 9% -8%, rgba(56, 189, 248, 0.14), transparent 31rem),
+      radial-gradient(circle at 92% 16%, rgba(34, 197, 94, 0.08), transparent 34rem),
+      radial-gradient(circle at 52% 105%, rgba(56, 189, 248, 0.07), transparent 38rem),
+      linear-gradient(145deg, #0b0a0e 0%, #0e0d12 48%, #09090d 100%);
+    background-attachment: fixed;
+  }
+
+  #root {
+    min-height: 100vh;
+    isolation: isolate;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+
+  select {
+    color-scheme: dark;
+  }
+
+  select option,
+  select optgroup {
+    background: #171519;
+    color: #f7f1e8;
+  }
+
+  :focus-visible {
+    scroll-margin: 1rem;
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   STORYHOLD SURFACES
+   Reusable glass and soft-neomorphic treatments. The solid fallbacks remain
+   readable when backdrop-filter is unavailable.
+   ══════════════════════════════════════════════════ */
+@layer components {
+  .storyhold-glass {
+    background: linear-gradient(145deg, rgba(31, 29, 36, 0.82), rgba(16, 15, 20, 0.72));
+    border: 1px solid rgba(255, 255, 255, 0.095);
+    box-shadow:
+      0 28px 64px -34px rgba(0, 0, 0, 0.95),
+      0 12px 30px -26px rgba(56, 189, 248, 0.28),
+      inset 0 1px 0 rgba(255, 255, 255, 0.055),
+      inset 0 -1px 0 rgba(0, 0, 0, 0.32);
+  }
+
+  .storyhold-glass-subtle {
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.047), rgba(255, 255, 255, 0.018));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow:
+      0 18px 42px -30px rgba(0, 0, 0, 0.94),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  .storyhold-neu-inset {
+    background: rgba(4, 4, 7, 0.28);
+    box-shadow:
+      inset 3px 3px 8px rgba(0, 0, 0, 0.42),
+      inset -2px -2px 7px rgba(255, 255, 255, 0.025);
+  }
+
+  @supports (backdrop-filter: blur(1px)) {
+    .storyhold-glass {
+      background: linear-gradient(145deg, rgba(31, 29, 36, 0.62), rgba(16, 15, 20, 0.48));
+      backdrop-filter: blur(22px) saturate(128%);
+      -webkit-backdrop-filter: blur(22px) saturate(128%);
+    }
+
+    .storyhold-glass-subtle {
+      backdrop-filter: blur(15px) saturate(120%);
+      -webkit-backdrop-filter: blur(15px) saturate(120%);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .storyhold-lift {
+    transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+  }
+
+  .storyhold-lift:hover {
+    transform: translateY(-2px);
+    border-color: rgba(56, 189, 248, 0.28);
+    box-shadow:
+      0 28px 58px -34px rgba(0, 0, 0, 1),
+      0 14px 32px -26px rgba(56, 189, 248, 0.38),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+* {
+  scrollbar-color: rgba(56, 189, 248, 0.42) rgba(255, 255, 255, 0.025);
+  scrollbar-width: thin;
+}
+
+/* Native menus need explicit colors on Windows; inherited translucent colors
+   otherwise make the opened option list nearly unreadable. */
+.storyhold-select {
+  min-height: 2.75rem;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 0.625rem;
+  background-color: #19171b;
+  color: #f8f2e9;
+  color-scheme: dark;
+  padding: 0.625rem 2.25rem 0.625rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+}
+
+.storyhold-select:hover {
+  border-color: rgba(56, 189, 248, 0.56);
+}
+
+.storyhold-select:focus-visible {
+  outline: 2px solid rgba(56, 189, 248, 0.82);
+  outline-offset: 2px;
+}
+
+.storyhold-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+/* ══════════════════════════════════════════════════
+   GLASS PANEL — hero article info card
+   Fenced to the featured hero only (not repeated).
+   Blue left-bar accent, frosted dark glass.
+   White text on effective ~#0D0D10 bg → 13:1 ✓
+   Blue accent on the same surface remains high contrast.
+   Fallback: solid dark 90% (no blur).
+   ══════════════════════════════════════════════════ */
+.bh-hero-panel {
+  background: rgba(13, 13, 16, 0.72);
+  border: 1px solid rgba(56, 189, 248, 0.16);
+  border-left: 2px solid #38BDF8;
+}
+@supports (backdrop-filter: blur(1px)) {
+  .bh-hero-panel {
+    background: rgba(13, 13, 16, 0.28);
+    backdrop-filter: blur(6.5px);
+    -webkit-backdrop-filter: blur(6.5px);
+    border: 1px solid rgba(56, 189, 248, 0.22);
+    border-left: 2px solid #38BDF8;
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   HERO CATEGORY SPINE — vertical rotated label
+   ══════════════════════════════════════════════════ */
+.bh-hero-spine {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+@media (max-width: 767px) {
+  .bh-hero-spine {
+    /* rotate(180deg) flips axes; translateX(-20px) in rotated space = +20px rightward on screen */
+    transform: rotate(180deg) translateX(-20px);
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   PROSE — article body (on dark bg)
+   ══════════════════════════════════════════════════ */
+.prose {
+  @apply font-body text-foreground/95;
+  font-size: 1.125rem;
+  line-height: 1.85;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4 {
+  @apply font-serif text-foreground mt-12 mb-6 font-semibold tracking-tight;
+}
+
+.prose p {
+  @apply mb-6;
+}
+
+.prose a {
+  @apply text-primary underline decoration-primary/30 underline-offset-4 hover:decoration-primary transition-all;
+}
+
+/* Internal article cross-links — sky blue, dotted underline.
+   Must follow .prose a to win the specificity race. */
+a.internal-link,
+.prose a.internal-link {
+  color: hsl(var(--link-internal));
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-color: color-mix(in srgb, hsl(var(--link-internal)) 55%, transparent);
+  text-underline-offset: 2px;
+  transition: text-decoration-color 0.15s;
+}
+a.internal-link:hover,
+.prose a.internal-link:hover {
+  text-decoration-color: hsl(var(--link-internal));
+}
+
+.prose blockquote {
+  @apply border-l-2 border-primary pl-6 italic text-xl text-foreground/80 my-8;
+}
+
+.prose img {
+  @apply shadow-sm w-full my-10;
+}
+
+.prose h2 {
+  padding-top: 1.5rem;
+  border-top: 1px solid hsl(var(--border));
+}
