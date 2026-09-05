@@ -96,6 +96,8 @@ const port = Number(process.env.PORT || "3000");
 const cookieName = "storyhold.sid";
 const sessionLifetimeMs = 7 * 24 * 60 * 60 * 1000;
 const startupStatusPath = path.join(storageRoot, "startup-status.txt");
+let startupState: "starting" | "ready" = "starting";
+let startupDb: StoryholdDb | undefined;
 
 async function markStartup(stage: string) {
   await writeFile(startupStatusPath, `${new Date().toISOString()} ${stage}\n`, "utf8");
@@ -157,8 +159,31 @@ async function loadStoryholdIndexHtml() {
 // maintenance proofs may place them separately. The startup marker is written
 // before World Studio initializes, so ensure its directory exists as well.
 await mkdir(storageRoot, { recursive: true });
+const app = express();
+app.disable("x-powered-by");
+if (isPublishedDeployment) app.set("trust proxy", 1);
+app.get("/api/healthz", async (_req, res, next) => {
+  if (startupState === "starting" || !startupDb) {
+    res.status(200).json({ status: "starting", service: "storyhold" });
+    return;
+  }
+  try {
+    await startupDb.query("SELECT 1");
+    res.json({ status: "ok", service: "storyhold" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+const server = app.listen(port, host, () => {
+  void markStartup("health endpoint listening");
+  process.stdout.write(
+    `Storyhold startup health endpoint listening at http://${host}:${port}\n`,
+  );
+});
+
 let vaultOwnership: Awaited<ReturnType<typeof acquireStoryholdVaultOwnership>> | undefined;
-let db: StoryholdDb;
+let db!: StoryholdDb;
 if (usingManagedPostgres) {
   await markStartup("opening managed PostgreSQL");
   process.stdout.write("Opening Storyhold managed PostgreSQL...\n");
@@ -175,6 +200,7 @@ if (usingManagedPostgres) {
     extensions: { vector },
   }) as unknown as StoryholdDb;
 }
+startupDb = db;
 try {
   if (!usingManagedPostgres || applyingDevelopmentSchema) {
     if (!usingManagedPostgres) {
@@ -537,9 +563,6 @@ function loginAllowed(email: string): boolean {
   return current.count <= 8;
 }
 
-const app = express();
-app.disable("x-powered-by");
-if (isPublishedDeployment) app.set("trust proxy", 1);
 app.use((_req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
@@ -548,11 +571,6 @@ app.use((_req, res, next) => {
 });
 app.use(express.json({ limit: "1mb" }));
 app.use(cookieParser());
-
-app.get("/api/healthz", async (_req, res) => {
-  await db.query("SELECT 1");
-  res.json({ status: "ok", service: "storyhold" });
-});
 
 type PlayerCredentialRow = LocalUser & { password_hash: string };
 
@@ -966,22 +984,21 @@ app.use((error: unknown, _req: Request, res: Response, _next: NextFunction) => {
   }
 });
 
-const server = app.listen(port, host, () => {
-  void markStartup("ready");
-  process.stdout.write(
-    `Storyhold server ready at http://${host}:${port}\n`,
-  );
-  process.stdout.write(
-    usingManagedPostgres ? "Database: Managed PostgreSQL\n" : `Database: ${dataDir}\n`,
-  );
-  if (isPublishedDeployment) {
-    process.stdout.write("Owner sign-in configured through deployment secrets.\n");
-  } else {
-    // Local logs may be shared for troubleshooting; never place the generated
-    // administrator password in a process log.
-    process.stdout.write(`Local administrator account ready: ${localEmail}\n`);
-  }
-});
+startupState = "ready";
+void markStartup("ready");
+process.stdout.write(
+  `Storyhold server ready at http://${host}:${port}\n`,
+);
+process.stdout.write(
+  usingManagedPostgres ? "Database: Managed PostgreSQL\n" : `Database: ${dataDir}\n`,
+);
+if (isPublishedDeployment) {
+  process.stdout.write("Owner sign-in configured through deployment secrets.\n");
+} else {
+  // Local logs may be shared for troubleshooting; never place the generated
+  // administrator password in a process log.
+  process.stdout.write(`Local administrator account ready: ${localEmail}\n`);
+}
 
 let shutdownStarted = false;
 
@@ -989,7 +1006,7 @@ async function shutdown() {
   if (shutdownStarted) return;
   shutdownStarted = true;
   server.close(async () => {
-    await db.close();
+    await startupDb?.close();
     await vaultOwnership?.release();
     process.exit(0);
   });
@@ -1003,7 +1020,8 @@ process.once("SIGTERM", () => void shutdown());
   );
   await markStartup("startup failed; closing database").catch(() => undefined);
   try {
-    await db.close();
+    server.close();
+    await startupDb?.close();
     await vaultOwnership?.release();
     await markStartup("startup failed; database closed").catch(() => undefined);
   } catch (closeError) {
