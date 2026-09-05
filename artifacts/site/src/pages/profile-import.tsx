@@ -4,10 +4,12 @@ import { ManuscriptImporter } from "@/components/customer/manuscript-importer";
 import { QuickstartCreator } from "@/components/customer/quickstart-creator";
 import { ProfileFrame } from "@/components/customer/profile-frame";
 import { useSeo } from "@/lib/seo";
+import { findStoryholdScenario } from "@/lib/storyholdScenarios";
 
 export default function ProfileImport() {
   const search = new URLSearchParams(window.location.search);
   const targetWorldId = search.get("world") ?? "";
+  const linkedScenario = findStoryholdScenario(search.get("scenario"));
   const referenceMode = search.get("reference") === "1";
   const [mode, setMode] = useState<"idea" | "sources">(
     targetWorldId || search.get("mode") === "sources" ? "sources" : "idea",
@@ -63,7 +65,7 @@ export default function ProfileImport() {
         </div>
       ) : null}
       {mode === "idea" && !targetWorldId ? (
-        <QuickstartCreator />
+        <QuickstartCreator scenario={linkedScenario} />
       ) : (
         <ManuscriptImporter targetWorldId={targetWorldId} referenceMode={referenceMode} />
       )}

@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { createCampaign, createWorld, type ResolutionMode, type WorldContract } from "@/lib/storyholdApi";
 import { prepareAdventureSetup } from "@/lib/adventureSetupApi";
+import { getScenarioQuickstart, type StoryholdScenario } from "@/lib/storyholdScenarios";
 
 function lines(value: string): string[] {
   return value
@@ -35,15 +36,17 @@ function suggestedName(value: string): string {
   return words.map((word) => word[0]!.toLocaleUpperCase() + word.slice(1)).join(" ");
 }
 
-export function QuickstartCreator() {
+export function QuickstartCreator({ scenario }: { scenario?: StoryholdScenario }) {
   const [, navigate] = useLocation();
-  const [worldPremise, setWorldPremise] = useState("");
-  const [characterConcept, setCharacterConcept] = useState("");
-  const [worldName, setWorldName] = useState("");
+  const defaults = scenario ? getScenarioQuickstart(scenario) : null;
+
+  const [worldPremise, setWorldPremise] = useState(defaults?.worldPremise ?? "");
+  const [characterConcept, setCharacterConcept] = useState(defaults?.characterConcept ?? "");
+  const [worldName, setWorldName] = useState(defaults?.worldName ?? "");
   const [characterName, setCharacterName] = useState("");
-  const [tone, setTone] = useState("");
-  const [startingPoint, setStartingPoint] = useState("");
-  const [initialObjective, setInitialObjective] = useState("");
+  const [tone, setTone] = useState(defaults?.tone ?? "");
+  const [startingPoint, setStartingPoint] = useState(defaults?.startingPoint ?? "");
+  const [initialObjective, setInitialObjective] = useState(defaults?.initialObjective ?? "");
   const [constraints, setConstraints] = useState("");
   const [exclusions, setExclusions] = useState("");
   const [resolutionMode, setResolutionMode] = useState<ResolutionMode>("story_first");
@@ -150,6 +153,11 @@ export function QuickstartCreator() {
         <p className="mt-3 max-w-xl text-sm leading-6 text-muted-foreground">
           Start from zero with only a few sentences. Storyhold keeps the setting and your character separate, locks the beginning when you approve it, and lets both grow through play.
         </p>
+        {scenario ? (
+          <div className="mt-5 rounded-2xl border border-violet-300/20 bg-violet-400/[0.07] px-4 py-3 text-sm text-violet-100">
+            Filled from <span className="font-semibold">{scenario.title}</span>. Every field remains yours to edit.
+          </div>
+        ) : null}
 
         <form onSubmit={prepare} className="mt-7">
           <fieldset disabled={busy} className="space-y-4 disabled:opacity-70">

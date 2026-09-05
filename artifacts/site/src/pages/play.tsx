@@ -26,7 +26,7 @@ export default function Play() {
   const [suggestions, setSuggestions] = useState(() =>
     drawStoryholdScenarios(
       SUGGESTION_COUNT,
-      selectedScenario ? [selectedScenario.id] : [],
+      selectedScenario?.id,
     ),
   );
   const [sceneLocked, setSceneLocked] = useState(false);
@@ -41,7 +41,7 @@ export default function Play() {
     setSuggestions(
       drawStoryholdScenarios(
         SUGGESTION_COUNT,
-        selectedScenario ? [selectedScenario.id] : [],
+        selectedScenario?.id,
       ),
     );
   };
@@ -137,33 +137,43 @@ export default function Play() {
                       onClick={() => chooseScenario(scenario)}
                       disabled={sceneLocked}
                       aria-pressed={selected}
-                      className={`flex min-h-40 flex-col rounded-xl border p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-55 ${
+                      className={`group relative flex min-h-40 flex-col rounded-xl border p-3 text-left transition-colors disabled:cursor-not-allowed disabled:opacity-55 ${
                         selected
-                          ? "border-primary/60 bg-primary/[0.12]"
-                          : "border-white/8 bg-black/20 hover:border-primary/35 hover:bg-white/[0.045]"
+                          ? "border-[#b285ff]/60 bg-[#b285ff]/[0.12]"
+                          : "border-white/8 bg-black/20 hover:border-[#b285ff]/35 hover:bg-white/[0.045]"
                       }`}
                     >
-                      <span className="text-[9px] font-bold uppercase tracking-[0.16em] text-primary">
+                      <span className={`text-[9px] font-bold uppercase tracking-[0.16em] ${selected ? "text-[#b285ff]" : "text-primary"}`}>
                         {scenario.genre}
                       </span>
                       <span className="mt-1.5 block font-serif text-base font-bold leading-5">
                         {scenario.title}
                       </span>
-                      <span className="mt-2 block line-clamp-3 text-xs leading-[1.15rem] text-muted-foreground">
+                      <span className="mt-2 block line-clamp-3 text-xs leading-[1.15rem] text-muted-foreground group-hover:text-[#d0cbc2] transition-colors">
                         {scenario.premise}
                       </span>
-                      <span className="mt-auto pt-3 text-[10px] font-bold uppercase tracking-[0.14em] text-primary/85">
-                        Use this beginning
+                      <span className={`mt-auto pt-3 text-[10px] font-bold uppercase tracking-[0.14em] ${selected ? "text-[#b285ff]" : "text-primary/85 group-hover:text-[#b285ff]"}`}>
+                        {selected ? "Selected" : "Use this beginning"}
                       </span>
                     </button>
                   );
                 })}
               </div>
-              <p className="mt-2.5 text-[11px] leading-4 text-muted-foreground">
-                {sceneLocked
-                  ? "Your starting point is now part of this scene."
-                  : "Each opening gives you a setting, a role, and immediate trouble. Pick one to fill the premise and your first move."}
-              </p>
+
+              <div className="mt-3 flex items-center justify-between gap-4">
+                <p className="text-[11px] leading-4 text-muted-foreground max-w-[280px]">
+                  {sceneLocked
+                    ? "Your starting point is now part of this scene."
+                    : "Pick an opening to fill the free scene below, or start a full adventure with it."}
+                </p>
+                {selectedScenario && (
+                  <Button asChild size="sm" className="h-9 shrink-0 bg-[#281b3d] text-[#e0c7ff] hover:bg-[#b285ff] hover:text-white border border-[#b285ff]/30">
+                    <Link href={`/profile/import?mode=idea&scenario=${selectedScenario.id}`}>
+                      Full Adventure <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
+                    </Link>
+                  </Button>
+                )}
+              </div>
             </section>
 
             <DemoConsole

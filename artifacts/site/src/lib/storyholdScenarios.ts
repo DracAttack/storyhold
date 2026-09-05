@@ -184,19 +184,140 @@ export function findStoryholdScenario(id: string | null | undefined) {
   return STORYHOLD_SCENARIOS.find((scenario) => scenario.id === id);
 }
 
+export type QuickstartContext = {
+  worldName: string;
+  worldPremise: string;
+  characterConcept: string;
+  tone: string;
+  startingPoint: string;
+  initialObjective: string;
+};
+
+export function getScenarioQuickstart(scenario: StoryholdScenario): QuickstartContext {
+  const sentences = scenario.premise
+    .split(/(?<=[.!?])\s+/u)
+    .map((sentence) => sentence.trim())
+    .filter(Boolean);
+  const firstSentence = sentences[0] ?? scenario.premise;
+  const incitingSituation = sentences.slice(1).join(" ") || scenario.premise;
+  const characterConcept = /^you\b/iu.test(firstSentence)
+    ? firstSentence
+    : `You are the central character in this ${scenario.genre.toLowerCase()} story. ${firstSentence}`;
+  const settingLead = firstSentence
+    .replace(/[.!?]+$/u, "")
+    .match(/^You are (.+)$/iu)?.[1];
+  const neutralOpening = incitingSituation
+    .replace(/^You are\b/iu, "That person is")
+    .replace(/^You were\b/iu, "That person was")
+    .replace(/\byours\b/giu, "theirs")
+    .replace(/\byour\b/giu, "their")
+    .replace(/\byou\b/giu, "that person");
+  const worldPremise = settingLead
+    ? `A ${scenario.genre.toLowerCase()} world that includes ${settingLead}. ${neutralOpening}`
+    : `A ${scenario.genre.toLowerCase()} world shaped by this situation: ${neutralOpening}`;
+  const worldName = scenario.title
+    ? scenario.title[0]!.toLocaleUpperCase() + scenario.title.slice(1)
+    : "Untitled World";
+
+  return {
+    worldName,
+    worldPremise,
+    characterConcept,
+    tone: scenario.genre,
+    startingPoint: incitingSituation,
+    initialObjective: scenario.openingMove,
+  };
+}
+
+export const FEATURED_SCENARIO_IDS = [
+  "erased-name",
+  "company-found-something",
+  "impossible-number",
+] as const;
+
+export const SUGGESTED_SCENARIO_IDS = [
+  "dragon-will",
+  "company-found-something",
+  "first-contact-lawyer",
+  "family-portrait",
+  "radio-future-obituary",
+  "impossible-number",
+  "mayor-two-shadows",
+  "body-double-crowned",
+  "summit-empty-chair",
+  "plague-apothecary",
+  "pirate-amnesty",
+  "clockwork-sun",
+  "airship-stowaway-queen",
+  "city-blocked-you",
+  "corporate-afterlife",
+  "weather-station",
+  "seed-vault-forest",
+  "family-restaurant-review",
+  "neighbor-key",
+  "office-floor",
+  "helpdesk-moon",
+  "treasure-map-home",
+  "compass-person",
+] as const;
+
+export function auditStoryholdScenarioSelectionConfig(
+  scenarios: readonly StoryholdScenario[] = STORYHOLD_SCENARIOS,
+  featuredIds: readonly string[] = FEATURED_SCENARIO_IDS,
+  suggestedIds: readonly string[] = SUGGESTED_SCENARIO_IDS,
+): string[] {
+  const issues: string[] = [];
+  const catalogIds = new Set(scenarios.map((scenario) => scenario.id));
+  for (const [label, configuredIds] of [
+    ["Featured", featuredIds],
+    ["Suggested", suggestedIds],
+  ] as const) {
+    const seen = new Set<string>();
+    for (const id of configuredIds) {
+      if (!catalogIds.has(id)) issues.push(`${label} scenario ${id} is not in the catalog.`);
+      if (seen.has(id)) issues.push(`${label} scenario ${id} is configured more than once.`);
+      seen.add(id);
+    }
+  }
+  return issues;
+}
+
+function shuffled<T>(values: readonly T[]): T[] {
+  const array = [...values];
+  for (let index = array.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [array[index], array[swapIndex]] = [array[swapIndex], array[index]];
+  }
+  return array;
+}
+
 export function drawStoryholdScenarios(
   count: number,
+  selectedId?: string,
   excludedIds: readonly string[] = [],
-) {
+): StoryholdScenario[] {
   const excluded = new Set(excludedIds);
-  const pool = STORYHOLD_SCENARIOS.filter((scenario) => !excluded.has(scenario.id));
-
-  for (let index = pool.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(Math.random() * (index + 1));
-    [pool[index], pool[swapIndex]] = [pool[swapIndex], pool[index]];
+  if (selectedId) excluded.add(selectedId);
+  const curatedPool = SUGGESTED_SCENARIO_IDS
+    .map(findStoryholdScenario)
+    .filter((scenario): scenario is StoryholdScenario =>
+      scenario !== undefined && !excluded.has(scenario.id)
+    );
+  const selected = findStoryholdScenario(selectedId);
+  const relevant = selected
+    ? shuffled(curatedPool.filter((scenario) => scenario.genre === selected.genre))
+    : [];
+  const otherGenres = shuffled(curatedPool.filter((scenario) => scenario.genre !== selected?.genre));
+  const diverse: StoryholdScenario[] = [];
+  const seenGenres = new Set<string>();
+  for (const scenario of otherGenres) {
+    if (seenGenres.has(scenario.genre)) continue;
+    diverse.push(scenario);
+    seenGenres.add(scenario.genre);
   }
-
-  return pool.slice(0, Math.max(0, count));
+  const used = new Set([...relevant, ...diverse].map((scenario) => scenario.id));
+  const remainder = otherGenres.filter((scenario) => !used.has(scenario.id));
+  return [...relevant, ...diverse, ...remainder].slice(0, Math.max(0, count));
 }
 
 export function auditStoryholdScenarioCatalog(
@@ -225,6 +346,9 @@ export function auditStoryholdScenarioCatalog(
     }
     ids.add(scenario.id);
     titles.add(scenario.title);
+  }
+  if (scenarios === STORYHOLD_SCENARIOS) {
+    issues.push(...auditStoryholdScenarioSelectionConfig(scenarios));
   }
 
   return issues;

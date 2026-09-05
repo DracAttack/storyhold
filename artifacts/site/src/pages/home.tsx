@@ -17,39 +17,38 @@ import { useCustomerAccount } from "@/components/customer/customer-shell";
 import { useAuth } from "@/lib/auth";
 import { useSeo } from "@/lib/seo";
 import { toChicagoTitleCase } from "@/lib/utils";
+import { FEATURED_SCENARIO_IDS, findStoryholdScenario } from "@/lib/storyholdScenarios";
 
-const openings = [
-  {
-    id: "erased-name",
-    genre: "Dark Fantasy",
-    title: "The Kingdom Erased Your Name",
-    description:
-      "You return as the only healer who remembers what the crown buried beneath its capital.",
+const OPENINGS_META = {
+  "erased-name": {
     icon: Drama,
     image: "/world-dark-fantasy.webp",
     imageAlt: "A golden citadel rising above a sea of clouds",
   },
-  {
-    id: "company-found-something",
-    genre: "Corporate Horror",
-    title: "The Company Found Something",
-    description:
-      "You are the executive assigned to monetize an artifact recovered beyond mapped space.",
+  "company-found-something": {
     icon: Orbit,
     image: "/world-corporate-horror.webp",
     imageAlt: "A rain-soaked corporate megacity beneath an immense spacecraft",
   },
-  {
-    id: "impossible-number",
-    genre: "Everyday Mystery",
-    title: "One Number Should Not Exist",
-    description:
-      "A quiet accountant follows an impossible discrepancy into the private lives of an entire town.",
+  "impossible-number": {
     icon: Feather,
     image: "/world-everyday-mystery.webp",
     imageAlt: "A lamplit accounting office overlooking a rainy small town",
   },
-];
+} satisfies Record<
+  (typeof FEATURED_SCENARIO_IDS)[number],
+  { icon: typeof Drama; image: string; imageAlt: string }
+>;
+
+const openings = FEATURED_SCENARIO_IDS.map((id) => {
+  const scenario = findStoryholdScenario(id);
+  if (!scenario) throw new Error(`Missing featured scenario: ${id}`);
+  const meta = OPENINGS_META[id];
+  return {
+    ...scenario,
+    ...meta,
+  };
+});
 
 export default function Home() {
   const auth = useAuth();
@@ -145,8 +144,8 @@ export default function Home() {
           <div className="mt-12 grid gap-5 md:grid-cols-3">
             {openings.map((opening) => (
               <Card
-                key={opening.genre}
-                className="group relative isolate min-h-[410px] overflow-hidden border-white/10 bg-[#111015] p-0 shadow-[0_18px_55px_rgba(0,0,0,0.22)]"
+                key={opening.id}
+                className="group relative isolate min-h-[410px] overflow-hidden border-white/10 bg-[#111015] p-0 shadow-[0_18px_55px_rgba(0,0,0,0.22)] hover:border-[#b285ff]/35 transition-colors"
               >
                 <img
                   src={opening.image}
@@ -169,11 +168,11 @@ export default function Home() {
                       {toChicagoTitleCase(opening.title)}
                     </h3>
                     <p className="mt-4 text-sm leading-6 text-muted-foreground">
-                      {opening.description}
+                      {opening.premise}
                     </p>
                     <Link
-                      href={`/play?scenario=${opening.id}`}
-                      className="mt-7 inline-flex items-center text-sm font-bold text-[#e9dfca] transition-colors group-hover:text-primary"
+                      href={`/profile/import?mode=idea&scenario=${opening.id}`}
+                      className="mt-7 inline-flex min-h-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.035] px-4 text-sm font-bold text-[#e9dfca] transition-all duration-300 hover:border-violet-300/45 hover:bg-violet-400/20 hover:text-violet-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-300/70"
                     >
                       Start from Here <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
