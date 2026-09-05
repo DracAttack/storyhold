@@ -58,7 +58,10 @@ test("one bounded narration read still runs NLI and rejects contradictions or in
     deadlines.push(payload.deadlineUnixMs);
     assert.equal(payload.requireLoaded, undefined, "The full narration check may load its required model.");
     return Response.json({ signals: [{ signalType: "story_claim", fields: {
-      subject: ["Mara"], predicate: ["is"], object: ["dead"], truth_mode: ["fact"],
+      subject: [{ text: "Mara", score: 0.99 }],
+      predicate: [{ text: "is", score: 0.99 }],
+      object: [{ text: "dead", score: 0.99 }],
+      truth_mode: [{ text: "fact", score: 0.99 }],
     } }] });
   });
   const params = {

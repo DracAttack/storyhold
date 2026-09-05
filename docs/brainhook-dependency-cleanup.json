@@ -1,0 +1,4029 @@
+{
+  "repository": "https://github.com/DracAttack/storyhold",
+  "baselineCommit": "fcb13fb26df6098bb1935891cb14702a7fae0975",
+  "checkout": "C:\\Users\\animu\\Documents\\Codex\\storyhold-remote-audit",
+  "protectedInstallation": "C:\\Users\\animu\\Documents\\Codex\\2026-07-31\\github-plugin-github-openai-curated-remote\\work\\storyhold\\storyhold-main",
+  "summary": {
+    "removedTrackedFiles": 525,
+    "removedTrackedBytes": 26773156,
+    "resolvedDependencyEntriesBefore": 733,
+    "resolvedDependencyEntriesAfter": 561,
+    "workspaceProjectsBefore": 12,
+    "workspaceProjectsAfter": 7
+  },
+  "removedFiles": [
+    {
+      "blob": "8f6e100e3690667865269d0cf53af2c1702bb553",
+      "bytes": 108208,
+      "path": ".canvas/assets/asset_1351267906.png",
+      "reason": "Unreferenced BrainHook magazine design screenshot."
+    },
+    {
+      "blob": "29af9e18971f27171ce869f62cdb32e5973f4362",
+      "bytes": 100428,
+      "path": "artifacts/api-server/assets/brainhook-logo.png",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "e49278d955dbc7aab0debe2c9f92b569ba9e73f3",
+      "bytes": 1079720,
+      "path": "artifacts/api-server/assets/default-card.png",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "84d64f8fc12ee386640b8b8e562968780e33a991",
+      "bytes": 4717,
+      "path": "artifacts/api-server/build.mjs",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "7769f0b93894c48c0462a457bd6c7767de53485a",
+      "bytes": 3251,
+      "path": "artifacts/api-server/scripts/optimize-heroes.mjs",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "7b79f772bf86952f90c2b83dbd04b50e1ae1a0ed",
+      "bytes": 2755,
+      "path": "artifacts/api-server/src/app.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "c03c37408ce85c30fca85b7034de6c32564efda7",
+      "bytes": 11309,
+      "path": "artifacts/api-server/src/index.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0,
+      "path": "artifacts/api-server/src/lib/.gitkeep",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "23062ee5ac6be0196c3730e6db60f16447b72dcd",
+      "bytes": 4274,
+      "path": "artifacts/api-server/src/lib/auth.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "303461767592f8669e7a06ea591d4cd2c1a1db56",
+      "bytes": 3011,
+      "path": "artifacts/api-server/src/lib/imageTransform.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "b74fe284069d24fbf0c7ac77ef72bae3e6abbb9a",
+      "bytes": 3257,
+      "path": "artifacts/api-server/src/lib/indexnow.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "ef5d76e6dccaf27626d1a9a270a46e89c9661d69",
+      "bytes": 6828,
+      "path": "artifacts/api-server/src/lib/objectStorage.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "ff7b4e4507e533902ba290ba2767f13552be56c8",
+      "bytes": 4331,
+      "path": "artifacts/api-server/src/lib/origins.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "0e9e464deabe12bf0d246365b38b963fd1915018",
+      "bytes": 3675,
+      "path": "artifacts/api-server/src/lib/origins.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "c0310208cea08863ad55b0b9001b820ef367dce2",
+      "bytes": 670,
+      "path": "artifacts/api-server/src/lib/pii.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "6883c23ebb3f4b44ef011b22f0dd31826ba0971a",
+      "bytes": 894,
+      "path": "artifacts/api-server/src/lib/slug.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "f1186f1e0f79c810fd150ee386ec31e79cb46755",
+      "bytes": 2854,
+      "path": "artifacts/api-server/src/lib/svix.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "91f2380dbb3baaad9c2d4ae2a83501a2d69291e8",
+      "bytes": 2978,
+      "path": "artifacts/api-server/src/lib/svix.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "bytes": 0,
+      "path": "artifacts/api-server/src/middlewares/.gitkeep",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "5374241002b8e4b285fbec81fc839a392e572074",
+      "bytes": 1963,
+      "path": "artifacts/api-server/src/routes/admin/aiSettings.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "c9378d0996e5c9572e14832b466c95085461505a",
+      "bytes": 25312,
+      "path": "artifacts/api-server/src/routes/admin/aiUsage.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "83329b87052d7998ee16145a06b7dd73b66d660b",
+      "bytes": 56909,
+      "path": "artifacts/api-server/src/routes/admin/articles.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "6da4e7c8b2d0bd384a371322f0733b2100fd322e",
+      "bytes": 4033,
+      "path": "artifacts/api-server/src/routes/admin/auth.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "49bb81ea117d39a1165c91f48a527021572d4d4f",
+      "bytes": 16873,
+      "path": "artifacts/api-server/src/routes/admin/authors.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "96f53caba529a74ec81d9f400b61fd1a5f49d019",
+      "bytes": 2157,
+      "path": "artifacts/api-server/src/routes/admin/backCatalog.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "31a63b341eb0789405eba72c273596f5a5264b87",
+      "bytes": 9175,
+      "path": "artifacts/api-server/src/routes/admin/beats.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "f94a28f5ec7e8a7b02ee9a38a25f0c74dee99c95",
+      "bytes": 3866,
+      "path": "artifacts/api-server/src/routes/admin/citations.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "98b00e118d682560b27ede9d27ac7074c05c19a1",
+      "bytes": 4446,
+      "path": "artifacts/api-server/src/routes/admin/claims.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "d92b3bbcfb57c76d6750d2da015ce45835acadb8",
+      "bytes": 14440,
+      "path": "artifacts/api-server/src/routes/admin/conceptRadar.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "586844a141dbfec29bd172e3de1bf321d6ec5e27",
+      "bytes": 79925,
+      "path": "artifacts/api-server/src/routes/admin/concepts.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "d7d85b91d467a544a544f7c02307906725d9304c",
+      "bytes": 13420,
+      "path": "artifacts/api-server/src/routes/admin/coverageMap.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "6dc524845db0611c6bc57d36cec8c1e903def162",
+      "bytes": 1854,
+      "path": "artifacts/api-server/src/routes/admin/duplicates.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "6a01c7b43186de37688eff66aec4a2cd8a1202c6",
+      "bytes": 4940,
+      "path": "artifacts/api-server/src/routes/admin/editorReview.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "07cbecb63e61cd5f56f2c3e2922834b5590ba556",
+      "bytes": 4446,
+      "path": "artifacts/api-server/src/routes/admin/feeds.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "8e833902c3bccc8f98aba5dbf5ec0a952f066b01",
+      "bytes": 25783,
+      "path": "artifacts/api-server/src/routes/admin/ideas.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "437f245eb985ca67ac5bec1383a371a22e85e82a",
+      "bytes": 8773,
+      "path": "artifacts/api-server/src/routes/admin/ideasHarvest.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "2e0799f8f18d74ea3b9afdc4799e287f0c0c6c8e",
+      "bytes": 239,
+      "path": "artifacts/api-server/src/routes/admin/llm.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "be099928e2ad420e44f1d9175881c2a0e9f98ac7",
+      "bytes": 7143,
+      "path": "artifacts/api-server/src/routes/admin/mediaLibrary.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "d679b1672dbd3f32511d81023eedc79ba8d8118f",
+      "bytes": 23706,
+      "path": "artifacts/api-server/src/routes/admin/memes.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "a333eeae9340b657a0d93235682b15de088794ce",
+      "bytes": 1744,
+      "path": "artifacts/api-server/src/routes/admin/notifications.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "44c9addab92a297c689a5a296d2da0ac74f8c189",
+      "bytes": 3976,
+      "path": "artifacts/api-server/src/routes/admin/pageViews.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "a66de6b4b5f43f4bfa48a68d5fb69e87a4435141",
+      "bytes": 8810,
+      "path": "artifacts/api-server/src/routes/admin/readerJourneys.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "9728023f6c0380a78c22209727daedb6958d0213",
+      "bytes": 10897,
+      "path": "artifacts/api-server/src/routes/admin/schedule.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "773ee58d309484264ce3d380a3bfe0fb7c8a37e2",
+      "bytes": 3723,
+      "path": "artifacts/api-server/src/routes/admin/shares.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "d71cb3ed2687958fb685e74a46ee5d68d58ab744",
+      "bytes": 4034,
+      "path": "artifacts/api-server/src/routes/admin/siteSettings.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "c86a18c52edd2623e873ca223d0f5de7686660e8",
+      "bytes": 9472,
+      "path": "artifacts/api-server/src/routes/admin/socialQueue.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "89a2c32a301f5423dea16e61272cac1e77f9506f",
+      "bytes": 6189,
+      "path": "artifacts/api-server/src/routes/admin/sourceGaps.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "4776911821f21b7f6b45a87ed0abb3af2699f4e1",
+      "bytes": 4574,
+      "path": "artifacts/api-server/src/routes/admin/sourceHealth.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "f1a379517f0381ad6d5843fd05ea0ef8b1a4a517",
+      "bytes": 14956,
+      "path": "artifacts/api-server/src/routes/admin/sourceVault.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "00dc388dc236bf66d532f4c0ad695b014a6a8908",
+      "bytes": 7282,
+      "path": "artifacts/api-server/src/routes/admin/stats.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "7be2906aa413fdef8d14798bb40a3c93f4334fe1",
+      "bytes": 9925,
+      "path": "artifacts/api-server/src/routes/admin/subscribers.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "00d6585e02fd90a8ac21e8719aeced7dc315d47b",
+      "bytes": 4868,
+      "path": "artifacts/api-server/src/routes/admin/termOfDay.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "27e8f13f745e88af18230635f7ada970ae236658",
+      "bytes": 22689,
+      "path": "artifacts/api-server/src/routes/admin/trends.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "d1f802f1ac869c5c6c936c453969b5e235a30c7f",
+      "bytes": 2542,
+      "path": "artifacts/api-server/src/routes/admin/utmPresets.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "869e4436a667dc53cd66155e7d312f3668caf7bf",
+      "bytes": 2129,
+      "path": "artifacts/api-server/src/routes/cron.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "f5500664c9329b94dcc6b398ebe9eb74f0eb11b5",
+      "bytes": 1385,
+      "path": "artifacts/api-server/src/routes/health.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "bdee2e05f07efc6d8d84b2f6959db0d146316017",
+      "bytes": 8930,
+      "path": "artifacts/api-server/src/routes/healthz-seo.checks.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "664c396d9ce2668d0911927953358b3b76e107b6",
+      "bytes": 3069,
+      "path": "artifacts/api-server/src/routes/healthz-seo.checks.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "7d9d08e9275cfa7ba2aa87be85ef6f193e5d238a",
+      "bytes": 16445,
+      "path": "artifacts/api-server/src/routes/healthz-seo.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "b8044964f6dd9b8a7ee8860574b613a96c8da7d3",
+      "bytes": 3902,
+      "path": "artifacts/api-server/src/routes/index.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "c41176115922a658a94352781dd697c68e716f2c",
+      "bytes": 7745,
+      "path": "artifacts/api-server/src/routes/public.editorial.browser.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "a3c2227f7805587ddebcec822b8912dbb8702383",
+      "bytes": 7060,
+      "path": "artifacts/api-server/src/routes/public.editorial.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "d836546b5992e698b85531c01a6b87b18ad44163",
+      "bytes": 7870,
+      "path": "artifacts/api-server/src/routes/public.next.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "31d202d85bf6b49bd96d2ee71ff705ce5607c90a",
+      "bytes": 99586,
+      "path": "artifacts/api-server/src/routes/public.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "107d685b6e16e9420259510ea01780200aced141",
+      "bytes": 3447,
+      "path": "artifacts/api-server/src/routes/robots.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "64c857bb08db75d1192eb2f91219645601d439f9",
+      "bytes": 4237,
+      "path": "artifacts/api-server/src/routes/rss.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "6cff6366eb9e7faad115812165d227e4c88ea467",
+      "bytes": 12739,
+      "path": "artifacts/api-server/src/routes/seo.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "33e9111cce532a4a73f3add3c6590917ad2a9509",
+      "bytes": 8813,
+      "path": "artifacts/api-server/src/routes/storage.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "993025d98c54ea69d3359f5486b5f2e53abe5e8a",
+      "bytes": 7178,
+      "path": "artifacts/api-server/src/routes/webhooks.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "428f03d6371129bb8e0dc22c0535f434e9ac0eaa",
+      "bytes": 5994,
+      "path": "artifacts/api-server/src/services/aiBudget.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "0ac9345fd7efb0004b458323480062c0983ee833",
+      "bytes": 78337,
+      "path": "artifacts/api-server/src/services/aiRegistry.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "f37d5339251a44f9d982fad13a496150913d2f9b",
+      "bytes": 8402,
+      "path": "artifacts/api-server/src/services/aiSettings.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "05d178e7d3283c24f8e024452c99b02e30c7393c",
+      "bytes": 6844,
+      "path": "artifacts/api-server/src/services/aiUsage.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "96869d8a4a3931aeb61fbeb702c16e469c56839d",
+      "bytes": 224883,
+      "path": "artifacts/api-server/src/services/articles.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "1f634a6f0a50cc3a7e2f6f897d25122fdc5b33fd",
+      "bytes": 4331,
+      "path": "artifacts/api-server/src/services/authorAssignment.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "a29f6706d2262b3e48d3504752396a7c19cd96be",
+      "bytes": 23092,
+      "path": "artifacts/api-server/src/services/backCatalogHarvest.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "046756e9c36d1416a43eb8528a806c60848c9382",
+      "bytes": 4105,
+      "path": "artifacts/api-server/src/services/backCatalogLinks.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "58fa051e5117769b1316d49c8500f48394b6a0da",
+      "bytes": 5915,
+      "path": "artifacts/api-server/src/services/backCatalogLinks.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "4a2d3a9bdc40eaea48e34e6bb6327d4f191a3b7f",
+      "bytes": 5865,
+      "path": "artifacts/api-server/src/services/beatAdjacency.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "09db74e486de649833cc64d3ce27b349a02a0296",
+      "bytes": 14818,
+      "path": "artifacts/api-server/src/services/beatClassifier.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "1fce1d49aae50f2031309994f09f08b8e3ac3c02",
+      "bytes": 3724,
+      "path": "artifacts/api-server/src/services/beats.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "5618fa9389768742878fd3c40049747ad2bfd8d1",
+      "bytes": 2687,
+      "path": "artifacts/api-server/src/services/beats.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "f646545e6d3eca4edf13295bfadf8bdae8658a6b",
+      "bytes": 13453,
+      "path": "artifacts/api-server/src/services/citationMetadata.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "b58f9f381f72c507248a4c912c84211df5ae1cd9",
+      "bytes": 52812,
+      "path": "artifacts/api-server/src/services/citationMetadata.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "7a2af7363d16b8d7250b181ca97a043f00e4c782",
+      "bytes": 13740,
+      "path": "artifacts/api-server/src/services/citationNotes.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "931d2a1408d0c2ecd508bb4164e771b41e8c2995",
+      "bytes": 8929,
+      "path": "artifacts/api-server/src/services/citations.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "60fdf80ac0b132a0a2f53adbc5a92b02e3a09e50",
+      "bytes": 16554,
+      "path": "artifacts/api-server/src/services/citations.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "36304c235ef932e9b309fdad9a076eccfc4c14c7",
+      "bytes": 18827,
+      "path": "artifacts/api-server/src/services/claimBatchBackfill.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "b797fa4c313035447754428908742a678fb40cdc",
+      "bytes": 2292,
+      "path": "artifacts/api-server/src/services/claimBatchManifest.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "d9a4e574fa251c7295320856052d825fee0ed91a",
+      "bytes": 3576,
+      "path": "artifacts/api-server/src/services/claimBatchManifest.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "9d3b8cdd5774b1039eac80fa475abfe18022e68b",
+      "bytes": 29198,
+      "path": "artifacts/api-server/src/services/claimExtraction.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "13d58d20071c97ac19bd9347fefea78aed63ffcb",
+      "bytes": 17706,
+      "path": "artifacts/api-server/src/services/claimGraph.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "2a70b349ad1b731bea48769a564ad6a374cd1066",
+      "bytes": 1708,
+      "path": "artifacts/api-server/src/services/claimReconciliationPlan.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "d6c9356a65aa363be128c2071805d3715089fc58",
+      "bytes": 1802,
+      "path": "artifacts/api-server/src/services/claimReconciliationPlan.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "f6e9962ad6f89706c0712610ff68d7a0ab96eb5e",
+      "bytes": 15853,
+      "path": "artifacts/api-server/src/services/clusterScore.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "784423952f02879b86daffb892b0b3a217aa2bd6",
+      "bytes": 9258,
+      "path": "artifacts/api-server/src/services/clusterScore.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "8033600c0d05c7e0ef78143fee619e6bbef01ca1",
+      "bytes": 16025,
+      "path": "artifacts/api-server/src/services/conceptAliasAudit.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "92a7921726d90e4089ca0b8429245c18c46abd5b",
+      "bytes": 6191,
+      "path": "artifacts/api-server/src/services/conceptBeatAffinity.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "b97684a280fe94b3a15c3514605a23d3fd167c0d",
+      "bytes": 9164,
+      "path": "artifacts/api-server/src/services/conceptBeatAffinity.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "d677c18d6cbee0c3b4cbf61c9e180ea29eef3df9",
+      "bytes": 13647,
+      "path": "artifacts/api-server/src/services/conceptBeatAffinityJob.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "b1e6e2838f6c9bb0fdd31e99a9ad63c772f64597",
+      "bytes": 19408,
+      "path": "artifacts/api-server/src/services/conceptEdges.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "ec77a01df5fdac7ec57fc9aa5420bdd1f13c77a0",
+      "bytes": 3902,
+      "path": "artifacts/api-server/src/services/conceptEvidenceHealth.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "aaa67d9bfcc03350d329758719ac31ede87a6bb0",
+      "bytes": 4933,
+      "path": "artifacts/api-server/src/services/conceptEvidenceHealth.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "10088d5052522de5fc36fe651e21e358c571cad9",
+      "bytes": 17025,
+      "path": "artifacts/api-server/src/services/conceptEvidenceHealthJob.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "d3d9ef045e840c3bb696b0261f08ef3922e3b37f",
+      "bytes": 4027,
+      "path": "artifacts/api-server/src/services/conceptExplainer.backfill.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "d39e79d7632a117d241042895f2d347e07d4494e",
+      "bytes": 6015,
+      "path": "artifacts/api-server/src/services/conceptExplainer.titleCase.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "3925563aa7326688606215e896d9602348896ff1",
+      "bytes": 109002,
+      "path": "artifacts/api-server/src/services/conceptExplainer.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "cb4bdfb22c78df82f62fda4d823a3f701e9101f7",
+      "bytes": 22211,
+      "path": "artifacts/api-server/src/services/conceptMergeSweep.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "58aa8e6362e559012d5bb12f1dbab25754f5ded1",
+      "bytes": 3891,
+      "path": "artifacts/api-server/src/services/conceptQueryPlanner.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "06ff90a77fabf17b410134015954c9ba7689602f",
+      "bytes": 3784,
+      "path": "artifacts/api-server/src/services/conceptQueryPlanner.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "dae5f4b5701001c8d7b76c427b0e7f2d4e277b3f",
+      "bytes": 5426,
+      "path": "artifacts/api-server/src/services/conceptTagger.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "83de641b65734eb9f6e4020142abdc8efd886cc0",
+      "bytes": 5732,
+      "path": "artifacts/api-server/src/services/conceptTagger.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "623737753fb568f37586e4911f094c9245e93456",
+      "bytes": 4872,
+      "path": "artifacts/api-server/src/services/continuance.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "0f82b34967f979dd4c0522b97b7e3188bae5b7b3",
+      "bytes": 27951,
+      "path": "artifacts/api-server/src/services/coverageMapJob.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "783a5bd42ca56cea3bd59925c25d4a41512c94db",
+      "bytes": 15338,
+      "path": "artifacts/api-server/src/services/coverageMapScore.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "8d0ffe61726dcfed71b586bdcd938cd60d6bef4b",
+      "bytes": 19314,
+      "path": "artifacts/api-server/src/services/coverageMapScore.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "c97dbfa667ed82b8f7549a51f62be53a04a943bd",
+      "bytes": 1522,
+      "path": "artifacts/api-server/src/services/cronClaim.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "f754e778c888a14cc18c2f07e162f40d3386ef39",
+      "bytes": 3132,
+      "path": "artifacts/api-server/src/services/cronTick.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "58407145f3e6229ce449fef1e3774e8175c70274",
+      "bytes": 39834,
+      "path": "artifacts/api-server/src/services/cronTick.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "1177b4ee220037679558c116569b8d11c5930460",
+      "bytes": 6297,
+      "path": "artifacts/api-server/src/services/crossBeatRadar.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "621924b3c5299b6a75ddd3acb327708d15608dcf",
+      "bytes": 7503,
+      "path": "artifacts/api-server/src/services/crossBeatRadar.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "06651dabb3d5a6bfc5eca3b965b673d1b72a5dce",
+      "bytes": 20380,
+      "path": "artifacts/api-server/src/services/crossBeatRadarJob.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "694d1a4101c6a2b64d368688befbcba5d58e9b44",
+      "bytes": 21205,
+      "path": "artifacts/api-server/src/services/dedupe.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "25ed04e91f376e3503a7dd95ebd8c0e0b99f02a0",
+      "bytes": 6781,
+      "path": "artifacts/api-server/src/services/dedupeEligibility.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "13829c1ae0ffb25cfd90d0385def3fe3de565928",
+      "bytes": 7466,
+      "path": "artifacts/api-server/src/services/dedupeEligibility.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "6e381a675b508e9d5ff6dc329e8197692a08a6ab",
+      "bytes": 29607,
+      "path": "artifacts/api-server/src/services/developmentSignalDetector.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "fc8c0f19f314aaa5c1dcce4a8c50fe6335776cbb",
+      "bytes": 2852,
+      "path": "artifacts/api-server/src/services/draftResearchPolicy.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "a03eacc9dcce92b9b7a126739fc8f6f119769524",
+      "bytes": 18428,
+      "path": "artifacts/api-server/src/services/duplicateScan.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "ea2be9a688c8b13f51bdabed69298025026e8185",
+      "bytes": 31588,
+      "path": "artifacts/api-server/src/services/editorCockpit.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "f58a3599af8629de1de318c04cd4dff744ccbf89",
+      "bytes": 13367,
+      "path": "artifacts/api-server/src/services/editorialScreen.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "aabf4d542601ad7e102ea32f41473e6a190b3f56",
+      "bytes": 53945,
+      "path": "artifacts/api-server/src/services/editorialScreen.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "3b46abf6dc7d84e096c0b3ecc5fc527366d0f722",
+      "bytes": 5184,
+      "path": "artifacts/api-server/src/services/email.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "28fe2eeacfc0b65550d5f3bfce81e8077b61eb4d",
+      "bytes": 14519,
+      "path": "artifacts/api-server/src/services/emailShared.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "afa7eb88e4a97eac8a1668a02034d5e22c3eb4a1",
+      "bytes": 1972,
+      "path": "artifacts/api-server/src/services/feedItemFilter.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "26e4827cb2a1ceca62b6d80329c1f6828e9a70b9",
+      "bytes": 2278,
+      "path": "artifacts/api-server/src/services/feedItemFilter.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "4380130aa556a71e4e4dbff781ca75691bc6a9f2",
+      "bytes": 3796,
+      "path": "artifacts/api-server/src/services/feedParsing.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "a5f57d9fa6af070ff2de8f123e17f64e116ed3e1",
+      "bytes": 7430,
+      "path": "artifacts/api-server/src/services/feedParsing.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "4061ca0b99ba4519c18a252661352c02d8debe31",
+      "bytes": 21940,
+      "path": "artifacts/api-server/src/services/feedWatcher.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "8b62a04a07c763a1fbc5b3627b3c59b1ca7fdf54",
+      "bytes": 17250,
+      "path": "artifacts/api-server/src/services/glossaryCardCapture.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "9bafc728f5d2659f7f152eca20d0b305f423551e",
+      "bytes": 55122,
+      "path": "artifacts/api-server/src/services/glossaryVaultSync.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "afdcaa995779a621e2fd4adeec06e457eab16726",
+      "bytes": 17385,
+      "path": "artifacts/api-server/src/services/glossaryVaultSync.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "b224c80454b038cece3c04b5c59987e82e0f694f",
+      "bytes": 7513,
+      "path": "artifacts/api-server/src/services/govDoc.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "a05e57e6f54221c12b9b7b697da9b6e59844007c",
+      "bytes": 8719,
+      "path": "artifacts/api-server/src/services/govDoc.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "6dca551a607567b0686f930b79c5b8bd8fac73a9",
+      "bytes": 2085,
+      "path": "artifacts/api-server/src/services/govinfoResolve.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "b5226b6c987fcba1eaa4ad6054ae15bb8f17dac6",
+      "bytes": 5604,
+      "path": "artifacts/api-server/src/services/govinfoResolve.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "f2204ae9d66191c1f7d4aaec61447c10e5a8cc31",
+      "bytes": 1935,
+      "path": "artifacts/api-server/src/services/hashtagPolicy.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "c70391bdc3c1212b26c8c2b333465027904f33d8",
+      "bytes": 7713,
+      "path": "artifacts/api-server/src/services/hashtagPolicy.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "b9b078561b11713305cf3658e560e7d498e45c58",
+      "bytes": 17888,
+      "path": "artifacts/api-server/src/services/heroImage.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "4870d30981d630a779558524f5ab881d0e12e9d1",
+      "bytes": 5235,
+      "path": "artifacts/api-server/src/services/ingestGuards.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "fe5754474f21bb0764499b3f261fd43287f92b68",
+      "bytes": 5376,
+      "path": "artifacts/api-server/src/services/ingestGuards.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "0d68d4de9eb2aecd976ad5a56ebae0ed59b3a1b7",
+      "bytes": 1105,
+      "path": "artifacts/api-server/src/services/jobStaleness.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "d77b425be7f8d18c55fb59a6d28f3c8d94058812",
+      "bytes": 2511,
+      "path": "artifacts/api-server/src/services/jobState.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "8aa3487ad02e80294658c94aa4160abd8a08ee9f",
+      "bytes": 8194,
+      "path": "artifacts/api-server/src/services/jobState.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "9d57ce4de7c0cd7aa096135b972647686e9df1b8",
+      "bytes": 13230,
+      "path": "artifacts/api-server/src/services/llm.ideaGeneration.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "f17c59a6b823df2675caafc9d8be7fe0044bff2e",
+      "bytes": 192146,
+      "path": "artifacts/api-server/src/services/llm.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "c29f8340dfcfe2a2c62c490095ad7fd18d77da81",
+      "bytes": 33105,
+      "path": "artifacts/api-server/src/services/memeImage.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "c55092c212198e7d8b74a76b166488c9b6b3c222",
+      "bytes": 18184,
+      "path": "artifacts/api-server/src/services/memeQueue.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "cf6e003b9644c0982eeaff8290e0268951f4fcfc",
+      "bytes": 27711,
+      "path": "artifacts/api-server/src/services/memeQueue.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "2579663cf62b0d1bd6616b2ba9fb56adc48b83ea",
+      "bytes": 14671,
+      "path": "artifacts/api-server/src/services/memeRender.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "a5b4d246490c8923bd0dbe017835058401f982d1",
+      "bytes": 14811,
+      "path": "artifacts/api-server/src/services/memeRender.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "2222db118fabc92f264eb18a8d4497f7239806f3",
+      "bytes": 55189,
+      "path": "artifacts/api-server/src/services/memes.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "ab0a5b59ee1a591cabc0ede8f1c5ffce2deaf1d8",
+      "bytes": 9566,
+      "path": "artifacts/api-server/src/services/notifications.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "8e854ce7198b64eb2c67ed319422c67f2964d2fe",
+      "bytes": 6107,
+      "path": "artifacts/api-server/src/services/packetRelevance.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "07a4c9a90dea6391250719487a9aa24e0422848c",
+      "bytes": 8296,
+      "path": "artifacts/api-server/src/services/packetRelevance.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "196cf31dcd1866885448673f51dcaf3222d27141",
+      "bytes": 4942,
+      "path": "artifacts/api-server/src/services/postOpeners.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "45a6d7c7727971a3983f145fed33b4fec386c58a",
+      "bytes": 5340,
+      "path": "artifacts/api-server/src/services/promptInjectionGuard.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "0398abccc2638231821ff29fb147096a31b3a2fa",
+      "bytes": 8879,
+      "path": "artifacts/api-server/src/services/representativeScore.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "bf81dc3c60bd252a1cb3ae5c120e4d3cc64e9a7e",
+      "bytes": 9886,
+      "path": "artifacts/api-server/src/services/representativeScore.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "f886f49b924b2b0364a5f52639cea6db4bd8b66a",
+      "bytes": 15052,
+      "path": "artifacts/api-server/src/services/researchFallback.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "d556080ccc35f61ea12db0d56e09d498afaa108f",
+      "bytes": 24249,
+      "path": "artifacts/api-server/src/services/researchFallback.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "ee84ea130b3d6ac6a8057b8bc52f857d77d7f3e7",
+      "bytes": 13737,
+      "path": "artifacts/api-server/src/services/retractionCascade.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "42f8d32c17cb6713da39cc30e97bb8fe85f5eeb5",
+      "bytes": 8468,
+      "path": "artifacts/api-server/src/services/scheduling.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "913acfe817c9fb165be8227ea75a3c9c1b1bcf6e",
+      "bytes": 250708,
+      "path": "artifacts/api-server/src/services/seed.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "ba5adebb45fa6402cee3a6ff8ef34a8456b0a47e",
+      "bytes": 5105,
+      "path": "artifacts/api-server/src/services/seedIntermediaryBackfill.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "5b3496b70271c0f2408a4d3ebcce3327c5e0892d",
+      "bytes": 9560,
+      "path": "artifacts/api-server/src/services/shadowMetrics.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "7ecd947ca35ef9c1c1b2b8f1be757162c736dc9f",
+      "bytes": 16214,
+      "path": "artifacts/api-server/src/services/shareImage.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "66de52684ef8ae82533b8f47cdeae941ef9efddf",
+      "bytes": 3574,
+      "path": "artifacts/api-server/src/services/simhash.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "489f255f3cf06b501cda45262648b9eff07612d4",
+      "bytes": 5251,
+      "path": "artifacts/api-server/src/services/simhash.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "c7089257cf3759312335912f31677f62aa63416a",
+      "bytes": 10298,
+      "path": "artifacts/api-server/src/services/siteSettings.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "b62e177328f49f6e79a05a413d0378a7867f6da6",
+      "bytes": 14670,
+      "path": "artifacts/api-server/src/services/social.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "f6fcd00ded4b8d7961f46b8d170e706c3c86fe46",
+      "bytes": 4644,
+      "path": "artifacts/api-server/src/services/socialBudget.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "d2c24fe4f0066a9ed2034f16e3a9db8cc9540d3a",
+      "bytes": 9589,
+      "path": "artifacts/api-server/src/services/socialQueue.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "d917d4a1c7dc0a847268b30f1c5a3d0b38d90d70",
+      "bytes": 65492,
+      "path": "artifacts/api-server/src/services/socialQueue.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "068e9f9d51ccc78070e6f342bb9758447c9091b0",
+      "bytes": 23544,
+      "path": "artifacts/api-server/src/services/sourceAuthority.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "eceb466f0b4c5e4759f9d1a9c10c9754e8149885",
+      "bytes": 35658,
+      "path": "artifacts/api-server/src/services/sourceAuthority.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "5377fc3bcbcea8d2834254e8951c9aa6cdd3d5d0",
+      "bytes": 12741,
+      "path": "artifacts/api-server/src/services/sourceDiscovery.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "9377a2e000d064e2124739c48c89c0c1499c2d5e",
+      "bytes": 6055,
+      "path": "artifacts/api-server/src/services/sourceDiversity.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "4e1ea2c5a330792b2973104d339b43bb51d6b85e",
+      "bytes": 23941,
+      "path": "artifacts/api-server/src/services/sourceGapScanner.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "8b887976ed205120b70da301572dae7cd4333788",
+      "bytes": 11373,
+      "path": "artifacts/api-server/src/services/sourceHarvest.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "0fd775f25ccaf062743af05e144b6e375d8f2f1f",
+      "bytes": 28654,
+      "path": "artifacts/api-server/src/services/sourceHarvest.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "86c4b0c78e241ae9879709ab38c21e64c3be7d69",
+      "bytes": 14318,
+      "path": "artifacts/api-server/src/services/sourceIngestQueue.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "54bd2f0038fa45404e53e3192681ec39967b04a0",
+      "bytes": 16237,
+      "path": "artifacts/api-server/src/services/sourceIngestQueue.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "37cf9958c7674233a2725dbac13a8e3693522f2c",
+      "bytes": 3174,
+      "path": "artifacts/api-server/src/services/sourceLinkPolicy.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "763f5ce5b1cacb7de54313578310851e9a0ddfdb",
+      "bytes": 2946,
+      "path": "artifacts/api-server/src/services/sourceLinkPolicy.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "137e0bb0b569eb43b4c9a648a6cff2da471c5f60",
+      "bytes": 96523,
+      "path": "artifacts/api-server/src/services/sourceVault.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "5e788f3013fdde201c0a727f4b5d282afc1ba114",
+      "bytes": 5924,
+      "path": "artifacts/api-server/src/services/sourceVault.upload.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "37fe0b929a937fba8308b6f6552677f5db78c3cc",
+      "bytes": 5911,
+      "path": "artifacts/api-server/src/services/sourceVaultBudget.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "d6a59c5110c64f71c66f124fc9e67cb3511802f2",
+      "bytes": 74301,
+      "path": "artifacts/api-server/src/services/storyClusters.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "d270803bbe7c4aed046dca784de8d3ba49fc5ba0",
+      "bytes": 10162,
+      "path": "artifacts/api-server/src/services/storyWatch.signal.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "e05a2871d2c53c35ce663ac58735183733ff6126",
+      "bytes": 12233,
+      "path": "artifacts/api-server/src/services/storyWatch.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "8185b6fc3c99ad3d6416ec6223248e6443faede0",
+      "bytes": 3670,
+      "path": "artifacts/api-server/src/services/termExtraction.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "d5de9a38720114f5a44dd88ab5e7975364140e86",
+      "bytes": 7302,
+      "path": "artifacts/api-server/src/services/termExtraction.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "a531428d7dd80b80d814846f432134f99961eb48",
+      "bytes": 38445,
+      "path": "artifacts/api-server/src/services/termOfDay.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "4fbd273eeac286091435bc56b9f0931417dd54eb",
+      "bytes": 7327,
+      "path": "artifacts/api-server/src/services/termOfDayCard.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "e99a4fbad250cb6f49022921444b1e15671f7673",
+      "bytes": 10214,
+      "path": "artifacts/api-server/src/services/trendMarkers.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "80ad1398541f5839afb2f1de32fd7c0b72c53376",
+      "bytes": 12869,
+      "path": "artifacts/api-server/src/services/trends.test.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "b91c8007e166bf02b99c26f3c6130bff5efdef84",
+      "bytes": 30101,
+      "path": "artifacts/api-server/src/services/trends.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "cda31dd055aeb59f5cc3ca6d9ea5dd9e678effb7",
+      "bytes": 28761,
+      "path": "artifacts/api-server/src/services/updateArticleGenerator.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "70c6096276573e311bc63999c77ffbcd7c729ca0",
+      "bytes": 10543,
+      "path": "artifacts/api-server/src/services/updateDepthScore.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "1f5d0843424f2d52f78d4133c48f8ff4956b4bba",
+      "bytes": 1825,
+      "path": "artifacts/api-server/src/services/verificationText.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "20c52b2bbbc5d67ff5af11c65aea23d0e0ff16aa",
+      "bytes": 32011,
+      "path": "artifacts/api-server/src/services/weeklyNewsletter.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "96452dfcb509133f82ec70ea91d6122feae619f1",
+      "bytes": 9383,
+      "path": "artifacts/api-server/src/services/welcomeEmail.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "9807a29e0754249743c403efc2fd405192c9fcc5",
+      "bytes": 10428,
+      "path": "artifacts/api-server/src/services/wikipedia.ts",
+      "reason": "Dormant magazine backend outside the Storyhold entry/dependency graph. Shared intake helpers retained separately."
+    },
+    {
+      "blob": "8f94c258bc9f10c764e933c5bcea986a62b4c2a4",
+      "bytes": 327,
+      "path": "artifacts/mockup-sandbox/.replit-artifact/artifact.toml",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "ba0c18c0c790c4270fe1d596a400e4e24dcc643e",
+      "bytes": 426,
+      "path": "artifacts/mockup-sandbox/components.json",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "1397a638300ec564af33d63612ff217ea2c4012b",
+      "bytes": 4325,
+      "path": "artifacts/mockup-sandbox/index.html",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "c09ed92cbbc0cbe8e5499340d22a576720eb3c8f",
+      "bytes": 4639,
+      "path": "artifacts/mockup-sandbox/mockupPreviewPlugin.ts",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "20e280611ead90d8869b7460aedbaa2fb14b506b",
+      "bytes": 2511,
+      "path": "artifacts/mockup-sandbox/package.json",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "f75bb3021e272dad8979adc7a5d779df86f66fad",
+      "bytes": 58036,
+      "path": "artifacts/mockup-sandbox/public/images/glossary-share-card.jpg",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "9ca1abce338116572c0e09e133ae26409491e5cb",
+      "bytes": 1977,
+      "path": "artifacts/mockup-sandbox/src/.generated/mockup-components.ts",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "d9c2317f0d952aefe737473c57dc4afe359048a0",
+      "bytes": 3654,
+      "path": "artifacts/mockup-sandbox/src/App.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "ed1d74f03786f7fba91adc8ecf1d251536076430",
+      "bytes": 6054,
+      "path": "artifacts/mockup-sandbox/src/components/mockups/brainhook-folio/Article.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "dc46d5247f567b767b34b888c1fca3198a12ec85",
+      "bytes": 7335,
+      "path": "artifacts/mockup-sandbox/src/components/mockups/brainhook-folio/Home.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "80161c64c46d4642f2c2d2e768789012c2b32545",
+      "bytes": 240,
+      "path": "artifacts/mockup-sandbox/src/components/mockups/brainhook-folio/_group.css",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "218bbb4339a8e005157ec2ce8219f1d4a5c2fed7",
+      "bytes": 3763,
+      "path": "artifacts/mockup-sandbox/src/components/mockups/brainhook-ink/Article.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "102fe7c9c347ae763dc335035d65666f38aba57b",
+      "bytes": 4730,
+      "path": "artifacts/mockup-sandbox/src/components/mockups/brainhook-ink/Home.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "47947da1c0ef7a5b97b31a500c3cf23d385f6f8d",
+      "bytes": 12673,
+      "path": "artifacts/mockup-sandbox/src/components/mockups/brainhook-ink/_group.css",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "c2c11df8acd879c5195ae2690b0e70830029f954",
+      "bytes": 5421,
+      "path": "artifacts/mockup-sandbox/src/components/mockups/brainhook-signal/Article.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "f1ba3f057486b6da4f57d68871c9afeef12f81f2",
+      "bytes": 6713,
+      "path": "artifacts/mockup-sandbox/src/components/mockups/brainhook-signal/Home.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "2d6ac4cbd35f4c4d9e601fe07bef5502579b8276",
+      "bytes": 190,
+      "path": "artifacts/mockup-sandbox/src/components/mockups/brainhook-signal/_group.css",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "6a705a33775b6805d562742bff9ba8c632d09f8f",
+      "bytes": 4133,
+      "path": "artifacts/mockup-sandbox/src/components/mockups/brainhook-verso/Article.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "5614d2e95b729d096bd8ad47d032c7b50a269101",
+      "bytes": 4926,
+      "path": "artifacts/mockup-sandbox/src/components/mockups/brainhook-verso/Home.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "1a00cf770cd14b5c400ea8e222dabb461fd00ebf",
+      "bytes": 13335,
+      "path": "artifacts/mockup-sandbox/src/components/mockups/brainhook-verso/_group.css",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "5e8f64e5389cf795b8429e4cee8abc8213bdc28b",
+      "bytes": 11968,
+      "path": "artifacts/mockup-sandbox/src/components/mockups/glossary-card-display/EditorialDossier.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "a6afcd47b762c6f4329247801de062c6cb508149",
+      "bytes": 12730,
+      "path": "artifacts/mockup-sandbox/src/components/mockups/glossary-card-display/FieldIndex.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "03bc261ae167d320a43869bd5430617fc93a74e3",
+      "bytes": 7479,
+      "path": "artifacts/mockup-sandbox/src/components/mockups/glossary-card-display/FloatingPlate.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "1cecb0e8fc99ceab0642741aef12cc26fdddc38f",
+      "bytes": 6126,
+      "path": "artifacts/mockup-sandbox/src/components/mockups/glossary-card-display/IntegratedMasthead.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "c8cedd3ee3224ba2e19a70304ba746755a028ad6",
+      "bytes": 11359,
+      "path": "artifacts/mockup-sandbox/src/components/mockups/glossary-card-display/NoirPlate.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "3e52efca4a1713cfe40f52db21424f0e3c28eaae",
+      "bytes": 6669,
+      "path": "artifacts/mockup-sandbox/src/components/mockups/glossary-card-display/PosterFrame.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "8e6e9be60bc6df0bd6225d8a23343c884c4402a7",
+      "bytes": 379,
+      "path": "artifacts/mockup-sandbox/src/components/mockups/glossary-card-display/_group.css",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "e1797c93458f3751a2e0f1189ff50d77f20ae3ed",
+      "bytes": 2001,
+      "path": "artifacts/mockup-sandbox/src/components/ui/accordion.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "fa2b4429f4303210462ad03f9f49280ac5ae07ce",
+      "bytes": 4419,
+      "path": "artifacts/mockup-sandbox/src/components/ui/alert-dialog.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "5afd41d142c95c74069ebb5460117e74ead3b9df",
+      "bytes": 1598,
+      "path": "artifacts/mockup-sandbox/src/components/ui/alert.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "c4abbf37f217c715a0eaade7f45ac78600df419f",
+      "bytes": 140,
+      "path": "artifacts/mockup-sandbox/src/components/ui/aspect-ratio.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "51e507ba9d08bcdbb1fb630498f1cbdf2bf50093",
+      "bytes": 1419,
+      "path": "artifacts/mockup-sandbox/src/components/ui/avatar.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "cfd176a05b00824f7a6a029b10bb935ef38d10bb",
+      "bytes": 1163,
+      "path": "artifacts/mockup-sandbox/src/components/ui/badge.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "60e6c96f72f0350d08b47e4730cab8f3975dc853",
+      "bytes": 2712,
+      "path": "artifacts/mockup-sandbox/src/components/ui/breadcrumb.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "d6e78014fc491465c059253d541b10afdaa3227a",
+      "bytes": 2209,
+      "path": "artifacts/mockup-sandbox/src/components/ui/button-group.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "a471859fcdc6b46cc07cf9445f8b7a1765d563df",
+      "bytes": 1925,
+      "path": "artifacts/mockup-sandbox/src/components/ui/button.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "a623682dab53fbe9e1777b83b2e93763837653d8",
+      "bytes": 7569,
+      "path": "artifacts/mockup-sandbox/src/components/ui/calendar.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "cabfbfc59d955db9efc2049783cad4a71db55442",
+      "bytes": 1828,
+      "path": "artifacts/mockup-sandbox/src/components/ui/card.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "9c2b9bf3705d8421bef00704c0c52e83d371ca11",
+      "bytes": 6210,
+      "path": "artifacts/mockup-sandbox/src/components/ui/carousel.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "558b810e741ae2fa05d5249c46d3253bc9e32e4f",
+      "bytes": 10674,
+      "path": "artifacts/mockup-sandbox/src/components/ui/chart.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "90b71e4131b047201b35476638ea324b12f76113",
+      "bytes": 1031,
+      "path": "artifacts/mockup-sandbox/src/components/ui/checkbox.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "9fa48946afd1eb56bd932377fd888e3986304676",
+      "bytes": 329,
+      "path": "artifacts/mockup-sandbox/src/components/ui/collapsible.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "2cecd9104b27be82d238aa2f1cbb351e05446af7",
+      "bytes": 4887,
+      "path": "artifacts/mockup-sandbox/src/components/ui/command.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "0cd4b2c03d306c38836d43c7f3dc2cb2547c64a7",
+      "bytes": 7406,
+      "path": "artifacts/mockup-sandbox/src/components/ui/context-menu.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "9dbeaa096eef7b54a3272898770c4c32e00630af",
+      "bytes": 3835,
+      "path": "artifacts/mockup-sandbox/src/components/ui/dialog.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "c17b0ccaa95dccfb96c75618e078efd263e54fd0",
+      "bytes": 3007,
+      "path": "artifacts/mockup-sandbox/src/components/ui/drawer.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "5a20503b547ea0e4e467d63fe1ae78e4171afb52",
+      "bytes": 7606,
+      "path": "artifacts/mockup-sandbox/src/components/ui/dropdown-menu.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "71667632e77bf4265ab740e906f785fee806eec2",
+      "bytes": 2396,
+      "path": "artifacts/mockup-sandbox/src/components/ui/empty.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "0a276fcb1d7623b0d57fd649fddfb043b535ea62",
+      "bytes": 6044,
+      "path": "artifacts/mockup-sandbox/src/components/ui/field.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "1fe22e6f0be2750d1b5ec3efc7346fef4612b2e3",
+      "bytes": 4175,
+      "path": "artifacts/mockup-sandbox/src/components/ui/form.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "95643d9c7099c1179f8a876fbf8840dc077e1b38",
+      "bytes": 1237,
+      "path": "artifacts/mockup-sandbox/src/components/ui/hover-card.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "e66a505a0fa0c4767cc00beefe969a8a41a5b597",
+      "bytes": 4883,
+      "path": "artifacts/mockup-sandbox/src/components/ui/input-group.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "f7891c9cc8ba7868f4b5bdb67dc883b1880ade9f",
+      "bytes": 2143,
+      "path": "artifacts/mockup-sandbox/src/components/ui/input-otp.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "69b64fb2455114c3eeda2d18741af0027b3c5e89",
+      "bytes": 768,
+      "path": "artifacts/mockup-sandbox/src/components/ui/input.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "93d2b8122ddd7119c3580afa71e8c53708982983",
+      "bytes": 4494,
+      "path": "artifacts/mockup-sandbox/src/components/ui/item.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "44d8ba842d739468527fd004503f4546cc152576",
+      "bytes": 862,
+      "path": "artifacts/mockup-sandbox/src/components/ui/kbd.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "534182176bf87f9308355514adc884d2b69750a5",
+      "bytes": 724,
+      "path": "artifacts/mockup-sandbox/src/components/ui/label.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "6919168b87c646d3b27fd66d68cdd7e391757583",
+      "bytes": 8608,
+      "path": "artifacts/mockup-sandbox/src/components/ui/menubar.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "056354bf824bf1f06e9dbceeacad512ce21b03d1",
+      "bytes": 5124,
+      "path": "artifacts/mockup-sandbox/src/components/ui/navigation-menu.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "d3311054cd07a90d130f7996c79b3fc0feeede39",
+      "bytes": 2751,
+      "path": "artifacts/mockup-sandbox/src/components/ui/pagination.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "fdcb511dc768b79951de97416e9bd0ff1ae9ea05",
+      "bytes": 1342,
+      "path": "artifacts/mockup-sandbox/src/components/ui/popover.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "4fc3b473e6f51afa972f840fb0f4476f8663c256",
+      "bytes": 792,
+      "path": "artifacts/mockup-sandbox/src/components/ui/progress.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "9d3a26e6ec5d8647f22d754be5affd9e8eba1ec5",
+      "bytes": 1410,
+      "path": "artifacts/mockup-sandbox/src/components/ui/radio-group.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "f4bc5586b67f45d3cc35f228e8bac2e4bc2cea16",
+      "bytes": 1723,
+      "path": "artifacts/mockup-sandbox/src/components/ui/resizable.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "cf253cf17056ce04827219643e484ea99c77cf6b",
+      "bytes": 1642,
+      "path": "artifacts/mockup-sandbox/src/components/ui/scroll-area.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "6e637f7dc67daa0b2ce4f440e4bbdb3f14ce3c03",
+      "bytes": 5745,
+      "path": "artifacts/mockup-sandbox/src/components/ui/select.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "6d7f12265ba0338704f013930ce4d52c56527dd1",
+      "bytes": 756,
+      "path": "artifacts/mockup-sandbox/src/components/ui/separator.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "272cb721eb48b7a5833ccd51f940a8830d85b64e",
+      "bytes": 4280,
+      "path": "artifacts/mockup-sandbox/src/components/ui/sheet.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "3e5c20556fd9212b53e8305579b57954a1bd06ad",
+      "bytes": 21056,
+      "path": "artifacts/mockup-sandbox/src/components/ui/sidebar.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "d7e45f7bd315f86eabf32f2c9425223417920e60",
+      "bytes": 266,
+      "path": "artifacts/mockup-sandbox/src/components/ui/skeleton.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "9398b331513e9668b8d76f2905d570c34d080fd2",
+      "bytes": 1037,
+      "path": "artifacts/mockup-sandbox/src/components/ui/slider.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "452f4d9f0dde88611113632c1d759d60155fe4d3",
+      "bytes": 894,
+      "path": "artifacts/mockup-sandbox/src/components/ui/sonner.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "a70e713c5b4ecb2af186efe3fadea51805f26ba5",
+      "bytes": 331,
+      "path": "artifacts/mockup-sandbox/src/components/ui/spinner.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "455c23b6cd5adcb0278792568cdddf084a4a37c9",
+      "bytes": 1148,
+      "path": "artifacts/mockup-sandbox/src/components/ui/switch.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "c0df655c0bf26af1148d038e1d013e884663b240",
+      "bytes": 2859,
+      "path": "artifacts/mockup-sandbox/src/components/ui/table.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "85d83beab3224580318b1dd85f93e9294fae32c0",
+      "bytes": 1877,
+      "path": "artifacts/mockup-sandbox/src/components/ui/tabs.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "e56b0affd7e03bd8359092a81d81c606ab09972d",
+      "bytes": 649,
+      "path": "artifacts/mockup-sandbox/src/components/ui/textarea.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "a822477534192c4df5073e4015f7461e739d3344",
+      "bytes": 4845,
+      "path": "artifacts/mockup-sandbox/src/components/ui/toast.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "6c67edff67a48c6ac1c46f25a6d468dd461e66cb",
+      "bytes": 772,
+      "path": "artifacts/mockup-sandbox/src/components/ui/toaster.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "1c876bbeecabe59b684719afe58e684f34cdecbf",
+      "bytes": 1753,
+      "path": "artifacts/mockup-sandbox/src/components/ui/toggle-group.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "ab0a30fb3daa5b3fe5a4158ee1372405aac50aba",
+      "bytes": 1486,
+      "path": "artifacts/mockup-sandbox/src/components/ui/toggle.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "28e19183f4d9dfbb73c82928190556b69575eb2b",
+      "bytes": 1267,
+      "path": "artifacts/mockup-sandbox/src/components/ui/tooltip.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "2b0fe1dfef3b17850bbac040665f514a8ffd0f15",
+      "bytes": 565,
+      "path": "artifacts/mockup-sandbox/src/hooks/use-mobile.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "4da06d4715bc3dfba3873ec4229040533a02d272",
+      "bytes": 3767,
+      "path": "artifacts/mockup-sandbox/src/hooks/use-toast.ts",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "53b9b028ddbeeaf35a42470b4bff8387e1d08a6b",
+      "bytes": 4967,
+      "path": "artifacts/mockup-sandbox/src/index.css",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "bd0c391ddd1088e9067844c48835bf4abcd61783",
+      "bytes": 166,
+      "path": "artifacts/mockup-sandbox/src/lib/utils.ts",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "696e0d2b94fbc09e5bf2378678cfe86625c2f15c",
+      "bytes": 157,
+      "path": "artifacts/mockup-sandbox/src/main.tsx",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "bfcc6513c12ae483a36ed1e43d12611ba0eb246a",
+      "bytes": 449,
+      "path": "artifacts/mockup-sandbox/tsconfig.json",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "3b4f2ca0d9f1531a73133ce58513bcc8a9f0f420",
+      "bytes": 1615,
+      "path": "artifacts/mockup-sandbox/vite.config.ts",
+      "reason": "Dormant BrainHook magazine design/mockup application."
+    },
+    {
+      "blob": "29da33cb0a40f66d4bbe66708fdee2fd7e1c15c6",
+      "bytes": 1392,
+      "path": "artifacts/site/build.mjs",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "5b9b2a73cecfbbaa0c5a55db5c7e46c9d52bf824",
+      "bytes": 26271,
+      "path": "artifacts/site/public/apple-touch-icon.png",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "932dbcf33e150401720758e0ed9b4eedf1baec4c",
+      "bytes": 32537,
+      "path": "artifacts/site/public/author-avatars/dr-aris-thorne.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "413c2a811d2c14c77f027408c760e141f32a4f00",
+      "bytes": 34751,
+      "path": "artifacts/site/public/author-avatars/dr-marcus-okafor.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "6eabad41b8e75b276553f63674a3ac51caf14a57",
+      "bytes": 33648,
+      "path": "artifacts/site/public/author-avatars/elena-rivera.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "862bc00786667557e2e068abdc93b828b4276d12",
+      "bytes": 22943,
+      "path": "artifacts/site/public/author-avatars/marcus-vance.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "92f3109d4dc50d6a4de37a602e899c50e5b08a6a",
+      "bytes": 27152,
+      "path": "artifacts/site/public/author-avatars/priya-shah.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "0665f85a97b95c13124f08c6a356250c5df73d8e",
+      "bytes": 36864,
+      "path": "artifacts/site/public/author-avatars/sarah-jenkins.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "6309d6f9e7d2871ef5cd7a1418d6746a3ca24136",
+      "bytes": 1936353,
+      "path": "artifacts/site/public/brand-fallback.png",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "5eef9026cde073f5a8b7d6e3643bbb437c407a15",
+      "bytes": 96790,
+      "path": "artifacts/site/public/brand-fallback.webp",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "056cad0715a1829e4e55184f6fefc668625b45cd",
+      "bytes": 64798,
+      "path": "artifacts/site/public/category-heroes/astronomy-universe.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "183dd668378ff0082b32e12b346e4aa28cdceeb2",
+      "bytes": 192728,
+      "path": "artifacts/site/public/category-heroes/brain-health-longevity.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "f5d27827d401f6269859d7ddd437b7fabfade54f",
+      "bytes": 200795,
+      "path": "artifacts/site/public/category-heroes/earth-climate.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "662b01daccb9ef1e4adb00e78af5678afdfcde75",
+      "bytes": 197102,
+      "path": "artifacts/site/public/category-heroes/hidden-science-everyday.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "25a299d151c1d3e456fc38f467abed321f48ee03",
+      "bytes": 244621,
+      "path": "artifacts/site/public/category-heroes/money-psychology-habits.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "ae850d610adea016747c9134b0c801e0925724e9",
+      "bytes": 98788,
+      "path": "artifacts/site/public/category-heroes/psychology-behavior.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "3449ab9e56300c632118e9a641b3151d7bea0ae3",
+      "bytes": 73293,
+      "path": "artifacts/site/public/category-heroes/relationships-communication.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "99e49bfdd0867bdd797d6429230a3385e6d4fb93",
+      "bytes": 246173,
+      "path": "artifacts/site/public/category-heroes/technology-future.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "5a8e4ca4a43796f483ee5baac973ca85571014aa",
+      "bytes": 118765,
+      "path": "artifacts/site/public/category-heroes/weird-creepy.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "c4d85761e223f2776e8df12a97850dfae92ee6ec",
+      "bytes": 1255,
+      "path": "artifacts/site/public/favicon-16.png",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "f5953d1b2a1bc221ebb8b3c846e740785c4f1347",
+      "bytes": 2516,
+      "path": "artifacts/site/public/favicon-32.png",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "6ab080011b6aca7b051d61593897e01380e047ad",
+      "bytes": 15086,
+      "path": "artifacts/site/public/favicon.ico",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "bec39d3904eda0adfb5d4817c7a391f34a10ec19",
+      "bytes": 37165,
+      "path": "artifacts/site/public/icon-192.png",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "ca6551706a71750a5556513b0ca7ad27b4f5aa16",
+      "bytes": 179379,
+      "path": "artifacts/site/public/icon-512.png",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "e406a83045bc096f88821616aca28af1f11ae52f",
+      "bytes": 398055,
+      "path": "artifacts/site/public/og-brand-card.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "7056f314028fdcee92b8a8c53ba4b5afbd52dc7b",
+      "bytes": 37888,
+      "path": "artifacts/site/public/opengraph-snap.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "a27d567e69a103e779d528459921a9f95a454c17",
+      "bytes": 85478,
+      "path": "artifacts/site/public/opengraph.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "6913c62159ce651846aad929dd8f0086aecf244d",
+      "bytes": 16692,
+      "path": "artifacts/site/scripts/verify-bot-readable.sh",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "2e82609300a9b7cbd43360aba7b8db9759bd8d40",
+      "bytes": 114330,
+      "path": "artifacts/site/server/index.ts",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "4e3852693cc007c1d6d2f5223e4834c097618082",
+      "bytes": 2189976,
+      "path": "artifacts/site/src/assets/brainhook-brand-bg.png",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "5e76480dcf8b4b0ca1584a57f68d6c88f12bed58",
+      "bytes": 62388,
+      "path": "artifacts/site/src/assets/brainhook-mark.png",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "0bc4ca9db40108248aa145bc7f0e12b716ccbbb3",
+      "bytes": 126977,
+      "path": "artifacts/site/src/assets/card-bg-bacteria.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "889b83820c6e1c9a2d319949ee5049a17f65cff0",
+      "bytes": 143833,
+      "path": "artifacts/site/src/assets/card-bg-blackhole.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "ffc48fc8083d54c5d6f11773e9625d912e6d1b66",
+      "bytes": 160990,
+      "path": "artifacts/site/src/assets/card-bg-brain.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "daf1a5abb6bc19d026f7ecce67eab9bceee1be99",
+      "bytes": 175044,
+      "path": "artifacts/site/src/assets/card-bg-butterfly-nebula.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "8af7ce0f05909fc816946ae80fe9ebcf33c529fb",
+      "bytes": 169579,
+      "path": "artifacts/site/src/assets/card-bg-chagas.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "7aa9dc9dc88defb863309f1177ad8bb43a4984c3",
+      "bytes": 233998,
+      "path": "artifacts/site/src/assets/card-bg-cliffside.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "11931c2722735534bf5029ab2c3107ec0f1aaf8b",
+      "bytes": 1570424,
+      "path": "artifacts/site/src/assets/card-bg-coral.png",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "81f31aff015220f266b7974d88f5e2cda1ba4aa1",
+      "bytes": 111071,
+      "path": "artifacts/site/src/assets/card-bg-deadstar.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "44d4cac8fb5599c97c360e7123d9101c846befed",
+      "bytes": 235955,
+      "path": "artifacts/site/src/assets/card-bg-dna-neuron.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "893ed168607a271da791b8ef144228499922457e",
+      "bytes": 1220429,
+      "path": "artifacts/site/src/assets/card-bg-eclipse.png",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "f5d8af437f67ae186e2e301058c08a7f063b65ca",
+      "bytes": 93789,
+      "path": "artifacts/site/src/assets/card-bg-fireball.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "7b2327308f3b83d6f2605847d272446c1e295f13",
+      "bytes": 159008,
+      "path": "artifacts/site/src/assets/card-bg-forensic.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "38e8c787d46cca81c6a1b812d1392d9be923f626",
+      "bytes": 136743,
+      "path": "artifacts/site/src/assets/card-bg-fox-mouse.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "b3d65872dfd3016c230e9514c81233e425b17c45",
+      "bytes": 199299,
+      "path": "artifacts/site/src/assets/card-bg-kras-protein.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "698713bcb3f7a46deb3ea599d8ea841d0821eb35",
+      "bytes": 200844,
+      "path": "artifacts/site/src/assets/card-bg-magnetar.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "7a192d66ece52dd1e38550d63367ef23af7d08d3",
+      "bytes": 164551,
+      "path": "artifacts/site/src/assets/card-bg-parasite.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "0e35704d2ca3183e02b240c2ec595fd052602fb8",
+      "bytes": 113887,
+      "path": "artifacts/site/src/assets/card-bg-planet-nine.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "4aa8fd574e917e429e72a3694333fcffd204af40",
+      "bytes": 108895,
+      "path": "artifacts/site/src/assets/card-bg-quasar.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "b34c771d7f472365af6a77aa69a416facdd0ebb7",
+      "bytes": 1805122,
+      "path": "artifacts/site/src/assets/card-bg-rainforest.png",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "9581ba4415284c431fc15f6b928c4009ae0d1fd5",
+      "bytes": 284133,
+      "path": "artifacts/site/src/assets/card-bg-reef.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "755d2c3fac0976b7fa722ace6a220e04fbd57303",
+      "bytes": 215672,
+      "path": "artifacts/site/src/assets/card-bg-roman-telescope.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "9811d5c6e734ac41c56a82634b5732ee52222f32",
+      "bytes": 172230,
+      "path": "artifacts/site/src/assets/card-bg-solar-storm.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "0cd76c8b5f606c19c7ed47ff65b07dec7ad40ebc",
+      "bytes": 257713,
+      "path": "artifacts/site/src/assets/card-bg-stellar-snake.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "4d6a42c96b8d67a9a16eb596a3d58abd8b185422",
+      "bytes": 123616,
+      "path": "artifacts/site/src/assets/card-bg-streamer.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "32837f350dee5e5c37eebfc8c41f3cb3d3738613",
+      "bytes": 218726,
+      "path": "artifacts/site/src/assets/card-bg-studio.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "816557c322c9bb77184d320388364f0c8342acc1",
+      "bytes": 284634,
+      "path": "artifacts/site/src/assets/card-bg-telescope.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "c4f906bb60feced129c01eb4fff91c217e2c306c",
+      "bytes": 140286,
+      "path": "artifacts/site/src/assets/card-bg-webb-stars.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "5b4ad3edd5996211965ee14412c757d10ecd4343",
+      "bytes": 141616,
+      "path": "artifacts/site/src/assets/nebula-bg.jpg",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "26f0c6dbb82d5b66e3e86812ed3b671f097f00f7",
+      "bytes": 53355,
+      "path": "artifacts/site/src/assets/swipe-thumb.png",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "d8a2c3d16838a63c2e092a475010313fafba54f7",
+      "bytes": 1801053,
+      "path": "artifacts/site/src/assets/vitruvian-bg.png",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "415eac069e212e183ec03623f877b570cb1153db",
+      "bytes": 725,
+      "path": "artifacts/site/src/components/EditorialDisclaimer.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "943f92f1ee9735bbfc813fb7396f96a9c5051d30",
+      "bytes": 3904,
+      "path": "artifacts/site/src/components/GlossaryCardCanvas.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "eba4f5bc8b7a160fa710acaecd5cf37f524cdc40",
+      "bytes": 27794,
+      "path": "artifacts/site/src/components/GlossaryShareCard.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "d822e9cc3239e39c206294a30d166ea372218397",
+      "bytes": 1665,
+      "path": "artifacts/site/src/components/admin/CategoryPicker.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "2a8d8a02d821da2bb466c6c6e45e41d7258adae6",
+      "bytes": 2921,
+      "path": "artifacts/site/src/components/admin/SecondaryBeatsEditor.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "f6560dc3418bd2af9d8a0615efada97960e23a38",
+      "bytes": 3244,
+      "path": "artifacts/site/src/components/admin/SubBeatsPicker.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "87c850fa023599dbe52766064c8fe92bf5191ab1",
+      "bytes": 1926,
+      "path": "artifacts/site/src/components/ads/DisplayAd.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "1d4216a84202d1b04758b7c86b2b393c657082a7",
+      "bytes": 1585,
+      "path": "artifacts/site/src/components/ads/InlineAd.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "34b500744413d14404207bbd35c171c5817c645c",
+      "bytes": 1055,
+      "path": "artifacts/site/src/components/ads/adsense-config.ts",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "dc5887353b7ec50951d6c744a0e908d1c5445d1b",
+      "bytes": 537,
+      "path": "artifacts/site/src/components/ads/adsense.d.ts",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "86e0d6abcd1002867367ec846053135f381d62bb",
+      "bytes": 3192,
+      "path": "artifacts/site/src/components/ads/loadAdSense.ts",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "957ddb5e541bb339a4a8e3f559097bf6e09271a0",
+      "bytes": 2470,
+      "path": "artifacts/site/src/components/ads/useAdSense.ts",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "6a1954909237700dd91b13e5987cea0633942b96",
+      "bytes": 883,
+      "path": "artifacts/site/src/components/article/AdminEditLink.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "28543f3f02561accf0fccaa172b8302bf559e2dd",
+      "bytes": 8885,
+      "path": "artifacts/site/src/components/article/ArticleCard.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "b82cf89644ffca8775dbde1c9dc8670548d50e30",
+      "bytes": 11747,
+      "path": "artifacts/site/src/components/article/ConceptCard.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "a082b50bc0a4a90db19357029250579b531cac61",
+      "bytes": 7066,
+      "path": "artifacts/site/src/components/article/EditorialTrustBox.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "7a79ab1b2788b669fe9c7823b08966b446eb5871",
+      "bytes": 4616,
+      "path": "artifacts/site/src/components/article/NewsletterCTA.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "957068b23691bdbece29a966b14d10349705e31f",
+      "bytes": 2374,
+      "path": "artifacts/site/src/components/article/ResponsiveImage.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "db18e7162c938c68409681c567d18d6fd9f701f6",
+      "bytes": 17207,
+      "path": "artifacts/site/src/components/article/ShareButtons.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "3135ef6818f3a8d49a0dd6c93951cbbc784d37eb",
+      "bytes": 7367,
+      "path": "artifacts/site/src/components/article/SubscribePrompt.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "27d51b3a58ea44d307d4e0bf495f569102e269c8",
+      "bytes": 17582,
+      "path": "artifacts/site/src/components/article/SwipeNextPrompt.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "c11ed60e8531f0390477861c4bded6c4d2b13d0b",
+      "bytes": 10054,
+      "path": "artifacts/site/src/components/glossary/SwipeNextConceptPrompt.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "641b424c8c2c57c4009eac1e855ceff2b059d4b9",
+      "bytes": 11265,
+      "path": "artifacts/site/src/components/layout/BeatSideNav.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "4a3429d90e651709785b8d5f9b8d053045d37d4a",
+      "bytes": 6988,
+      "path": "artifacts/site/src/components/layout/Footer.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "0c005defcde0dce6de22e65127229e63da573a4a",
+      "bytes": 6055,
+      "path": "artifacts/site/src/components/layout/Header.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "1449c720485617de79fe30494d3d8857f5e7b0a9",
+      "bytes": 10680,
+      "path": "artifacts/site/src/components/layout/HeaderSearch.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "b72e4c557cc8108dc74875781213f9fec5d24f00",
+      "bytes": 2143,
+      "path": "artifacts/site/src/components/layout/PolicyPage.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "de88928f10c0753aeb1c51641cd9d3f820c60dc5",
+      "bytes": 7386,
+      "path": "artifacts/site/src/lib/analytics.ts",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "e83d599a95fd3a7a5ab2f1b0c1495b37a667e311",
+      "bytes": 2384,
+      "path": "artifacts/site/src/lib/consent.ts",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "dc4dad645b2a4656f7abc96b5c33e0dec8024311",
+      "bytes": 2259,
+      "path": "artifacts/site/src/lib/downloadImage.ts",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "ae249932907de1e11a59da33309cae3a59af2cde",
+      "bytes": 6277,
+      "path": "artifacts/site/src/lib/glossaryCaptureContext.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "0b8abb9022d8586650a2694007266e9113ba4b4e",
+      "bytes": 3196,
+      "path": "artifacts/site/src/lib/heroImage.ts",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "8ff7b700e9ef22cbe6dffbd9e13422ed4cdf4557",
+      "bytes": 9780,
+      "path": "artifacts/site/src/lib/journey.ts",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "2a0153c1f44ff2d5b90219832af1c2c4a63d99e9",
+      "bytes": 25024,
+      "path": "artifacts/site/src/lib/policyContent.ts",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "2d2a59b97e31da19da35313055cba25c8919ba62",
+      "bytes": 7141,
+      "path": "artifacts/site/src/lib/seoText.ts",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "e0778d83d23a23d9f8d3727a6143891c58ff6265",
+      "bytes": 5632,
+      "path": "artifacts/site/src/lib/subscription.test.ts",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "3fd75b58371888deec4f5bf3a02e175d1285a6c6",
+      "bytes": 7283,
+      "path": "artifacts/site/src/lib/subscription.ts",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "952b74599a83531d1fca8500d5c2955e56d84ede",
+      "bytes": 2377,
+      "path": "artifacts/site/src/lib/swipeHint.ts",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "e0b18a3f70bbea42195ead6e2dfef9b0ec63050a",
+      "bytes": 830,
+      "path": "artifacts/site/src/lib/useBeats.ts",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "ad245cf50b5719d2a72e7419132f95cf380d9dfc",
+      "bytes": 312,
+      "path": "artifacts/site/src/lib/useGlossaryCapture.ts",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "07a341f6463ec42bc84c1927ece8e8ea511583d4",
+      "bytes": 2156,
+      "path": "artifacts/site/src/lib/visitedArticles.ts",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "aacba19055c6ab4ed414896b1eff05930fdd221a",
+      "bytes": 1325,
+      "path": "artifacts/site/src/lib/visitedConcepts.ts",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "9722b0d02da82699e147fbb2e729052603f4609b",
+      "bytes": 4644,
+      "path": "artifacts/site/src/pages/CardRender.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "8a53858d78ad00db84642cd16e7964adb4f8ed89",
+      "bytes": 6711,
+      "path": "artifacts/site/src/pages/about.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "32c3c66f9bc7cbcb73214b554781e578c2c72473",
+      "bytes": 9064,
+      "path": "artifacts/site/src/pages/admin/AdminLayout.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "efc18d36d728affb055175b0e16b0612a313a996",
+      "bytes": 16470,
+      "path": "artifacts/site/src/pages/admin/AiControl.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "029be4253a65785ca1a567bec04877569a9e1344",
+      "bytes": 24520,
+      "path": "artifacts/site/src/pages/admin/AiCosts.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "c375719124c05e5b04e01a64363f0474e4dc1164",
+      "bytes": 98145,
+      "path": "artifacts/site/src/pages/admin/ArticleEditor.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "64ccdb2f4656edde6170346aba64b6a121fc4aad",
+      "bytes": 72292,
+      "path": "artifacts/site/src/pages/admin/Articles.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "2d2dfbfa343f227695fd49106acce0d87dfd8071",
+      "bytes": 39011,
+      "path": "artifacts/site/src/pages/admin/AuthorDetail.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "d44978b6ad2c278d2951af281f4d365cbcfa3604",
+      "bytes": 25003,
+      "path": "artifacts/site/src/pages/admin/AuthorNew.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "30f672429da0089cc36aa3201cf174d3dd981f9c",
+      "bytes": 13175,
+      "path": "artifacts/site/src/pages/admin/Authors.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "4b18fb752c01163448bad26273d52ee44a1aa5d1",
+      "bytes": 12155,
+      "path": "artifacts/site/src/pages/admin/BackCatalog.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "2410f5ae57b883331650f0b5356f9ff283982bca",
+      "bytes": 15837,
+      "path": "artifacts/site/src/pages/admin/Beats.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "0d6c416d65a3ce6381b1af41aa79994814bba279",
+      "bytes": 20353,
+      "path": "artifacts/site/src/pages/admin/ConceptRadarHealth.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "a29634ae2844f87d9f51a895d51efa8c080b75ff",
+      "bytes": 146002,
+      "path": "artifacts/site/src/pages/admin/Concepts.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "f8d3487b5e73c8aad6a76e9c3c5da237ad5d6ef4",
+      "bytes": 19374,
+      "path": "artifacts/site/src/pages/admin/CoverageMap.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "3ef8227c2f99eb8c35f8055ac6a681d1af6aab68",
+      "bytes": 14792,
+      "path": "artifacts/site/src/pages/admin/CrossBeatRadar.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "83f06c2389f29f91106b015e3bc3e2590d5b3c58",
+      "bytes": 11149,
+      "path": "artifacts/site/src/pages/admin/Dashboard.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "82846c4da062db266453b676dc26f8e8f5890e6a",
+      "bytes": 9495,
+      "path": "artifacts/site/src/pages/admin/Duplicates.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "3569847019b6fbead918f217f3e4f1296f9fa63c",
+      "bytes": 27476,
+      "path": "artifacts/site/src/pages/admin/EditorCockpit.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "56c8fc37bf69c4b027d444a0081c21548b350032",
+      "bytes": 21299,
+      "path": "artifacts/site/src/pages/admin/Feeds.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "5a42e3750200b68d112bded2b5281591a6cdaa94",
+      "bytes": 25254,
+      "path": "artifacts/site/src/pages/admin/GlossaryCards.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "f5d7dadfa4e07e8d3adf25d76317f25a801b71b6",
+      "bytes": 30570,
+      "path": "artifacts/site/src/pages/admin/Ideas.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "15fddf800c466a0c59cbb54c52bb4c748aca8b95",
+      "bytes": 15403,
+      "path": "artifacts/site/src/pages/admin/InternalLinks.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "6b888581446b0097b4eda407505f42350e7f22e8",
+      "bytes": 19110,
+      "path": "artifacts/site/src/pages/admin/MediaLibrary.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "53b974425052cd81a004bdfb6a60373e75817d68",
+      "bytes": 68510,
+      "path": "artifacts/site/src/pages/admin/MemeEditor.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "5188c12f1881909c3a955a568e0f4cfa23d73198",
+      "bytes": 22710,
+      "path": "artifacts/site/src/pages/admin/MemeTemplates.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "7893c6ec37b4b933a647fd9abc5f6e0552063ed8",
+      "bytes": 9182,
+      "path": "artifacts/site/src/pages/admin/Memes.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "2d62bd3a131058efa5616feb9af8588e3f1c58f8",
+      "bytes": 3790,
+      "path": "artifacts/site/src/pages/admin/Notifications.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "a9d8a4e993db682479744f64214d0d4b0c34b5a7",
+      "bytes": 46396,
+      "path": "artifacts/site/src/pages/admin/Settings.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "e2caf754a610ff367c1636c1ac52059e61f85f01",
+      "bytes": 10132,
+      "path": "artifacts/site/src/pages/admin/ShadowMetrics.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "618638b992f1e0b3c78d9432c89b9f8af10eae05",
+      "bytes": 28315,
+      "path": "artifacts/site/src/pages/admin/ShareCards.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "490edc8b08123175dcce699a704cc6eaf975d5b0",
+      "bytes": 29234,
+      "path": "artifacts/site/src/pages/admin/Shares.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "c5d6c8d012e5200e0afe9a4dfb3420972789fac8",
+      "bytes": 42290,
+      "path": "artifacts/site/src/pages/admin/SocialQueue.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "168bb2293aa324ad6e48ee1603535dd2ea274dde",
+      "bytes": 19504,
+      "path": "artifacts/site/src/pages/admin/SourceGaps.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "13669cedf2f2e1ded7c24f4578fa40b9ea9b6814",
+      "bytes": 11841,
+      "path": "artifacts/site/src/pages/admin/SourceHealth.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "3ccd19e09b3d03b5123cf30b4f293e0bdaf0a3ff",
+      "bytes": 32809,
+      "path": "artifacts/site/src/pages/admin/SourceLinks.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "fbe6b5a6433e116787ed5230a38b0bfaa7faecff",
+      "bytes": 53384,
+      "path": "artifacts/site/src/pages/admin/SourceVault.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "f8dc12ea9b1f62cfd69a820750dd99db50fcb2ec",
+      "bytes": 30149,
+      "path": "artifacts/site/src/pages/admin/SourceVaultDetail.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "313c86c0bd89a728ce7370ef2099701e89d02bd4",
+      "bytes": 17806,
+      "path": "artifacts/site/src/pages/admin/Subscribers.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "5371ec5708b279ec7cfa0b2d226854a9e8a54bcb",
+      "bytes": 29293,
+      "path": "artifacts/site/src/pages/admin/TermOfDay.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "da71c75c6672ea54e0225561f9ff59b84bf4c8ba",
+      "bytes": 76775,
+      "path": "artifacts/site/src/pages/admin/TrendRadar.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "32d99ac99bde4b924410237b79a46afb799a00c6",
+      "bytes": 21666,
+      "path": "artifacts/site/src/pages/admin/UtmBuilder.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "246f159c5adc623bfb9fbd31c91bba6dc690c11b",
+      "bytes": 48163,
+      "path": "artifacts/site/src/pages/article.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "1661eb813da72fe369b875e24d973f440a038f2c",
+      "bytes": 11733,
+      "path": "artifacts/site/src/pages/author.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "83663a64253e83c1f8181bbcb71239e5dbb3827f",
+      "bytes": 10465,
+      "path": "artifacts/site/src/pages/category.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "15742f5e24d06b0991b8ec4980bc2c73c6dcb632",
+      "bytes": 1161,
+      "path": "artifacts/site/src/pages/contact.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "cbb27062dbe57773875ebf428cb7d87704460611",
+      "bytes": 1237,
+      "path": "artifacts/site/src/pages/corrections.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "d12ed5582b203fa995b297ede696943a54074c50",
+      "bytes": 1216,
+      "path": "artifacts/site/src/pages/editorial.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "552b6c64fdb7876cf058f79e245d435fd295bcf2",
+      "bytes": 48516,
+      "path": "artifacts/site/src/pages/glossary-detail.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "79e06973fac4bf65ddc38959b60680d9f0a17903",
+      "bytes": 11921,
+      "path": "artifacts/site/src/pages/glossary.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "97817420dae4f4ef8a5bfe5e849cc9f8c2c30303",
+      "bytes": 953,
+      "path": "artifacts/site/src/pages/not-found.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "73d5971dc2e56d7011cecedc86f75f7fe6ae3c00",
+      "bytes": 2183,
+      "path": "artifacts/site/src/pages/privacy.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "2b04fee9d343f4afb8ebd5cb5848743db498aa2f",
+      "bytes": 4329,
+      "path": "artifacts/site/src/pages/search.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "d91e3d2b6a8a7e64e7871d5d05d007cf1538b4f8",
+      "bytes": 1180,
+      "path": "artifacts/site/src/pages/terms.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "dc68aceb6c0f53e34b8107b5283445dd2f0e52d4",
+      "bytes": 3692,
+      "path": "artifacts/site/src/pages/unsubscribe.tsx",
+      "reason": "Dormant magazine frontend/SSR/asset outside all retained Storyhold runtime, helper and test imports."
+    },
+    {
+      "blob": "78d0f27cfc2ec477953d14499d6213e466e7c9c6",
+      "bytes": 181349,
+      "path": "lib/api-client-react/src/generated/api.schemas.ts",
+      "reason": "Generated magazine API endpoints/types; generic fetch/ApiError helper retained."
+    },
+    {
+      "blob": "7d4d7ab09a22d46b913c033b3076eaaf25970cb0",
+      "bytes": 751297,
+      "path": "lib/api-client-react/src/generated/api.ts",
+      "reason": "Generated magazine API endpoints/types; generic fetch/ApiError helper retained."
+    },
+    {
+      "blob": "d6242209036123a749636fbc1e721bb4366bdecb",
+      "bytes": 417490,
+      "path": "lib/api-spec/openapi.yaml",
+      "reason": "Unused magazine API contract or provider-wrapper workspace package."
+    },
+    {
+      "blob": "ca0de79ed7cfc3bbe776e5b4fa80565a0c7f2942",
+      "bytes": 1740,
+      "path": "lib/api-spec/orval.config.ts",
+      "reason": "Unused magazine API contract or provider-wrapper workspace package."
+    },
+    {
+      "blob": "c39b598d6fbd61b0f9d1fc3e39c9e1ebdd80c49b",
+      "bytes": 228,
+      "path": "lib/api-spec/package.json",
+      "reason": "Unused magazine API contract or provider-wrapper workspace package."
+    },
+    {
+      "blob": "60fe769c6a815c47e7930c1171703512a75ad389",
+      "bytes": 189,
+      "path": "lib/api-zod/package.json",
+      "reason": "Unused magazine API contract or provider-wrapper workspace package."
+    },
+    {
+      "blob": "b16826f6ac52e667b3bcac431d93e110af3d73f9",
+      "bytes": 671907,
+      "path": "lib/api-zod/src/generated/api.ts",
+      "reason": "Unused magazine API contract or provider-wrapper workspace package."
+    },
+    {
+      "blob": "47a637d21f0ce551a91ffb07e69a01fb15abbfe3",
+      "bytes": 33,
+      "path": "lib/api-zod/src/index.ts",
+      "reason": "Unused magazine API contract or provider-wrapper workspace package."
+    },
+    {
+      "blob": "5859959cb9219e0c20d2f6b9e4c2cce2d1dc3711",
+      "bytes": 221,
+      "path": "lib/api-zod/tsconfig.json",
+      "reason": "Unused magazine API contract or provider-wrapper workspace package."
+    },
+    {
+      "blob": "c18176379077fc6ced4aad33ba255326dd3329ae",
+      "bytes": 1095,
+      "path": "lib/db/drizzle.config.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "917db6df3ef695d2f7e041e7b08755394c4794ac",
+      "bytes": 1320,
+      "path": "lib/db/src/schema/adminNotifications.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "10300215bdcc358e4cf9695debbe81eec0880c50",
+      "bytes": 484,
+      "path": "lib/db/src/schema/adminSettings.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "9a49d1475fd14af3b5ec44beb7a4e199fca9ec9b",
+      "bytes": 1056,
+      "path": "lib/db/src/schema/aiSettings.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "1e39961711c14efba0a22c4ef4c1901e4e496435",
+      "bytes": 2550,
+      "path": "lib/db/src/schema/articleRelations.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "298d3b59aad46ecf1ad8d2369db383625bae9672",
+      "bytes": 6230,
+      "path": "lib/db/src/schema/articleSources.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "92a6df36192f8a190ed4362ec16d4c8d64f24bdf",
+      "bytes": 14785,
+      "path": "lib/db/src/schema/articles.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "2792525ba1fa13b4a4b87c5391e0d517c57246fd",
+      "bytes": 992,
+      "path": "lib/db/src/schema/authorSlugRedirects.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "e9b4fbcc01e47890874c89265ce0fc638e298bbb",
+      "bytes": 3692,
+      "path": "lib/db/src/schema/authors.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "0b5178d2d7607bbbcf32b36ae4bdc5a3bcbe8610",
+      "bytes": 1407,
+      "path": "lib/db/src/schema/beats.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "c6b11fad84e0a72e05f0d4578d057db91216003e",
+      "bytes": 7937,
+      "path": "lib/db/src/schema/claims.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "75b9b99813f0eb580d571a359ed5072ca9bbb376",
+      "bytes": 7770,
+      "path": "lib/db/src/schema/conceptRadar.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "5300b2abf8eae4fd020e9be8209cef3150d99483",
+      "bytes": 15247,
+      "path": "lib/db/src/schema/concepts.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "991a82308005210638dbd82054ad08697504d1ff",
+      "bytes": 618,
+      "path": "lib/db/src/schema/conversations.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "786843e86c8c8faaddf104cbb7da6e40df3127d8",
+      "bytes": 7125,
+      "path": "lib/db/src/schema/coverageMap.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "6856f8a9eaeba8af21612f30f427edb836da1b23",
+      "bytes": 2145,
+      "path": "lib/db/src/schema/duplicateReviews.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "8b2785c46a7c1ad0dde8028ce037378e061eeeac",
+      "bytes": 3941,
+      "path": "lib/db/src/schema/editorialReviewActions.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "1b7ddaa4c2b209d868ed48b858a14e1d3b79d75b",
+      "bytes": 1986,
+      "path": "lib/db/src/schema/emailEvents.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "97ee9ef126cef56eea6f1f30c09696f0d22492da",
+      "bytes": 9200,
+      "path": "lib/db/src/schema/evidencePackets.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "948f6dc15db0e53d227a28769506cdd7192900b9",
+      "bytes": 7866,
+      "path": "lib/db/src/schema/feeds.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "ddfcd17642b5f053b388bea6f343a8a9e9dbfea0",
+      "bytes": 1925,
+      "path": "lib/db/src/schema/internalClicks.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "00c35b508a18b98a7794c30b1b54d1401937ead4",
+      "bytes": 4036,
+      "path": "lib/db/src/schema/memeTemplates.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "9be9eef9e1a1a29f9b0c6a3da5934a0fe8469747",
+      "bytes": 13455,
+      "path": "lib/db/src/schema/memes.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "2efa0451d21b72480dd31d18d9024c034c6f1b58",
+      "bytes": 799,
+      "path": "lib/db/src/schema/messages.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "4968e6d39bcb46cf6afb6b11d3bacc60c30c3ef5",
+      "bytes": 2610,
+      "path": "lib/db/src/schema/pageViews.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "b8db58d21b118d4841cf50991f54a9408e975b7a",
+      "bytes": 848,
+      "path": "lib/db/src/schema/shareEvents.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "0b3bb1e3abba78efaab7dc4fb273ef602bcd7dec",
+      "bytes": 17257,
+      "path": "lib/db/src/schema/siteSettings.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "6bdeea8f5bbebe8e870986f66d72606ec008248e",
+      "bytes": 1669,
+      "path": "lib/db/src/schema/socialPosts.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "f2130d1700708836cea3a496914524b2b879a215",
+      "bytes": 8589,
+      "path": "lib/db/src/schema/socialQueue.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "e6eb2d8b9d3f5c894cfa0b320da65da952ca510b",
+      "bytes": 3080,
+      "path": "lib/db/src/schema/sourceGaps.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "cf60aeb838465a4422f491d09635250da7185f63",
+      "bytes": 2925,
+      "path": "lib/db/src/schema/sourceRetractionImpacts.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "2cc12f4f3e2e510d14fc18358ad80a323cad8ce1",
+      "bytes": 19706,
+      "path": "lib/db/src/schema/sourceVault.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "be220c8872bdc5fbb2a52b92b6069c1f55221287",
+      "bytes": 12798,
+      "path": "lib/db/src/schema/storyClusters.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "0f8e036ca54c61f573533ea9b5b3ebc5eb3f44c2",
+      "bytes": 3133,
+      "path": "lib/db/src/schema/storyUpdateSignals.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "535427d86a0f0336b034f1d5019ad4c59891363b",
+      "bytes": 2649,
+      "path": "lib/db/src/schema/subscribers.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "e1e55db2abc34f62ac4dae38fd5efd2deddbb5fc",
+      "bytes": 1252,
+      "path": "lib/db/src/schema/swipeEvents.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "cf3e60232a33d27a08ea29e792b4371aec24c837",
+      "bytes": 5182,
+      "path": "lib/db/src/schema/termOfDay.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "898cd6152bd0d5a0777a248f5c269313dd06d420",
+      "bytes": 4218,
+      "path": "lib/db/src/schema/topicIdeas.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "887425c83c2793712b4d30be40d7423ae0c9f14e",
+      "bytes": 6689,
+      "path": "lib/db/src/schema/trendMarkers.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "c02806c1bc9745a831f678641bd3bf8974926a81",
+      "bytes": 2174,
+      "path": "lib/db/src/schema/trendSignals.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "b73b41ed4eee29140053abc575756970935a0f82",
+      "bytes": 469,
+      "path": "lib/db/src/schema/utmPresets.ts",
+      "reason": "Unused magazine schema/tooling; retained shared embedding usage schema and client."
+    },
+    {
+      "blob": "ee615096d779aa32c35522ae2c230e1f95ecffa8",
+      "bytes": 367,
+      "path": "lib/integrations-anthropic-ai/package.json",
+      "reason": "Unused magazine API contract or provider-wrapper workspace package."
+    },
+    {
+      "blob": "f84c2c134a5587037c4fba3fc071c41331b7d404",
+      "bytes": 107,
+      "path": "lib/integrations-anthropic-ai/src/batch/index.ts",
+      "reason": "Unused magazine API contract or provider-wrapper workspace package."
+    },
+    {
+      "blob": "a47d0eb438178fe96c91f0f42397809f87a530c2",
+      "bytes": 3864,
+      "path": "lib/integrations-anthropic-ai/src/batch/utils.ts",
+      "reason": "Unused magazine API contract or provider-wrapper workspace package."
+    },
+    {
+      "blob": "8de684f3efeb239803c8805aa3734dcb05f767ad",
+      "bytes": 593,
+      "path": "lib/integrations-anthropic-ai/src/client.ts",
+      "reason": "Unused magazine API contract or provider-wrapper workspace package."
+    },
+    {
+      "blob": "9e304892857a6ca314e00cbae570537460920828",
+      "bytes": 136,
+      "path": "lib/integrations-anthropic-ai/src/index.ts",
+      "reason": "Unused magazine API contract or provider-wrapper workspace package."
+    },
+    {
+      "blob": "53af906a0d19e9529580b4891101ae9637b5da07",
+      "bytes": 244,
+      "path": "lib/integrations-anthropic-ai/tsconfig.json",
+      "reason": "Unused magazine API contract or provider-wrapper workspace package."
+    },
+    {
+      "blob": "8f4f4e4648fc06126fe615a81ffcb30b6ced5fb3",
+      "bytes": 399,
+      "path": "lib/integrations-gemini-ai/package.json",
+      "reason": "Unused magazine API contract or provider-wrapper workspace package."
+    },
+    {
+      "blob": "f84c2c134a5587037c4fba3fc071c41331b7d404",
+      "bytes": 107,
+      "path": "lib/integrations-gemini-ai/src/batch/index.ts",
+      "reason": "Unused magazine API contract or provider-wrapper workspace package."
+    },
+    {
+      "blob": "da3ad0ac7ee920a2e6d3e33e6508f2f19ed49309",
+      "bytes": 3846,
+      "path": "lib/integrations-gemini-ai/src/batch/utils.ts",
+      "reason": "Unused magazine API contract or provider-wrapper workspace package."
+    },
+    {
+      "blob": "2d4be6fde91ea91e23b1c2df8b079eebe715d40f",
+      "bytes": 610,
+      "path": "lib/integrations-gemini-ai/src/client.ts",
+      "reason": "Unused magazine API contract or provider-wrapper workspace package."
+    },
+    {
+      "blob": "76a6c2ca876b7f4e4dd54c07d0048d6af304fbf6",
+      "bytes": 3895,
+      "path": "lib/integrations-gemini-ai/src/image/client.ts",
+      "reason": "Unused magazine API contract or provider-wrapper workspace package."
+    },
+    {
+      "blob": "551f260a2780716eac818092aa8a76e664e2ee67",
+      "bytes": 84,
+      "path": "lib/integrations-gemini-ai/src/image/index.ts",
+      "reason": "Unused magazine API contract or provider-wrapper workspace package."
+    },
+    {
+      "blob": "7d8f5ff90e9fd7d8eeb2825862264cd664228c25",
+      "bytes": 170,
+      "path": "lib/integrations-gemini-ai/src/index.ts",
+      "reason": "Unused magazine API contract or provider-wrapper workspace package."
+    },
+    {
+      "blob": "53af906a0d19e9529580b4891101ae9637b5da07",
+      "bytes": 244,
+      "path": "lib/integrations-gemini-ai/tsconfig.json",
+      "reason": "Unused magazine API contract or provider-wrapper workspace package."
+    },
+    {
+      "blob": "1957689330a29f0d8854e7c0d57af52add5013e3",
+      "bytes": 1390,
+      "path": "seo_strategy.md",
+      "reason": "BrainHook magazine SEO document."
+    }
+  ],
+  "dependencyChanges": [
+    {
+      "manifest": "artifacts/api-server/package.json",
+      "workspace": "@workspace/api-server",
+      "removedWorkspace": false,
+      "removedDependencies": [
+        {
+          "name": "@google/genai",
+          "group": "dependencies",
+          "version": "^1.50.1"
+        },
+        {
+          "name": "@workspace/api-zod",
+          "group": "dependencies",
+          "version": "workspace:*"
+        },
+        {
+          "name": "@workspace/integrations-anthropic-ai",
+          "group": "dependencies",
+          "version": "workspace:*"
+        },
+        {
+          "name": "@workspace/integrations-gemini-ai",
+          "group": "dependencies",
+          "version": "workspace:*"
+        },
+        {
+          "name": "connect-pg-simple",
+          "group": "dependencies",
+          "version": "^10.0.0"
+        },
+        {
+          "name": "cors",
+          "group": "dependencies",
+          "version": "^2"
+        },
+        {
+          "name": "drizzle-orm",
+          "group": "dependencies",
+          "version": "catalog:"
+        },
+        {
+          "name": "express-session",
+          "group": "dependencies",
+          "version": "^1.19.0"
+        },
+        {
+          "name": "fast-xml-parser",
+          "group": "dependencies",
+          "version": "^5.9.3"
+        },
+        {
+          "name": "http-proxy-middleware",
+          "group": "dependencies",
+          "version": "^3.0.5"
+        },
+        {
+          "name": "node-cron",
+          "group": "dependencies",
+          "version": "^4.2.1"
+        },
+        {
+          "name": "nodemailer",
+          "group": "dependencies",
+          "version": "^9.0.0"
+        },
+        {
+          "name": "pino-http",
+          "group": "dependencies",
+          "version": "^10"
+        },
+        {
+          "name": "playwright-core",
+          "group": "dependencies",
+          "version": "^1.61.1"
+        },
+        {
+          "name": "zod",
+          "group": "dependencies",
+          "version": "catalog:"
+        },
+        {
+          "name": "@types/connect-pg-simple",
+          "group": "devDependencies",
+          "version": "^7.0.3"
+        },
+        {
+          "name": "@types/cors",
+          "group": "devDependencies",
+          "version": "^2.8.19"
+        },
+        {
+          "name": "@types/express-session",
+          "group": "devDependencies",
+          "version": "^1.19.0"
+        },
+        {
+          "name": "@types/node-cron",
+          "group": "devDependencies",
+          "version": "^3.0.11"
+        },
+        {
+          "name": "@types/nodemailer",
+          "group": "devDependencies",
+          "version": "^8.0.1"
+        },
+        {
+          "name": "esbuild-plugin-pino",
+          "group": "devDependencies",
+          "version": "^2.3.3"
+        },
+        {
+          "name": "thread-stream",
+          "group": "devDependencies",
+          "version": "3.1.0"
+        }
+      ],
+      "movedDependencies": [
+        {
+          "name": "@types/pg",
+          "from": "dependencies",
+          "to": "devDependencies",
+          "version": "^8.18.0"
+        }
+      ],
+      "addedDependencies": []
+    },
+    {
+      "manifest": "artifacts/mockup-sandbox/package.json",
+      "workspace": "@workspace/mockup-sandbox",
+      "removedWorkspace": true,
+      "removedDependencies": [
+        {
+          "name": "@hookform/resolvers",
+          "group": "devDependencies",
+          "version": "^3.10.0"
+        },
+        {
+          "name": "@radix-ui/react-accordion",
+          "group": "devDependencies",
+          "version": "^1.2.12"
+        },
+        {
+          "name": "@radix-ui/react-alert-dialog",
+          "group": "devDependencies",
+          "version": "^1.1.15"
+        },
+        {
+          "name": "@radix-ui/react-aspect-ratio",
+          "group": "devDependencies",
+          "version": "^1.1.8"
+        },
+        {
+          "name": "@radix-ui/react-avatar",
+          "group": "devDependencies",
+          "version": "^1.1.11"
+        },
+        {
+          "name": "@radix-ui/react-checkbox",
+          "group": "devDependencies",
+          "version": "^1.3.3"
+        },
+        {
+          "name": "@radix-ui/react-collapsible",
+          "group": "devDependencies",
+          "version": "^1.1.12"
+        },
+        {
+          "name": "@radix-ui/react-context-menu",
+          "group": "devDependencies",
+          "version": "^2.2.16"
+        },
+        {
+          "name": "@radix-ui/react-dialog",
+          "group": "devDependencies",
+          "version": "^1.1.15"
+        },
+        {
+          "name": "@radix-ui/react-dropdown-menu",
+          "group": "devDependencies",
+          "version": "^2.1.16"
+        },
+        {
+          "name": "@radix-ui/react-hover-card",
+          "group": "devDependencies",
+          "version": "^1.1.15"
+        },
+        {
+          "name": "@radix-ui/react-label",
+          "group": "devDependencies",
+          "version": "^2.1.8"
+        },
+        {
+          "name": "@radix-ui/react-menubar",
+          "group": "devDependencies",
+          "version": "^1.1.16"
+        },
+        {
+          "name": "@radix-ui/react-navigation-menu",
+          "group": "devDependencies",
+          "version": "^1.2.14"
+        },
+        {
+          "name": "@radix-ui/react-popover",
+          "group": "devDependencies",
+          "version": "^1.1.15"
+        },
+        {
+          "name": "@radix-ui/react-progress",
+          "group": "devDependencies",
+          "version": "^1.1.8"
+        },
+        {
+          "name": "@radix-ui/react-radio-group",
+          "group": "devDependencies",
+          "version": "^1.3.8"
+        },
+        {
+          "name": "@radix-ui/react-scroll-area",
+          "group": "devDependencies",
+          "version": "^1.2.10"
+        },
+        {
+          "name": "@radix-ui/react-select",
+          "group": "devDependencies",
+          "version": "^2.2.6"
+        },
+        {
+          "name": "@radix-ui/react-separator",
+          "group": "devDependencies",
+          "version": "^1.1.8"
+        },
+        {
+          "name": "@radix-ui/react-slider",
+          "group": "devDependencies",
+          "version": "^1.3.6"
+        },
+        {
+          "name": "@radix-ui/react-slot",
+          "group": "devDependencies",
+          "version": "^1.2.4"
+        },
+        {
+          "name": "@radix-ui/react-switch",
+          "group": "devDependencies",
+          "version": "^1.2.6"
+        },
+        {
+          "name": "@radix-ui/react-tabs",
+          "group": "devDependencies",
+          "version": "^1.1.13"
+        },
+        {
+          "name": "@radix-ui/react-toast",
+          "group": "devDependencies",
+          "version": "^1.2.7"
+        },
+        {
+          "name": "@radix-ui/react-toggle",
+          "group": "devDependencies",
+          "version": "^1.1.10"
+        },
+        {
+          "name": "@radix-ui/react-toggle-group",
+          "group": "devDependencies",
+          "version": "^1.1.11"
+        },
+        {
+          "name": "@radix-ui/react-tooltip",
+          "group": "devDependencies",
+          "version": "^1.2.8"
+        },
+        {
+          "name": "@replit/vite-plugin-cartographer",
+          "group": "devDependencies",
+          "version": "catalog:"
+        },
+        {
+          "name": "@replit/vite-plugin-runtime-error-modal",
+          "group": "devDependencies",
+          "version": "catalog:"
+        },
+        {
+          "name": "@tailwindcss/vite",
+          "group": "devDependencies",
+          "version": "catalog:"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "version": "catalog:"
+        },
+        {
+          "name": "@types/react",
+          "group": "devDependencies",
+          "version": "catalog:"
+        },
+        {
+          "name": "@types/react-dom",
+          "group": "devDependencies",
+          "version": "catalog:"
+        },
+        {
+          "name": "@vitejs/plugin-react",
+          "group": "devDependencies",
+          "version": "catalog:"
+        },
+        {
+          "name": "chokidar",
+          "group": "devDependencies",
+          "version": "^4.0.3"
+        },
+        {
+          "name": "class-variance-authority",
+          "group": "devDependencies",
+          "version": "catalog:"
+        },
+        {
+          "name": "clsx",
+          "group": "devDependencies",
+          "version": "catalog:"
+        },
+        {
+          "name": "cmdk",
+          "group": "devDependencies",
+          "version": "^1.1.1"
+        },
+        {
+          "name": "date-fns",
+          "group": "devDependencies",
+          "version": "^3.6.0"
+        },
+        {
+          "name": "embla-carousel-react",
+          "group": "devDependencies",
+          "version": "^8.6.0"
+        },
+        {
+          "name": "fast-glob",
+          "group": "devDependencies",
+          "version": "^3.3.3"
+        },
+        {
+          "name": "framer-motion",
+          "group": "devDependencies",
+          "version": "catalog:"
+        },
+        {
+          "name": "input-otp",
+          "group": "devDependencies",
+          "version": "^1.4.2"
+        },
+        {
+          "name": "lucide-react",
+          "group": "devDependencies",
+          "version": "catalog:"
+        },
+        {
+          "name": "next-themes",
+          "group": "devDependencies",
+          "version": "^0.4.6"
+        },
+        {
+          "name": "react",
+          "group": "devDependencies",
+          "version": "catalog:"
+        },
+        {
+          "name": "react-day-picker",
+          "group": "devDependencies",
+          "version": "^9.11.1"
+        },
+        {
+          "name": "react-dom",
+          "group": "devDependencies",
+          "version": "catalog:"
+        },
+        {
+          "name": "react-hook-form",
+          "group": "devDependencies",
+          "version": "^7.66.0"
+        },
+        {
+          "name": "react-resizable-panels",
+          "group": "devDependencies",
+          "version": "^2.1.9"
+        },
+        {
+          "name": "recharts",
+          "group": "devDependencies",
+          "version": "^2.15.4"
+        },
+        {
+          "name": "sonner",
+          "group": "devDependencies",
+          "version": "^2.0.7"
+        },
+        {
+          "name": "tailwind-merge",
+          "group": "devDependencies",
+          "version": "catalog:"
+        },
+        {
+          "name": "tailwindcss",
+          "group": "devDependencies",
+          "version": "catalog:"
+        },
+        {
+          "name": "tailwindcss-animate",
+          "group": "devDependencies",
+          "version": "^1.0.7"
+        },
+        {
+          "name": "tw-animate-css",
+          "group": "devDependencies",
+          "version": "^1.4.0"
+        },
+        {
+          "name": "vaul",
+          "group": "devDependencies",
+          "version": "^1.1.2"
+        },
+        {
+          "name": "vite",
+          "group": "devDependencies",
+          "version": "catalog:"
+        },
+        {
+          "name": "zod",
+          "group": "devDependencies",
+          "version": "catalog:"
+        }
+      ],
+      "movedDependencies": [],
+      "addedDependencies": []
+    },
+    {
+      "manifest": "artifacts/site/package.json",
+      "workspace": "@workspace/site",
+      "removedWorkspace": false,
+      "removedDependencies": [
+        {
+          "name": "express",
+          "group": "dependencies",
+          "version": "^5.2.1"
+        },
+        {
+          "name": "@hookform/resolvers",
+          "group": "devDependencies",
+          "version": "^3.10.0"
+        },
+        {
+          "name": "@types/express",
+          "group": "devDependencies",
+          "version": "^5.0.6"
+        },
+        {
+          "name": "date-fns",
+          "group": "devDependencies",
+          "version": "^3.6.0"
+        },
+        {
+          "name": "framer-motion",
+          "group": "devDependencies",
+          "version": "catalog:"
+        },
+        {
+          "name": "react-icons",
+          "group": "devDependencies",
+          "version": "^5.4.0"
+        },
+        {
+          "name": "zod",
+          "group": "devDependencies",
+          "version": "catalog:"
+        }
+      ],
+      "movedDependencies": [],
+      "addedDependencies": []
+    },
+    {
+      "manifest": "lib/api-client-react/package.json",
+      "workspace": "@workspace/api-client-react",
+      "removedWorkspace": false,
+      "removedDependencies": [
+        {
+          "name": "@tanstack/react-query",
+          "group": "dependencies",
+          "version": "catalog:"
+        },
+        {
+          "name": "react",
+          "group": "peerDependencies",
+          "version": ">=18"
+        }
+      ],
+      "movedDependencies": [],
+      "addedDependencies": []
+    },
+    {
+      "manifest": "lib/api-spec/package.json",
+      "workspace": "@workspace/api-spec",
+      "removedWorkspace": true,
+      "removedDependencies": [
+        {
+          "name": "orval",
+          "group": "devDependencies",
+          "version": "^8.28.1"
+        }
+      ],
+      "movedDependencies": [],
+      "addedDependencies": []
+    },
+    {
+      "manifest": "lib/api-zod/package.json",
+      "workspace": "@workspace/api-zod",
+      "removedWorkspace": true,
+      "removedDependencies": [
+        {
+          "name": "zod",
+          "group": "dependencies",
+          "version": "catalog:"
+        }
+      ],
+      "movedDependencies": [],
+      "addedDependencies": []
+    },
+    {
+      "manifest": "lib/db/package.json",
+      "workspace": "@workspace/db",
+      "removedWorkspace": false,
+      "removedDependencies": [
+        {
+          "name": "drizzle-zod",
+          "group": "dependencies",
+          "version": "^0.8.3"
+        },
+        {
+          "name": "zod",
+          "group": "dependencies",
+          "version": "catalog:"
+        },
+        {
+          "name": "drizzle-kit",
+          "group": "devDependencies",
+          "version": "^0.31.9"
+        }
+      ],
+      "movedDependencies": [],
+      "addedDependencies": []
+    },
+    {
+      "manifest": "lib/integrations-anthropic-ai/package.json",
+      "workspace": "@workspace/integrations-anthropic-ai",
+      "removedWorkspace": true,
+      "removedDependencies": [
+        {
+          "name": "@anthropic-ai/sdk",
+          "group": "dependencies",
+          "version": "^0.78.0"
+        },
+        {
+          "name": "p-limit",
+          "group": "dependencies",
+          "version": "^7.3.0"
+        },
+        {
+          "name": "p-retry",
+          "group": "dependencies",
+          "version": "^7.1.1"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "version": "catalog:"
+        }
+      ],
+      "movedDependencies": [],
+      "addedDependencies": []
+    },
+    {
+      "manifest": "lib/integrations-gemini-ai/package.json",
+      "workspace": "@workspace/integrations-gemini-ai",
+      "removedWorkspace": true,
+      "removedDependencies": [
+        {
+          "name": "@google/genai",
+          "group": "dependencies",
+          "version": "^1.44.0"
+        },
+        {
+          "name": "p-limit",
+          "group": "dependencies",
+          "version": "^7.3.0"
+        },
+        {
+          "name": "p-retry",
+          "group": "dependencies",
+          "version": "^7.1.1"
+        },
+        {
+          "name": "@types/node",
+          "group": "devDependencies",
+          "version": "catalog:"
+        }
+      ],
+      "movedDependencies": [],
+      "addedDependencies": []
+    }
+  ],
+  "retainedDirectDependencyManifests": {
+    "lib/content-utils/package.json": {
+      "name": "@workspace/content-utils",
+      "version": "0.0.0",
+      "private": true,
+      "type": "module",
+      "exports": {
+        ".": "./src/index.ts"
+      }
+    },
+    "artifacts/site/package.json": {
+      "name": "@workspace/site",
+      "version": "0.0.0",
+      "private": true,
+      "type": "module",
+      "scripts": {
+        "dev": "vite --config vite.config.ts --host 0.0.0.0",
+        "build": "vite build --config vite.config.ts --configLoader runner",
+        "start": "pnpm --filter @workspace/api-server run start:local",
+        "serve": "vite preview --config vite.config.ts --host 0.0.0.0",
+        "typecheck": "tsc -p tsconfig.json --noEmit",
+        "test": "node ./test.mjs"
+      },
+      "devDependencies": {
+        "@radix-ui/react-accordion": "^1.2.4",
+        "@radix-ui/react-alert-dialog": "^1.1.7",
+        "@radix-ui/react-aspect-ratio": "^1.1.3",
+        "@radix-ui/react-avatar": "^1.1.4",
+        "@radix-ui/react-checkbox": "^1.1.5",
+        "@radix-ui/react-collapsible": "^1.1.4",
+        "@radix-ui/react-context-menu": "^2.2.7",
+        "@radix-ui/react-dialog": "^1.1.7",
+        "@radix-ui/react-dropdown-menu": "^2.1.7",
+        "@radix-ui/react-hover-card": "^1.1.7",
+        "@radix-ui/react-label": "^2.1.3",
+        "@radix-ui/react-menubar": "^1.1.7",
+        "@radix-ui/react-navigation-menu": "^1.2.6",
+        "@radix-ui/react-popover": "^1.1.7",
+        "@radix-ui/react-progress": "^1.1.3",
+        "@radix-ui/react-radio-group": "^1.2.4",
+        "@radix-ui/react-scroll-area": "^1.2.4",
+        "@radix-ui/react-select": "^2.1.7",
+        "@radix-ui/react-separator": "^1.1.3",
+        "@radix-ui/react-slider": "^1.2.4",
+        "@radix-ui/react-slot": "^1.2.0",
+        "@radix-ui/react-switch": "^1.1.4",
+        "@radix-ui/react-tabs": "^1.1.4",
+        "@radix-ui/react-toast": "^1.2.7",
+        "@radix-ui/react-toggle": "^1.1.3",
+        "@radix-ui/react-toggle-group": "^1.1.3",
+        "@radix-ui/react-tooltip": "^1.2.0",
+        "@replit/vite-plugin-cartographer": "catalog:",
+        "@replit/vite-plugin-dev-banner": "catalog:",
+        "@replit/vite-plugin-runtime-error-modal": "catalog:",
+        "@tailwindcss/typography": "^0.5.15",
+        "@tailwindcss/vite": "catalog:",
+        "@tanstack/react-query": "catalog:",
+        "@types/node": "catalog:",
+        "@types/react": "catalog:",
+        "@types/react-dom": "catalog:",
+        "@vitejs/plugin-react": "catalog:",
+        "@workspace/api-client-react": "workspace:*",
+        "@workspace/content-utils": "workspace:*",
+        "class-variance-authority": "catalog:",
+        "clsx": "catalog:",
+        "cmdk": "^1.1.1",
+        "embla-carousel-react": "^8.6.0",
+        "esbuild": "^0.27.3",
+        "input-otp": "^1.4.2",
+        "lucide-react": "catalog:",
+        "next-themes": "^0.4.6",
+        "react": "catalog:",
+        "react-day-picker": "^9.11.1",
+        "react-dom": "catalog:",
+        "react-hook-form": "^7.55.0",
+        "react-resizable-panels": "^2.1.7",
+        "recharts": "^2.15.2",
+        "sonner": "^2.0.7",
+        "tailwind-merge": "catalog:",
+        "tailwindcss": "catalog:",
+        "tsx": "catalog:",
+        "tw-animate-css": "^1.4.0",
+        "vaul": "^1.1.2",
+        "vite": "catalog:",
+        "wouter": "^3.3.5"
+      },
+      "dependencies": {
+        "@mlc-ai/web-llm": "^0.2.84"
+      }
+    },
+    "scripts/package.json": {
+      "name": "@workspace/scripts",
+      "version": "0.0.0",
+      "private": true,
+      "type": "module",
+      "scripts": {
+        "hello": "tsx ./src/hello.ts",
+        "lint-sql-regex": "node ../scripts/lint-sql-regex.mjs ../artifacts/api-server/src",
+        "typecheck": "tsc -p tsconfig.json --noEmit"
+      },
+      "devDependencies": {
+        "@types/node": "catalog:",
+        "tsx": "catalog:"
+      }
+    },
+    "artifacts/api-server/package.json": {
+      "name": "@workspace/api-server",
+      "version": "0.0.0",
+      "private": true,
+      "type": "module",
+      "scripts": {
+        "dev": "tsx watch ./src/local.ts",
+        "build": "pnpm run typecheck:local",
+        "start": "pnpm run start:local",
+        "start:local": "tsx ./src/local.ts",
+        "schema:development": "STORYHOLD_APPLY_DEVELOPMENT_SCHEMA=1 STORYHOLD_DATABASE_ENVIRONMENT=development tsx ./src/local.ts",
+        "test": "node ./test.mjs",
+        "typecheck:local": "tsc -p tsconfig.local.json --noEmit",
+        "typecheck": "tsc -p tsconfig.json --noEmit"
+      },
+      "dependencies": {
+        "@anthropic-ai/sdk": "^0.78.0",
+        "@electric-sql/pglite": "^0.5.4",
+        "@electric-sql/pglite-pgvector": "^0.0.5",
+        "@google-cloud/storage": "^7.16.0",
+        "@huggingface/transformers": "^4.2.0",
+        "@mozilla/readability": "^0.6.0",
+        "@workspace/content-utils": "workspace:*",
+        "@workspace/db": "workspace:*",
+        "bcryptjs": "^3.0.3",
+        "cookie-parser": "^1.4.7",
+        "express": "^5",
+        "fflate": "^0.8.3",
+        "jsdom": "^29.1.1",
+        "mammoth": "^1.12.0",
+        "pg": "^8.20.0",
+        "pino": "^9",
+        "unpdf": "^1.6.2"
+      },
+      "devDependencies": {
+        "@types/cookie-parser": "^1.4.10",
+        "@types/express": "^5.0.6",
+        "@types/jsdom": "^28.0.3",
+        "@types/node": "catalog:",
+        "@types/pg": "^8.18.0",
+        "esbuild": "^0.27.3",
+        "pino-pretty": "^13",
+        "tsx": "catalog:"
+      }
+    },
+    "lib/db/package.json": {
+      "name": "@workspace/db",
+      "version": "0.0.0",
+      "private": true,
+      "type": "module",
+      "exports": {
+        ".": "./src/index.ts",
+        "./schema": "./src/schema/index.ts"
+      },
+      "dependencies": {
+        "drizzle-orm": "catalog:",
+        "pg": "^8.20.0"
+      },
+      "devDependencies": {
+        "@types/node": "catalog:",
+        "@types/pg": "^8.18.0"
+      }
+    },
+    "package.json": {
+      "name": "workspace",
+      "version": "0.0.0",
+      "license": "MIT",
+      "scripts": {
+        "preinstall": "node ./scripts/ensure-pnpm.mjs",
+        "build": "pnpm run typecheck && pnpm run storyhold:build",
+        "storyhold:install-gliner": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/install-storyhold-gliner.ps1",
+        "storyhold:enable-cuda": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/enable-storyhold-cuda.ps1",
+        "storyhold:verify-cuda": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/enable-storyhold-cuda.ps1 -VerifyOnly",
+        "storyhold:enable-llama-gpu": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/enable-storyhold-llama-gpu.ps1",
+        "storyhold:verify-llama-gpu": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/enable-storyhold-llama-gpu.ps1 -VerifyOnly",
+        "storyhold:local": "node ./scripts/storyhold-local.mjs",
+        "storyhold:audit-scenarios": "pnpm --dir artifacts/api-server exec tsx ../../scripts/audit-storyhold-scenarios.ts",
+        "storyhold:build": "pnpm run storyhold:audit-scenarios && pnpm --filter @workspace/site exec vite build --config vite.config.ts --configLoader runner",
+        "storyhold:start": "pnpm --filter @workspace/api-server run start:local",
+        "storyhold:schema:development": "pnpm --filter @workspace/api-server run schema:development",
+        "typecheck:libs": "tsc --build",
+        "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
+      },
+      "private": true,
+      "devDependencies": {
+        "typescript": "~5.9.2",
+        "prettier": "^3.8.1"
+      }
+    },
+    "lib/api-client-react/package.json": {
+      "name": "@workspace/api-client-react",
+      "version": "0.0.0",
+      "private": true,
+      "type": "module",
+      "exports": {
+        ".": "./src/index.ts"
+      }
+    }
+  },
+  "parentCommit": "9ed101ef83fb009d8163f7777e20611ccc3c94a5",
+  "upstreamIntegrated": {
+    "commit": "9ed101ef83fb009d8163f7777e20611ccc3c94a5",
+    "message": "Fix Premium AI campaign setup unlock",
+    "changedFilesPreserved": 6
+  },
+  "validation": {
+    "workspaceTypecheck": "passed after upstream integration",
+    "productionBuild": "passed after upstream integration",
+    "scenarioOpenings": {
+      "passed": 126,
+      "failed": 0
+    },
+    "frontend": {
+      "passed": 140,
+      "failed": 0,
+      "fixtureCorrections": "Four preexisting failures corrected in three test fixtures; production code unchanged."
+    },
+    "sharedIntakeHelpers": {
+      "passed": 49,
+      "failed": 0
+    },
+    "backendFullRun": {
+      "testFiles": 119,
+      "tests": 1428,
+      "passed": 1425,
+      "failed": 3,
+      "durationMs": 992487.1878,
+      "failureResolution": "Three preexisting stale assertions in two unchanged test files were corrected; affected suites passed 24/24, then passed again within the final 110-test upstream-integration rerun."
+    },
+    "finalBackendAffectedRerun": {
+      "passed": 110,
+      "failed": 0,
+      "durationMs": 36754.4503
+    },
+    "importChecks": {
+      "backendTypeScriptFiles": 232,
+      "frontendTypeScriptFiles": 152,
+      "unresolvedImports": 0
+    },
+    "diffWhitespace": "passed",
+    "livePaidProviderCalls": 0,
+    "productionStoryholdChangesFromCleanup": 0,
+    "knownNonFatalWarnings": [
+      "Vite sourcemap locations in five reusable UI components",
+      "Vite large WebLLM/frontend chunks",
+      "Existing transitive dependency deprecation notices"
+    ]
+  }
+}

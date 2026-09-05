@@ -1,11 +1,8 @@
 {
   "extends": "./tsconfig.json",
   "include": [
-    "src/lib/storyholdApi.ts",
-    "src/pages/admin/Worlds.tsx",
-    "src/pages/admin/WorldStudio.tsx",
-    "src/pages/admin/StoryholdAdminLayout.tsx",
-    "src/pages/admin/Dashboard.tsx"
+    "src/main.tsx",
+    "src/workers/lorekeeper-worker.ts"
   ],
   "references": [],
   "compilerOptions": {

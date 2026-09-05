@@ -18,7 +18,7 @@ const importedLaunch = readFileSync(
 test("the creation screen exposes two distinct player entrances", () => {
   assert.match(importPage, /Start a New Adventure/u);
   assert.match(importPage, /Play My Writing/u);
-  assert.match(importPage, /<QuickstartCreator\s*\/>/u);
+  assert.match(importPage, /<QuickstartCreator\s+scenario=\{linkedScenario\}\s*\/>/u);
   assert.match(importPage, /<ManuscriptImporter/u);
 });
 

@@ -30,8 +30,7 @@ import ProfileWorldIntake from "@/pages/profile-world-intake";
 import ProfileWorlds from "@/pages/profile-worlds";
 import { StoryholdCreditTerms, StoryholdHelp, StoryholdPrivacy, StoryholdRefunds, StoryholdTerms } from "@/pages/storyhold-legal";
 
-// Only Storyhold owner surfaces are routed. The imported magazine files remain
-// dormant in the repository and are not bundled into the active application.
+// Load Storyhold owner tools only when an authorized user opens them.
 const StoryholdAdminLayout = React.lazy(
   () => import("@/pages/admin/StoryholdAdminLayout"),
 );

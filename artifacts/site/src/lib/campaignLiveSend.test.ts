@@ -26,6 +26,7 @@ function sendContext(response: unknown, experienceMode: "solo" | "author", manua
   const browserCalls: string[] = [];
   const context: Record<string, any> = {
     action: "  I check the door.  ", inputMode: "action", sending: false,
+    setupBlocksPlay: false, setupBusy: false,
     session: { campaign: { id: `campaign-${experienceMode}`, experienceMode }, turns: [], runtime: {}, manualStorytellerEnabled: manual },
     auth: { userId: "player", refresh: async () => {} },
     pendingTurnRequestRef: { current: null }, requestId: () => "request-original",

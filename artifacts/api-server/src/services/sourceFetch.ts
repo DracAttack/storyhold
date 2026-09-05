@@ -1,6 +1,6 @@
 import { lookup } from "node:dns/promises";
 import { isIP } from "node:net";
-import { isPrivateOrReservedIp } from "./citations";
+import { isPrivateOrReservedIp } from "./networkSafety";
 import { parseRobotsTxt, isPathAllowed } from "../lib/robots";
 import {
   detectDocumentType,

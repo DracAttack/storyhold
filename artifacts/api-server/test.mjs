@@ -10,7 +10,7 @@ import { spawn } from "node:child_process";
 
 // The repo has no test framework installed (vitest/jest). This runner executes
 // TypeScript tests with Node's built-in test runner. The regular path bundles
-// them with esbuild because @workspace/db exports raw .ts source with
+// them with esbuild because shared workspace packages export raw .ts source with
 // extensionless imports. Restricted Windows environments use tsx's per-module
 // transform hook instead; see runWindowsTestsWithoutBundling below.
 
@@ -150,12 +150,6 @@ const EXTERNALS = [
   // transitively imports sharp, so externalising it keeps the bundle clean.
   "@huggingface/transformers",
 
-  // Playwright (glossary card Chromium capture): its bundled coreBundle.js
-  // requires optional "chromium-bidi" paths that esbuild cannot resolve, which
-  // breaks ANY test whose import graph touches the capture service. Keep both
-  // external (mirrors build.mjs) and resolved from node_modules at runtime.
-  "playwright",
-  "playwright-core",
 ];
 
 // ---------------------------------------------------------------------------
@@ -262,7 +256,7 @@ globalThis.require = __cr(import.meta.url);`,
   // NODE_ENV check in the app compares against "production") while signalling
   // the logger to skip its pino-pretty worker-thread transport, which can't be
   // bundled into the ESM test runner. This lets tests import logger-using
-  // modules (e.g. services/trends.ts) without crashing on a missing __dirname.
+  // modules (e.g. the optional embedding provider) without crashing on a missing __dirname.
   const child = spawn(process.execPath, ["--test", "--test-force-exit", ...bundled], {
     stdio: "inherit",
     env: { ...process.env, NODE_ENV: "test" },

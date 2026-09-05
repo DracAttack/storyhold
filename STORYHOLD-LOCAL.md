@@ -49,7 +49,7 @@ The command builds the current frontend, starts the safe Storyhold backend, and 
 - Requests a continuity reason when source evidence is insufficient. Strong logical impossibilities can create an amendment; unsupported override attempts are rejected and recorded in an internal integrity ledger.
 - Raises the internal evidence threshold after repeated unsupported or advantage-seeking override attempts. This integrity state is scoped by canonical player, world, and campaign IDs and is not shown as a punitive score in the player interface.
 - Does not start the imported publishing, newsletter, social, cron, or AI automation jobs.
-- Keeps the imported BrainHook admin pages available for capability auditing.
+- Keeps Storyhold's owner tools available. The unused magazine admin pages were retired; see `docs/brainhook-dependency-cleanup.md` for their recovery record.
 
 Image-only scanned PDFs currently need OCR before Storyhold can read their text. The upload remains recorded with a visible extraction warning.
 

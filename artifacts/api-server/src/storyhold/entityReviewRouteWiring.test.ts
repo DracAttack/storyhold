@@ -40,7 +40,8 @@ const quote = route(`${path}/quote`);
 test("saved responses with unknown pricing ask for a usage check instead of offering a futile resume", () => {
   assert.ok(quote.body.includes("pending.billable_attempts.some((attempt) => attempt.usage.pricingKnown !== true)"));
   assert.ok(review.body.includes("error instanceof EntityReviewAccountingError"));
-  assert.ok(review.body.includes("recorded usage needs to be checked"));
+  assert.ok(review.body.includes("final safety check before it can finish"));
+  assert.ok(review.body.includes("no new paid request will start automatically"));
 });
 
 function ordered(body: string, ...fragments: string[]) {
@@ -141,10 +142,13 @@ test("paged resume uses original requests and funding with source/model checks o
   ordered(review.body, "if (previous)", "continueSavedEntityReviewPages(db, callScope)", "finishSavedEntityReview(db, callScope)");
 });
 
-test("saved review quote exposes remaining work without reserving a second payment", () => {
+test("saved review quote exposes remaining work and settlement overage without reserving a second payment", () => {
   ordered(quote.body, "if (pending)", "readEntityReviewPageProgress(db,", "pageProgress?.canResume", "resume: true",
     "remainingPages: pageProgress ? pageProgress.totalPages - pageProgress.completedPages : 0", "return;");
-  assert.match(quote.body, /requiredCredits:\s*0/u);
+  assert.match(quote.body, /requiredCredits:\s*funding\?\.additionalCreditsDue\s*\?\?\s*0/u);
+  const pending = find(quote.handler, (node): node is ts.IfStatement =>
+    ts.isIfStatement(node) && node.expression.getText(source) === "pending");
+  assert.doesNotMatch(pending.thenStatement.getText(source), /\breserveCredits\s*\(/u);
 });
 
 test("saved context serializes and restores canonical-name lookup without querying new evidence", () => {

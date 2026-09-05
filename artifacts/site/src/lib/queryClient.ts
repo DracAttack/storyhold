@@ -11,7 +11,7 @@ function isAuthError(err: unknown): boolean {
  * If any admin-area query throws a 401, the session is no longer valid.
  * Flush React Query, then send the user back to /admin/login so they can
  * re-authenticate. Without this, a stale 401 cached against an
- * /admin/articles/:id query would render forever as an "unauthorized" error
+ * owner-tool query would render forever as an "unauthorized" error
  * even after a fresh login.
  */
 const queryCache = new QueryCache({

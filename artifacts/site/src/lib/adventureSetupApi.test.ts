@@ -51,6 +51,7 @@ test("the compact player card uses safe status copy and never renders private ex
   const privateExtras = { plan: { npcMotive: "SECRET_BETRAYAL", clocks: ["PRIVATE_CLOCK"] }, inputSha256: "PRIVATE_HASH", error: "PRIVATE_PROVIDER_ERROR" };
   const render = (status: AdventureSetupStatus["status"], busy = false) => renderToStaticMarkup(createElement(AdventureSetupCard, {
     setup: { ...privateExtras, required: true, status, opening: null }, busy, error: null, onPrepare() {},
+    context: { worldName: "Rain at the Western Gate", characterName: "Mara", characterConcept: "A courier seeking work" },
   }));
   assert.match(render("required"), /Prepare Adventure/);
   assert.match(render("failed"), /Try Again/);

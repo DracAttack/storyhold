@@ -81,14 +81,3 @@ export function chicagoTitleChildren(children: React.ReactNode): React.ReactNode
     children: chicagoTitleChildren(children.props.children),
   });
 }
-
-/**
- * Returns true when an alias contains only Latin-script characters
- * (Basic Latin, Latin-1, Latin Extended A/B, Latin Extended Additional).
- * Rejects any alias that contains CJK, Kanji, Arabic, Cyrillic, Devanagari,
- * Hebrew, Hangul, or any other non-Latin script — BrainHook only shows
- * aliases in English or proper Latin transliterations.
- */
-export function isLatinAlias(alias: string): boolean {
-  return !/[^\u0000-\u024F\u1E00-\u1EFF]/.test(alias);
-}

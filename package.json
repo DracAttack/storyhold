@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "preinstall": "node ./scripts/ensure-pnpm.mjs",
-    "build": "pnpm run typecheck && pnpm -r --filter \"!@workspace/mockup-sandbox\" --if-present run build",
+    "build": "pnpm run typecheck && pnpm run storyhold:build",
     "storyhold:install-gliner": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/install-storyhold-gliner.ps1",
     "storyhold:enable-cuda": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/enable-storyhold-cuda.ps1",
     "storyhold:verify-cuda": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/enable-storyhold-cuda.ps1 -VerifyOnly",
@@ -16,7 +16,7 @@
     "storyhold:start": "pnpm --filter @workspace/api-server run start:local",
     "storyhold:schema:development": "pnpm --filter @workspace/api-server run schema:development",
     "typecheck:libs": "tsc --build",
-    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --filter \"!@workspace/mockup-sandbox\" --if-present run typecheck"
+    "typecheck": "pnpm run typecheck:libs && pnpm -r --filter \"./artifacts/**\" --filter \"./scripts\" --if-present run typecheck"
   },
   "private": true,
   "devDependencies": {

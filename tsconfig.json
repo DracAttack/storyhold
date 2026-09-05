@@ -11,15 +11,6 @@
     },
     {
       "path": "./lib/api-client-react"
-    },
-    {
-      "path": "./lib/api-zod"
-    },
-    {
-      "path": "./lib/integrations-anthropic-ai"
-    },
-    {
-      "path": "./lib/integrations-gemini-ai"
     }
   ]
 }
