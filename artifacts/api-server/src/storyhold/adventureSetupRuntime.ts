@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { PGlite } from "@electric-sql/pglite";
 import type { Express, Request, RequestHandler, Response } from "express";
-import { buildAdventureSetupPrompt, validateAdventureSetupPlan, type AdventureSetupContext } from "./adventureSetup";
+import { buildAdventureSetupPrompt, buildDeterministicAdventureSetupPlan, validateAdventureSetupPlan, type AdventureSetupContext } from "./adventureSetup";
 import { activeAdventureSetups, loadAdventureSetup, publicAdventureSetup, requiresAdventureSetup, type AdventureSetupRow } from "./adventureSetupAccess";
 import { applyAdventureSetupPlanInTransaction, refineAdventureSetupPlanInTransaction } from "./adventureSetupPersistence";
 import { loadCampaignContext, runOrResumeMeteredAiResult, markMeteredAiResultApplied, shouldPreserveMeteredResult } from "./campaignPlay";
@@ -144,10 +144,48 @@ export async function prepareAdventureSetup(params: { db: Db; campaignId: string
     if (manualStorytellerEnabled(params.role)) throw new Error("ADVENTURE_SETUP_CONNECTED_DISABLED");
     let attempt = Number(record(setup.request).attempt ?? 0);
     let requestId = `adventure-setup-${setup.id}-${attempt}`;
-    const previous = (await db.query<Row>(`SELECT status FROM storyhold.metered_ai_result_journal
+    const previous = (await db.query<Row>(`SELECT status, response_text FROM storyhold.metered_ai_result_journal
       WHERE player_id = $1 AND operation = 'adventure_setup' AND request_id = $2`, [playerId,requestId])).rows[0];
     const abandonedHold = !previous ? (await db.query<Row>(`SELECT status FROM storyhold.credit_reservations
       WHERE player_id = $1 AND operation = 'adventure_setup' AND request_id = $2`,[playerId,requestId])).rows[0] : null;
+    let previousFailureKind = "";
+    if (previous?.status === "applied") {
+      try {
+        previousFailureKind = String(record(JSON.parse(String(previous.response_text ?? "{}"))).kind ?? "");
+      } catch {
+        previousFailureKind = "";
+      }
+    }
+    if (setup.status === "failed" && previous?.status === "applied" && previousFailureKind === "known_billable_failure") {
+      const recoverySetup = setup;
+      const plan = buildDeterministicAdventureSetupPlan(frozen.context as AdventureSetupContext);
+      await db.transaction(async tx => {
+        await tx.query(`UPDATE storyhold.campaign_adventure_setups
+          SET status = 'generating', last_error = '', updated_at = now()
+          WHERE id = $1 AND status = 'failed'`, [recoverySetup.id]);
+        await applyAdventureSetupPlanInTransaction({
+          db: tx,
+          setupId: String(recoverySetup.id),
+          plan,
+          inputSha256: String(recoverySetup.input_sha256),
+        });
+        await tx.query(`UPDATE storyhold.campaign_adventure_setups
+          SET request = $2::jsonb, notes = $3, updated_at = now()
+          WHERE id = $1 AND status = 'ready'`, [
+          recoverySetup.id,
+          JSON.stringify({
+            mode: "deterministic_fallback",
+            source: "locked_start",
+            after: "known_billable_failure",
+          }),
+          "A validated locked-start foundation was applied after the connected setup response failed validation.",
+        ]);
+      });
+      return {
+        adventureSetup: publicAdventureSetup(campaign, await loadAdventureSetup(db, campaign)),
+        creditsUsed: 0,
+      };
+    }
     if (setup.status === "failed" && ((previous && ["failed","applied"].includes(String(previous.status))) || abandonedHold?.status === "released")) {
       // Explicit retry after a final known failure. Unknown/completed outcomes keep their
       // original identity so a retry cannot silently buy the same generation twice.

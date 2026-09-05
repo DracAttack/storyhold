@@ -222,7 +222,7 @@ const OPENROUTER_STAGE_MODELS: Record<StoryholdInferenceStage, string> = {
   adaptation: "anthropic/claude-sonnet-4.6",
 };
 
-const PRICING_VERSION = "2026-08-28";
+const PRICING_VERSION = "2026-09-05";
 
 const PROVIDER_LABELS: Record<StoryholdProviderId, string> = {
   anthropic: "Anthropic",
@@ -886,6 +886,18 @@ function modelRates(
         output: 30,
         known: true,
       };
+  }
+  if (
+    configuration.id === "anthropic" &&
+    configuration.model.startsWith("claude-sonnet-5")
+  ) {
+    return {
+      input: 3,
+      cachedInput: 0.3,
+      cacheWriteInput: 3.75,
+      output: 15,
+      known: true,
+    };
   }
   if (
     configuration.id === "anthropic" &&

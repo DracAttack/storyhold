@@ -699,6 +699,12 @@ test("model, output, cache, and long-context rates change the private credit res
       inputUnits: 10_000,
       outputUnits: 2_000,
     });
+    const sonnet = priceReportedAiUsage({
+      provider: "anthropic",
+      model: "claude-sonnet-5",
+      inputUnits: 10_000,
+      outputUnits: 2_000,
+    });
     const cachedLuna = priceReportedAiUsage({
       provider: "openai",
       model: "gpt-5.6-luna",
@@ -720,6 +726,8 @@ test("model, output, cache, and long-context rates change the private credit res
     });
 
     assert.ok(kimi.estimatedCostMicros > luna.estimatedCostMicros);
+    assert.equal(sonnet.pricingKnown, true);
+    assert.equal(sonnet.estimatedCostMicros, 60_000);
     assert.ok(cachedLuna.estimatedCostMicros < luna.estimatedCostMicros);
     assert.ok(longGrok.estimatedCostMicros > shortGrok.estimatedCostMicros);
     assert.ok(creditsForUsage(kimi) > creditsForUsage(luna));

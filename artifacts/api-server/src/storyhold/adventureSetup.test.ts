@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   AdventureSetupValidationError,
   buildAdventureSetupPrompt,
+  buildDeterministicAdventureSetupPlan,
   validateAdventureSetupPlan,
   type AdventureSetupContext,
   type AdventureSetupPlan,
@@ -63,6 +64,39 @@ test("accepts a bounded original comedy setup without forced antagonists or mech
   assert.notEqual(validated, proposed);
   assert.notEqual(validated.cast, proposed.cast);
   assert.deepEqual({ snapshot, proposed }, before);
+});
+
+test("deterministic recovery remains stable and passes the same strict validator", () => {
+  const snapshot = context({
+    requiresWorldFoundation: true,
+    lockedStart: JSON.stringify({
+      currentLocation: { name: "The taco stand" },
+      trackedObjectives: [{
+        status: "active",
+        title: "Keep the lunch shift moving",
+        description: "Respond to immediate problems without assuming success.",
+        target: 4,
+      }],
+    }),
+  });
+  const first = buildDeterministicAdventureSetupPlan(snapshot);
+  const second = buildDeterministicAdventureSetupPlan(snapshot);
+  assert.deepEqual(first, second);
+  assert.deepEqual(validateAdventureSetupPlan(first, snapshot), first);
+  assert.equal(first.locationName, "The taco stand");
+  assert.equal(first.visibleObjective.title, "Keep the lunch shift moving");
+  assert.equal(first.visibleObjective.target, 4);
+  assert.equal(first.worldFoundation?.broaderForces.length, 2);
+});
+
+test("deterministic recovery never adds opening narration to an existing campaign", () => {
+  const snapshot = context({
+    requiresWorldFoundation: true,
+    currentTurnNumber: 1,
+    existingSummary: "The player already made a choice.",
+  });
+  const recovered = buildDeterministicAdventureSetupPlan(snapshot);
+  assert.equal(recovered.publicOpening, "");
 });
 
 test("new live foundations require identity secrecy and a world beyond the opening location", () => {

@@ -239,6 +239,8 @@ test("managed Anthropic reservation and execution use the same required output c
     const quote = quoteAiCostReservation(input);
     assert.equal(quote.maxOutputUnits, 8_192);
     assert.equal(quote.candidates[0]?.provider, "anthropic");
+    assert.equal(quote.pricingKnown, true);
+    assert.ok(quote.maximumCostMicros > 0);
 
     const originalFetch = globalThis.fetch;
     let executionCap = 0;
@@ -259,8 +261,10 @@ test("managed Anthropic reservation and execution use the same required output c
       }), { status: 200, headers: { "content-type": "application/json" } });
     };
     try {
-      await generateAiText(input);
+      const result = await generateAiText(input);
       assert.equal(executionCap, quote.maxOutputUnits);
+      assert.equal(result.usage.pricingKnown, true);
+      assert.ok(result.usage.estimatedCostMicros > 0);
     } finally {
       globalThis.fetch = originalFetch;
     }
@@ -475,7 +479,7 @@ test("managed verification enforces OpenRouter privacy routing and reports execu
       assert.equal(result.usage.costEstimated, false);
       assert.equal(
         result.usage.pricingVersion,
-        "openrouter-reported-2026-08-28",
+        "openrouter-reported-2026-09-05",
       );
     } finally {
       globalThis.fetch = originalFetch;

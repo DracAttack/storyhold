@@ -396,6 +396,215 @@ export function validateAdventureSetupPlan(value: unknown, context: AdventureSet
   return plan;
 }
 
+function fallbackText(value: unknown, fallback: string, maximum: number): string {
+  const normalized = typeof value === "string"
+    ? value.normalize("NFKC").replace(/\s+/gu, " ").trim()
+    : "";
+  return (normalized || fallback).slice(0, maximum);
+}
+
+/**
+ * Builds a conservative setup only from the locked campaign snapshot.
+ * It is used after a connected setup attempt has a settled, known-billable
+ * validation failure so the player is not charged again merely to unlock Play.
+ */
+export function buildDeterministicAdventureSetupPlan(
+  context: AdventureSetupContext,
+): AdventureSetupPlan {
+  let locked: JsonRecord = {};
+  try {
+    const parsed = JSON.parse(context.lockedStart);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      locked = parsed as JsonRecord;
+    }
+  } catch {
+    // Older tests and imported snapshots may contain a plain-text locked start.
+  }
+  const location = locked.currentLocation && typeof locked.currentLocation === "object"
+    ? locked.currentLocation as JsonRecord
+    : {};
+  const locationName = fallbackText(
+    location.name,
+    "The opening scene",
+    240,
+  );
+  const objectives = Array.isArray(locked.trackedObjectives)
+    ? locked.trackedObjectives.filter(
+        (entry): entry is JsonRecord =>
+          Boolean(entry) && typeof entry === "object" && !Array.isArray(entry),
+      )
+    : [];
+  const activeObjective = objectives.find((entry) =>
+    ["active", "pending"].includes(String(entry.status ?? "")),
+  );
+  const visibleObjective = {
+    key: "establish_footing",
+    title: fallbackText(
+      activeObjective?.title,
+      "Understand the immediate situation",
+      160,
+    ),
+    description: fallbackText(
+      activeObjective?.description,
+      "Observe what is happening nearby and decide how to respond without assuming an outcome.",
+      1_600,
+    ),
+    target: Math.min(
+      6,
+      Math.max(
+        1,
+        Number.isSafeInteger(Number(activeObjective?.target))
+          ? Number(activeObjective?.target)
+          : 3,
+      ),
+    ),
+  };
+  const usedNames = new Set(
+    (context.existingCast ?? []).map((entry) => normalizedSignature(entry.name)),
+  );
+  const unusedName = (candidates: string[]) =>
+    candidates.find((name) => !usedNames.has(normalizedSignature(name))) ??
+    `Local Contact ${usedNames.size + 1}`;
+  const cast: AdventureSetupPlan["cast"] = (context.existingCast ?? [])
+    .slice(0, 2)
+    .map((entry, index) => ({
+      key: `established_contact_${index + 1}`,
+      name: fallbackText(entry.name, `Established Contact ${index + 1}`, 160),
+      role: "Established person in this world",
+      presence: "unmet" as const,
+      publicSummary: fallbackText(
+        entry.publicSummary,
+        "This person belongs to the established cast but has not entered the opening scene.",
+        4_000,
+      ),
+      privateMotivation: "This person's next choice depends on how the player changes the situation.",
+      existingSubject: entry.subject,
+    }));
+  for (const candidates of [
+    ["Mara Venn", "Avery Vale", "Niko Rowan"],
+    ["Tobin Reed", "Sela Hart", "Ira Moss"],
+  ]) {
+    if (cast.length >= 2) break;
+    const name = unusedName(candidates);
+    usedNames.add(normalizedSignature(name));
+    cast.push({
+      key: `local_contact_${cast.length + 1}`,
+      name,
+      role: "A person connected to the surrounding community",
+      presence: "unmet",
+      publicSummary: `${name} is known locally, but has not yet entered the opening scene.`,
+      privateMotivation: `${name} wants to protect an ordinary responsibility before taking a larger risk.`,
+    });
+  }
+  const continuation =
+    context.currentTurnNumber > 0 ||
+    context.currentMinute > 0 ||
+    context.recentTurns.length > 0 ||
+    Boolean(context.existingSummary.trim());
+  const proposed: AdventureSetupPlan = {
+    publicOpening: continuation
+      ? ""
+      : `At ${locationName}, the familiar rhythm breaks when an immediate problem becomes visible. Nearby attention shifts toward the disturbance, and the moment holds before anyone decides what happens next.`,
+    locationName,
+    visibleObjective,
+    worldFoundation: {
+      settingBaseline: fallbackText(
+        context.campaign.premise,
+        "Daily life continues through ordinary places, communities, responsibilities, and choices.",
+        2_000,
+      ),
+      identitySecrecy: {
+        status: "limited",
+        truth: "The wider world does not yet understand the player character's complete history or capabilities.",
+        knownBy: ["the player character"],
+        exposureStakes: "New evidence may change trust and access, but no response is predetermined.",
+      },
+      broaderForces: [
+        {
+          key: "surrounding_community",
+          name: "The surrounding community",
+          summary: "People beyond the opening location continue pursuing their own responsibilities.",
+          relationshipToCampaign: "Their needs may matter if the player's choices create a genuine connection.",
+        },
+        {
+          key: "distant_interests",
+          name: "Distant interests",
+          summary: "Groups elsewhere respond to events through incomplete information and their own priorities.",
+          relationshipToCampaign: "They remain background possibilities until earned evidence or travel brings them closer.",
+        },
+      ],
+      unresolvedBackground: [
+        {
+          key: "unsettled_history",
+          question: "Which parts of the player character's history will become relevant?",
+          currentTruth: "No undisclosed past event is treated as established merely because setup requires a foundation.",
+          discoveryBoundary: "A later answer requires player authorship or evidence earned during play.",
+        },
+        {
+          key: "wider_connection",
+          question: "How might the opening situation connect to the wider world?",
+          currentTruth: "No larger connection has occurred at the locked beginning.",
+          discoveryBoundary: "A connection must arise from subsequent choices, investigation, travel, or credible contacts.",
+        },
+      ],
+    },
+    cast,
+    secrets: [{
+      key: "unseen_context",
+      truth: "Someone nearby has incomplete information that could alter how they interpret the immediate problem.",
+      clues: [
+        "A small inconsistency suggests that one observer has seen only part of what happened.",
+        "Two accounts of the immediate situation emphasize different details.",
+      ],
+      discoverableVia: [
+        "Compare observable details with what nearby people are willing to explain.",
+      ],
+    }],
+    pressures: [
+      {
+        key: "rising_attention",
+        title: "Rising attention",
+        privateSummary: "If the immediate problem remains unaddressed, more people may notice without agreeing on its meaning.",
+        observableConsequence: "Additional onlookers begin paying attention to the disruption.",
+        clueOpportunities: ["An observer may reveal what first drew their attention."],
+        maturesAfterMinutes: 15,
+        objectiveKey: visibleObjective.key,
+      },
+      {
+        key: "closing_window",
+        title: "A closing window",
+        privateSummary: "Ordinary schedules may make one useful conversation or opportunity harder to reach.",
+        observableConsequence: "Someone nearby prepares to leave or return to another responsibility.",
+        clueOpportunities: ["Their preparation reveals where they intend to go next."],
+        maturesAfterMinutes: 30,
+        objectiveKey: "follow_the_evidence",
+      },
+    ],
+    privateDirection: {
+      premise: "Let the opening grow from the player's response while preserving the locked start and avoiding predetermined revelations.",
+      goalSteps: [
+        {
+          key: "follow_the_evidence",
+          title: "Follow a credible lead",
+          condition: "Only if the player investigates an observable detail or earns a useful account.",
+          possibleNextStep: "The player may compare evidence, seek a witness, or pursue another grounded lead.",
+        },
+        {
+          key: "choose_a_commitment",
+          title: "Choose what deserves commitment",
+          condition: "Only after the player has enough context to recognize competing priorities.",
+          possibleNextStep: "The player may help, negotiate, withdraw, or redefine the immediate goal.",
+        },
+      ],
+      alternatePaths: [
+        "A social approach can build trust and information without requiring confrontation.",
+        "A practical approach can stabilize the immediate situation while leaving larger questions open.",
+      ],
+    },
+  };
+  return validateAdventureSetupPlan(proposed, context);
+}
+
 /** A provider-neutral authoring prompt. Calling it performs no model, DB, or network work. */
 export function buildAdventureSetupPrompt(context: AdventureSetupContext): string {
   validateContext(context);
