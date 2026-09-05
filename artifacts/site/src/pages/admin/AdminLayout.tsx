@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { LayoutDashboard, Users, FileText, LogOut, Home, Mail, Settings, Lightbulb, Tags, Menu, AtSign, Share2, Link2, ImageIcon, CopyCheck, Waypoints, Radar, BrainCircuit, DollarSign, Facebook, Laugh, Library, ClipboardList, Gauge, Rss, BookOpen, FileImage, ShieldAlert, Loader2, Network, Map } from "lucide-react";
 import { useEffect, useState } from "react";
-import bpdLogo from "@/assets/bpd-logo.png";
 import { GlosaryCaptureProvider } from "@/lib/glossaryCaptureContext";
 import { useGlossaryCapture } from "@/lib/useGlossaryCapture";
 import { useListWatchedClusters } from "@workspace/api-client-react";
@@ -159,14 +158,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             })}
           </div>
         ))}
-        {/* BPD-isms is a standalone app served outside this SPA, so use a
-            plain anchor (full page load) rather than a wouter Link. */}
-        <a
-          href="/bpdisms/"
-          className="flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground"
-        >
-          <img src={bpdLogo} alt="" className="h-4 w-4 rounded-sm object-cover" /> BPD-isms
-        </a>
       </nav>
       <GlosaryCaptureStatusPill />
       <div className="p-3 border-t space-y-2">

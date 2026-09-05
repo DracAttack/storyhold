@@ -28,7 +28,6 @@ export * from "./socialPosts";
 export * from "./socialQueue";
 export * from "./memeTemplates";
 export * from "./memes";
-export * from "./bpdisms";
 export * from "./concepts";
 export * from "./sourceGaps";
 export * from "./termOfDay";

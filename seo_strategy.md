@@ -10,7 +10,6 @@
 - Authenticated and admin routes under `/admin/**`
 - Internal API JSON routes except where they directly power crawl files or SSR SEO output
 - `mockup-sandbox`
-- `bpdisms` and `bpdisms-api` standalone product surfaces
 
 ## Target audience
 - Readers looking for research-backed magazine content about science, psychology, human behavior, and related current events.
