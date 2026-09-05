@@ -196,7 +196,7 @@ export type GenerateAiTextInput = {
 };
 
 const DEFAULT_MODELS: Record<StoryholdProviderId, string> = {
-  anthropic: "claude-haiku-4-5",
+  anthropic: "claude-sonnet-5",
   openai: "gpt-5.6-luna",
   xai: "grok-4.5",
   kimi: "kimi-k3",
@@ -1083,6 +1083,13 @@ async function callAnthropic(
   configuration: ProviderConfiguration,
   input: GenerateAiTextInput,
 ): Promise<ProviderCallResult> {
+  const usesReplitManagedAnthropic =
+    configuration.baseURL ===
+    process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL?.trim();
+  const omitsSamplingControls =
+    /^(?:claude-(?:opus|sonnet)-5|claude-opus-4-(?:7|8))$/u.test(
+      configuration.model,
+    );
   const client = new Anthropic({
     apiKey: configuration.apiKey,
     ...(configuration.baseURL ? { baseURL: configuration.baseURL } : {}),
@@ -1090,8 +1097,10 @@ async function callAnthropic(
   });
   const result = await client.messages.create({
     model: configuration.model,
-    max_tokens: input.maxOutputTokens ?? 2_000,
-    ...(typeof input.temperature === "number"
+    max_tokens: usesReplitManagedAnthropic
+      ? Math.max(input.maxOutputTokens ?? 8_192, 8_192)
+      : input.maxOutputTokens ?? 2_000,
+    ...(typeof input.temperature === "number" && !omitsSamplingControls
       ? { temperature: input.temperature }
       : {}),
     system: input.system,
