@@ -27,6 +27,7 @@ import {
   PostgresStoryholdAdapter,
   type StoryholdDb,
 } from "./storyhold/postgresAdapter";
+import { createStoryholdSourceVaultStorage } from "./storyhold/sourceVaultStorage";
 
 const __dir = path.dirname(fileURLToPath(import.meta.url));
 const repoDir = path.resolve(__dir, "../../..");
@@ -358,7 +359,7 @@ try {
   ALTER TABLE storyhold.players ADD COLUMN IF NOT EXISTS display_name text NOT NULL DEFAULT '';
   ALTER TABLE storyhold.players ADD COLUMN IF NOT EXISTS credits integer NOT NULL DEFAULT 40 CHECK (credits >= 0);
 `);
-  await initializeWorldStudio(db, storageRoot);
+  await initializeWorldStudio(db);
   if (applyingDevelopmentSchema) {
     // Create this schema-only release sentinel last. Production startup checks
     // it so an interrupted development schema application cannot be published
@@ -888,7 +889,12 @@ app.get(
   },
 );
 
-registerWorldStudioRoutes({ app, db, requireUser, storageRoot });
+registerWorldStudioRoutes({
+  app,
+  db,
+  requireUser,
+  sourceVaultStorage: createStoryholdSourceVaultStorage(storageRoot),
+});
 
 // The embedded local vault must be allowed to flush, and managed PostgreSQL
 // must release its pool, before this Node process exits. This loopback-only

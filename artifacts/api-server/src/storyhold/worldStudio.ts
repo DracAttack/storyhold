@@ -1,7 +1,11 @@
 import { createHash, randomUUID } from "node:crypto";
-import { mkdir, rm, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import type { StoryholdDb } from "./postgresAdapter";
+import {
+  GcsStoryholdSourceVaultStorage,
+  storyholdSourceObjectKey,
+  type StoryholdSourceVaultStorage,
+} from "./sourceVaultStorage";
 import express, {
   type Express,
   type Request,
@@ -1694,7 +1698,7 @@ function extensionFor(filename: string, type: DocumentType): string {
     .extname(filename)
     .toLocaleLowerCase()
     .replace(/[^.a-z0-9]/g, "");
-  return extension && extension.length <= 12 ? extension : `.${type}`;
+  return extension && extension.length <= 10 ? extension : `.${type}`;
 }
 
 function wordCount(text: string): number {
@@ -2234,19 +2238,6 @@ function assertUuid(value: string, res: Response): boolean {
   if (UUID_PATTERN.test(value)) return true;
   res.status(404).json({ error: "World not found." });
   return false;
-}
-
-export function worldUploadDirectoryForDeletion(
-  storageRoot: string,
-  worldId: string,
-): string {
-  if (!UUID_PATTERN.test(worldId)) throw new Error("Invalid world identifier.");
-  const uploadsRoot = path.resolve(storageRoot, "uploads");
-  const target = path.resolve(uploadsRoot, worldId);
-  if (path.dirname(target) !== uploadsRoot) {
-    throw new Error("The world upload directory escaped the storage root.");
-  }
-  return target;
 }
 
 async function ownedWorld(db: StudioDb, worldId: string, playerId: string) {
@@ -14520,7 +14511,6 @@ async function ensureTextValueConstraint(
 
 export async function initializeWorldStudio(
   db: StudioRootDb,
-  storageRoot: string,
 ) {
   await db.exec(worldStudioSchemaSql);
   // campaign_rpg_* tables reference campaigns, so they must follow the core
@@ -15032,7 +15022,6 @@ export async function initializeWorldStudio(
             ai_reviewed_content_hash = COALESCE(ai_reviewed_content_hash, content_hash)
       WHERE ai_review_status = 'reviewed' AND ai_reviewed_chunk_count = 0`,
   );
-  await mkdir(path.join(storageRoot, "uploads"), { recursive: true });
   await db.query(
     `UPDATE storyhold.world_sources
         SET local_scan_status = 'not_applicable', ai_review_status = 'not_applicable'
@@ -15245,9 +15234,14 @@ export function registerWorldStudioRoutes(params: {
   app: Express;
   db: StudioRootDb;
   requireUser: RequestHandler;
-  storageRoot: string;
+  sourceVaultStorage?: StoryholdSourceVaultStorage;
 }) {
-  const { app, db, requireUser, storageRoot } = params;
+  const {
+    app,
+    db,
+    requireUser,
+    sourceVaultStorage = new GcsStoryholdSourceVaultStorage(),
+  } = params;
 
   registerAdventureSetupRoutes({ app, db, requireUser });
   registerCampaignPlayRoutes({ app, db, requireUser });
@@ -16000,12 +15994,11 @@ export function registerWorldStudioRoutes(params: {
       }
       let filesRemoved = true;
       try {
-        const uploadDirectory = worldUploadDirectoryForDeletion(storageRoot, worldId);
-        await rm(uploadDirectory, { recursive: true, force: true });
+        await sourceVaultStorage.deleteWorldSources(worldId);
       } catch (error) {
         filesRemoved = false;
         process.stderr.write(
-          `Storyhold deleted world ${worldId}, but could not remove its upload directory: ${error instanceof Error ? error.message : String(error)}\n`,
+          `Storyhold deleted world ${worldId}, but could not remove its source objects: ${error instanceof Error ? error.message : String(error)}\n`,
         );
       }
       res.json({ deleted: true, worldId, name: deleted.name, filesRemoved });
@@ -19209,13 +19202,12 @@ export function registerWorldStudioRoutes(params: {
       }
 
       const sourceId = randomUUID();
-      const worldUploadDir = path.join(storageRoot, "uploads", worldId);
-      await mkdir(worldUploadDir, { recursive: true });
-      const rawFilePath = path.join(
-        worldUploadDir,
-        `${sourceId}${extensionFor(filename, documentType)}`,
+      const sourceExtension = extensionFor(filename, documentType);
+      const rawFilePath = storyholdSourceObjectKey(
+        worldId,
+        sourceId,
+        sourceExtension,
       );
-      await writeFile(rawFilePath, bytes, { flag: "wx" });
 
       let extraction: Awaited<ReturnType<typeof extractDocumentText>> | null =
         null;
@@ -19300,7 +19292,6 @@ export function registerWorldStudioRoutes(params: {
         });
         const projectedWordCount = currentIntake.wordCount + extractedWordCount;
         if (projectedWordCount > currentIntake.wordLimit) {
-          await unlink(rawFilePath).catch(() => undefined);
           res.status(413).json({
             code: "CANON_INTAKE_WORD_LIMIT",
             error: `Adding this source would bring the world to ${projectedWordCount.toLocaleString()} intake words. Canon Intake accepts up to ${currentIntake.wordLimit.toLocaleString()} words in one world, so this file was not added and no credits were used.`,
@@ -19314,6 +19305,14 @@ export function registerWorldStudioRoutes(params: {
       }
       const localScanStatus = reviewApplicable ? "pending" : "not_applicable";
       const aiReviewStatus = reviewApplicable ? "waiting" : "not_applicable";
+      await sourceVaultStorage.uploadSource({
+        worldId,
+        sourceId,
+        extension: sourceExtension,
+        bytes,
+        contentType: mediaType,
+        documentType,
+      });
       try {
         await db.query(
           `INSERT INTO storyhold.world_sources
@@ -19416,10 +19415,19 @@ export function registerWorldStudioRoutes(params: {
           });
         }
       } catch (error) {
-        await db.query("DELETE FROM storyhold.world_sources WHERE id = $1", [
-          sourceId,
-        ]);
-        await unlink(rawFilePath).catch(() => undefined);
+        try {
+          await db.query("DELETE FROM storyhold.world_sources WHERE id = $1", [
+            sourceId,
+          ]);
+        } finally {
+          try {
+            await sourceVaultStorage.deleteSource(rawFilePath);
+          } catch (cleanupError) {
+            process.stderr.write(
+              `Storyhold could not remove rolled-back source ${sourceId}: ${cleanupError instanceof Error ? cleanupError.message : String(cleanupError)}\n`,
+            );
+          }
+        }
         throw error;
       }
       res.status(processingError ? 422 : 201).json({

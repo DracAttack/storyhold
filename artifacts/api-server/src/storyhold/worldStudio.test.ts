@@ -81,7 +81,6 @@ import {
   syncSourceChapterSummaries,
   syncWorldEntities,
   worldIntakePipelineState,
-  worldUploadDirectoryForDeletion,
   WORLD_ANALYSIS_VERSION,
   LOCAL_ANALYSIS_VERSION,
   PREMIUM_VERIFICATION_PACKET_VERSION,
@@ -250,19 +249,6 @@ test("Canon Intake prices cumulative world words instead of charging each upload
   assert.equal(preflight.largeIntake, false);
   assert.equal(preflight.overLimit, false);
   await db.close();
-});
-
-test("world deletion resolves only the exact UUID directory inside uploads", () => {
-  const root = "C:\\Storyhold Data";
-  const worldId = "5fd1d7c4-1bb0-4fc4-a36d-b4d4909a6098";
-  assert.equal(
-    worldUploadDirectoryForDeletion(root, worldId),
-    `${root}\\uploads\\${worldId}`,
-  );
-  assert.throws(
-    () => worldUploadDirectoryForDeletion(root, "..\\another-folder"),
-    /Invalid world identifier/,
-  );
 });
 
 test("intake pipeline stops after local and browser work until premium is chosen", () => {
