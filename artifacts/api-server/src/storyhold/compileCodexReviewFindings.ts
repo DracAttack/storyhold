@@ -518,7 +518,7 @@ function splitConflatedCharacters(rows: JsonRecord[]): JsonRecord[] {
   return result;
 }
 
-function uniqueObjectValues(values: unknown[]): unknown[] {
+function uniqueObjectValues<T>(values: T[]): T[] {
   const seen = new Set<string>();
   return values.filter((value) => {
     const key = JSON.stringify(value);
@@ -1343,7 +1343,7 @@ function materializeChronologyLocations(findings: WorldFindings): void {
   const originalLocationsByCanonical = new Map<string, Set<string>>();
   const eventsByCanonical = new Map<string, WorldFindings["chronology"]>();
   for (const event of findings.chronology) {
-    event.locations = uniqueValues(event.locations.map((rawLocation) => {
+    event.locations = uniqueValues((event.locations ?? []).map((rawLocation) => {
       const canonical = CHRONOLOGY_LOCATION_NAMES.get(rawLocation.toLocaleLowerCase()) ?? rawLocation;
       const originals = originalLocationsByCanonical.get(canonical) ?? new Set<string>();
       originals.add(rawLocation);
@@ -1375,7 +1375,7 @@ function materializeChronologyLocations(findings: WorldFindings): void {
       relationships: parent ? [`${parent.relationType === "located_in" ? "Located in" : "Associated with"} ${parent.target}.`] : [],
       factionMemberships: [],
       evidence,
-      confidence: Math.max(...events.map((event) => event.confidence), 0.7),
+      confidence: Math.max(...events.map((event) => event.confidence ?? 0.7), 0.7),
       reviewStatus: "verified",
     });
     activeLabels.add(canonical.toLocaleLowerCase());
@@ -1390,7 +1390,7 @@ function materializeChronologyLocations(findings: WorldFindings): void {
         validFromLabel: "",
         validUntilLabel: "",
         evidence,
-        confidence: Math.max(...events.map((event) => event.confidence), 0.7),
+        confidence: Math.max(...events.map((event) => event.confidence ?? 0.7), 0.7),
         reviewStatus: "verified",
       });
     }
@@ -1768,7 +1768,7 @@ export function normalizeCompiledRelationshipWeb(findings: WorldFindings): void 
 export function reconcileCompiledDossierPowers(findings: WorldFindings): void {
   const ownersByLabel = new Map<string, Set<string>>();
   for (const power of findings.powers) {
-    for (const label of [power.name, ...power.aliases]) {
+    for (const label of [power.name, ...(power.aliases ?? [])]) {
       const key = label.trim().toLocaleLowerCase();
       if (!key) continue;
       const owners = ownersByLabel.get(key) ?? new Set<string>();
@@ -1896,9 +1896,9 @@ function normalizeCompiledReferences(findings: WorldFindings): void {
     return aliases?.size === 1 ? [...aliases][0]! : "";
   };
   for (const event of findings.chronology) {
-    event.actors = uniqueValues(event.actors.map(resolve).filter(Boolean));
-    event.targets = uniqueValues(event.targets.map(resolve).filter(Boolean));
-    event.witnesses = uniqueValues(event.witnesses.map(resolve).filter(Boolean));
+    event.actors = uniqueValues((event.actors ?? []).map(resolve).filter(Boolean));
+    event.targets = uniqueValues((event.targets ?? []).map(resolve).filter(Boolean));
+    event.witnesses = uniqueValues((event.witnesses ?? []).map(resolve).filter(Boolean));
   }
 }
 
@@ -1980,7 +1980,7 @@ export function resolveCompiledIdentityReveals(findings: WorldFindings): void {
     ]) as typeof oldDogEvent.evidence;
   }
 
-  for (const claim of findings.claims) {
+  for (const claim of findings.claims ?? []) {
     if (claim.subject.toLocaleLowerCase() === OLD_DOG_LABEL.toLocaleLowerCase()) {
       claim.subject = "Ragger";
     }
@@ -2020,7 +2020,7 @@ export function normalizeCompiledChronology(
   const reunion = findings.chronology.find((event) => event.name === BOOK_TWO_REUNION_EVENT);
   if (chapterFive && reunion) {
     reunion.sourceChapterKeys = uniqueValues([
-      ...reunion.sourceChapterKeys,
+      ...(reunion.sourceChapterKeys ?? []),
       BOOK_TWO_CHAPTER_FIVE_KEY,
     ]);
     reunion.evidence = uniqueObjectValues([
@@ -2131,6 +2131,7 @@ async function main(args = process.argv.slice(2)): Promise<void> {
 }
 
 if (
+  process.env.NODE_ENV !== "test" &&
   process.argv[1] &&
   import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href
 ) {

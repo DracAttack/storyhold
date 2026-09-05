@@ -578,9 +578,16 @@ export function validateCuratedWorldFindings(value: unknown): WorldFindings {
   if (value.claims !== undefined && !Array.isArray(value.claims)) {
     throw new CodexReviewReplayError("The curated findings claims field must be an array.");
   }
+  const chapterSummaries = value.chapterSummaries;
+  const chronology = value.chronology;
+  if (!Array.isArray(chapterSummaries) || !Array.isArray(chronology)) {
+    throw new CodexReviewReplayError(
+      "The curated findings JSON omitted chapterSummaries or chronology.",
+    );
+  }
   const chapterKeys = new Set<string>();
   const ordersBySource = new Map<string, number[]>();
-  for (const [index, raw] of value.chapterSummaries.entries()) {
+  for (const [index, raw] of chapterSummaries.entries()) {
     if (!isRecord(raw)) {
       throw new CodexReviewReplayError(`Curated chapter ${index + 1} was not an object.`);
     }
@@ -612,7 +619,7 @@ export function validateCuratedWorldFindings(value: unknown): WorldFindings {
       );
     }
   }
-  for (const [index, raw] of value.chronology.entries()) {
+  for (const [index, raw] of chronology.entries()) {
     if (!isRecord(raw)) {
       throw new CodexReviewReplayError(`Curated chronology event ${index + 1} was not an object.`);
     }
@@ -745,7 +752,11 @@ async function main(args = process.argv.slice(2)): Promise<void> {
 }
 
 const executedPath = process.argv[1] ? path.resolve(process.argv[1]) : "";
-if (executedPath && import.meta.url === pathToFileURL(executedPath).href) {
+if (
+  process.env.NODE_ENV !== "test" &&
+  executedPath &&
+  import.meta.url === pathToFileURL(executedPath).href
+) {
   main().catch((error) => {
     console.error(error instanceof Error ? error.message : String(error));
     process.exitCode = 1;

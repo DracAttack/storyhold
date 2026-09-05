@@ -43,7 +43,7 @@ const TERMINAL_STATES = new Set([
   "JOB_STATE_EXPIRED",
 ]);
 
-interface BackfillProgress {
+type BackfillProgress = Record<string, unknown> & {
   processed: number;
   claims: number;
   failed: number;
@@ -55,7 +55,7 @@ interface BackfillProgress {
   batchManifest?: ClaimBatchManifestEntry[];
   batchRequests?: number;
   model: string;
-}
+};
 
 interface BatchInput {
   document: SourceDocument;
