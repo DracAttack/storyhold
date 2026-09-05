@@ -268,6 +268,15 @@ function loopbackEndpoint(value: string): boolean {
   }
 }
 
+function remoteHttpsEndpoint(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && !loopbackEndpoint(value);
+  } catch {
+    return false;
+  }
+}
+
 export function getLocalEntityExtractionStatus(
   stage: "gliner1" | "gliner2" = "gliner2",
 ): LocalEntityExtractionStatus {
@@ -282,7 +291,10 @@ export function getLocalEntityExtractionStatus(
       : Boolean(endpoint),
   );
   const allowRemote = envEnabled("STORYHOLD_LOCAL_NER_ALLOW_REMOTE", false);
-  const safeEndpoint = Boolean(endpoint) && (allowRemote || loopbackEndpoint(endpoint));
+  const safeEndpoint = Boolean(endpoint) && (
+    loopbackEndpoint(endpoint) ||
+    (allowRemote && remoteHttpsEndpoint(endpoint))
+  );
   const enabled = requested && safeEndpoint;
   const isLoopback = Boolean(endpoint) && loopbackEndpoint(endpoint);
   return {
@@ -298,10 +310,14 @@ export function getLocalEntityExtractionStatus(
     sendsSourceTextOffDevice: Boolean(endpoint && !isLoopback),
     explanation: enabled
       ? stage === "gliner1"
-        ? "The private GLiNER 1 reader performs the broad, high-recall named-entity pass before structured extraction."
-        : "The private GLiNER2 reader classifies Storyhold-native terms, relationships, claims, and state changes before verification."
+        ? isLoopback
+          ? "A configured loopback GLiNER 1 reader performs the broad, high-recall named-entity pass. Its leads remain evidence-backed candidates, not canon."
+          : "A configured remote GLiNER 1 reader receives manuscript segments for a high-recall candidate pass. Its leads remain evidence-backed candidates, not canon."
+        : isLoopback
+          ? "A configured loopback GLiNER2 reader classifies Storyhold-native candidate terms, relationships, claims, and state changes before verification."
+          : "A configured remote GLiNER2 reader receives manuscript segments to classify candidate terms, relationships, claims, and state changes before verification."
       : requested && endpoint && !safeEndpoint
-        ? "The local entity endpoint was blocked because manuscript text may only use a loopback address unless remote access is explicitly allowed."
+        ? "The entity endpoint was blocked because manuscript text requires loopback HTTP(S), or an explicitly allowed remote HTTPS endpoint."
         : "The deterministic source scanner is active; the private GLiNER2 reader is not configured.",
   };
 }
@@ -356,6 +372,12 @@ export async function probeLocalEntityExtraction(
 function boundedNumber(value: unknown, fallback: number): number {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function modelScore(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.max(0, Math.min(1, parsed)) : null;
 }
 
 function cleanEntityText(value: unknown): string {
@@ -425,9 +447,11 @@ export function parseLocalEntityResponse(
     const text = cleanEntityText(row.text ?? row.word ?? row.entity_text ?? row.span);
     const label = cleanEntityText(row.label ?? row.entity ?? row.type).toLocaleLowerCase();
     const category = LABEL_CATEGORY.get(label);
+    const score = modelScore(row.score ?? row.confidence);
     if (
       !text ||
       !category ||
+      score === null ||
       text.length < 2 ||
       !localEntityTextIsUseful(text) ||
       (category === "character" && !localCharacterNameIsUseful(text)) ||
@@ -439,7 +463,7 @@ export function parseLocalEntityResponse(
     return [{
       text,
       category,
-      score: Math.max(0, Math.min(1, boundedNumber(row.score ?? row.confidence, 0.5))),
+      score,
       chunkId: segment.chunkId,
       sourceId: segment.sourceId,
       quote: quoteAround(segment.text, text, row.start),
@@ -470,11 +494,12 @@ export function parseLocalPassageClassifications(
   const seen = new Set<string>();
   return directRows(value, "classifications").flatMap((row): LocalPassageClassification[] => {
     const label = cleanEntityText(row.label ?? row.text).toLocaleLowerCase();
-    if (!label || seen.has(label)) return [];
+    const score = modelScore(row.score ?? row.confidence);
+    if (!label || score === null || seen.has(label)) return [];
     seen.add(label);
     return [{
       label,
-      score: Math.max(0, Math.min(1, boundedNumber(row.score ?? row.confidence, 0.5))),
+      score,
       chunkId: segment.chunkId,
       sourceId: segment.sourceId,
     }];
@@ -497,6 +522,7 @@ export function parseLocalStorySignals(
     const fields: Record<string, string[]> = {};
     const scores: number[] = [];
     const exactValues: Array<{ text: string; start: unknown }> = [];
+    let invalidScore = false;
     for (const [field, raw] of Object.entries(rawFields)) {
       const values = Array.isArray(raw) ? raw : [raw];
       const accepted: string[] = [];
@@ -506,23 +532,31 @@ export function parseLocalStorySignals(
           : { text: value };
         const text = cleanEntityText(record.text ?? record.label);
         if (!text) continue;
+        const score = modelScore(record.score ?? record.confidence);
+        if (score === null) {
+          invalidScore = true;
+          continue;
+        }
         const exact = segment.text.normalize("NFKC").includes(text);
         if (!exact && !SIGNAL_CHOICE_FIELDS.has(field)) continue;
         if (!accepted.some((existing) => existing.toLocaleLowerCase() === text.toLocaleLowerCase())) {
           accepted.push(text);
-          scores.push(Math.max(0, Math.min(1, boundedNumber(record.score ?? record.confidence, 0.5))));
+          scores.push(score);
           if (exact) exactValues.push({ text, start: record.start });
         }
       }
       if (accepted.length) fields[field] = accepted;
     }
-    if (Object.keys(fields).length === 0 || exactValues.length === 0) return [];
+    if (
+      invalidScore || scores.length === 0 ||
+      Object.keys(fields).length === 0 || exactValues.length === 0
+    ) return [];
     const first = exactValues[0]!;
     const last = exactValues[exactValues.length - 1]!;
     return [{
       signalType: signalType as LocalStorySignal["signalType"],
       fields,
-      score: scores.length ? Math.min(...scores) : 0.5,
+      score: Math.min(...scores),
       chunkId: segment.chunkId,
       sourceId: segment.sourceId,
       quote: quoteAroundRelation(segment.text, first.text, last.text, first.start, last.start),
@@ -546,9 +580,10 @@ export function parseLocalRelationResponse(
       : {};
     const subject = cleanEntityText(subjectRow.text ?? row.subject);
     const target = cleanEntityText(targetRow.text ?? row.target);
+    const score = modelScore(row.score ?? row.confidence);
     const normalizedText = segment.text.normalize("NFKC");
     if (
-      !relationType || !subject || !target || subject === target ||
+      !relationType || !subject || !target || score === null || subject === target ||
       !localEntityTextIsUseful(subject) || !localEntityTextIsUseful(target) ||
       !normalizedText.includes(subject) || !normalizedText.includes(target)
     ) return [];
@@ -559,7 +594,7 @@ export function parseLocalRelationResponse(
       subject,
       relationType,
       target,
-      score: Math.max(0, Math.min(1, boundedNumber(row.score, 0.5))),
+      score,
       chunkId: segment.chunkId,
       sourceId: segment.sourceId,
       quote: quoteAroundRelation(
@@ -634,10 +669,17 @@ async function extractSegment(
       throw new Error(`Local entity service returned HTTP ${response.status}.${detail ? ` ${detail}` : ""}`);
     }
     return {
-      mentions: parseLocalEntityResponse(payload, segment),
-      relations: parseLocalRelationResponse(payload, segment),
-      classifications: parseLocalPassageClassifications(payload, segment),
-      signals: parseLocalStorySignals(payload, segment),
+      // Treat the service threshold as advisory only. The server repeats it
+      // before admitting model output into its candidate ledger, so a
+      // misconfigured or substituted endpoint cannot silently lower it.
+      mentions: parseLocalEntityResponse(payload, segment)
+        .filter((mention) => mention.score >= threshold),
+      relations: parseLocalRelationResponse(payload, segment)
+        .filter((relation) => relation.score >= threshold),
+      classifications: parseLocalPassageClassifications(payload, segment)
+        .filter((classification) => classification.score >= threshold),
+      signals: parseLocalStorySignals(payload, segment)
+        .filter((signal) => signal.score >= threshold),
     };
   } catch (error) {
     if (controller.signal.aborted) {

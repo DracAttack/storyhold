@@ -216,6 +216,59 @@ test("GLiNER2 noise rows never become local entity leads", () => {
   assert.deepEqual(mentions.map((mention) => mention.text), ["Echo"]);
 });
 
+test("GLiNER output without finite model scores is rejected in every channel", () => {
+  const segment = {
+    chunkId: "11111111-1111-4111-8111-111111111111",
+    sourceId: "22222222-2222-4222-8222-222222222222",
+    text: "Alec leads the Guard in Sanctuary.",
+  };
+  assert.deepEqual(parseLocalEntityResponse({
+    entities: [
+      { text: "Alec", label: "person or named fictional character" },
+      { text: "Guard", label: "named faction, alliance, army, guild, clan, or organized group", score: Infinity },
+    ],
+  }, segment), []);
+  assert.deepEqual(parseLocalRelationResponse({
+    relations: [{
+      subject: { text: "Alec" },
+      target: { text: "Guard" },
+      label: "leads",
+      confidence: Number.NaN,
+    }],
+  }, segment), []);
+  assert.deepEqual(parseLocalPassageClassifications({
+    classifications: [{ label: "action" }],
+  }, segment), []);
+  assert.deepEqual(parseLocalStorySignals({
+    signals: [{
+      signalType: "story_claim",
+      fields: {
+        subject: [{ text: "Alec", score: 0.9 }],
+        predicate: [{ text: "leads" }],
+        object: [{ text: "Guard", score: 0.9 }],
+      },
+    }],
+  }, segment), []);
+});
+
+test("the server enforces its GLiNER confidence floor even if an endpoint ignores it", async (t) => {
+  const previous = { ...process.env };
+  t.after(() => { process.env = previous; });
+  process.env.STORYHOLD_LOCAL_GLINER2_ENABLED = "true";
+  process.env.STORYHOLD_LOCAL_GLINER2_URL = "http://127.0.0.1:8765/gliner2";
+  process.env.STORYHOLD_LOCAL_NER_THRESHOLD = "0.8";
+  t.mock.method(globalThis, "fetch", async () => Response.json({
+    entities: [
+      { text: "Alec", label: "person or named fictional character", score: 0.79 },
+      { text: "Echo", label: "person or named fictional character", score: 0.8 },
+    ],
+  }));
+  const result = await extractLocalStoryEntities({
+    chunks: [{ id: "one", sourceId: "book", content: "Alec met Echo." }],
+  });
+  assert.deepEqual(result.mentions.map((mention) => mention.text), ["Echo"]);
+});
+
 test("local entity extraction rejects a remote endpoint unless explicitly allowed", () => {
   const previous = { ...process.env };
   try {
@@ -226,6 +279,25 @@ test("local entity extraction rejects a remote endpoint unless explicitly allowe
     assert.equal(status.enabled, false);
     assert.equal(status.configured, false);
     assert.equal(status.endpoint, null);
+  } finally {
+    process.env = previous;
+  }
+});
+
+test("remote GLiNER requires HTTPS even when remote processing is explicitly allowed", () => {
+  const previous = { ...process.env };
+  try {
+    process.env.STORYHOLD_LOCAL_NER_ENABLED = "true";
+    process.env.STORYHOLD_LOCAL_NER_ALLOW_REMOTE = "true";
+    process.env.STORYHOLD_LOCAL_NER_URL = "http://models.example.test/gliner";
+    const blocked = getLocalEntityExtractionStatus();
+    assert.equal(blocked.configured, false);
+    assert.match(blocked.explanation, /HTTPS/);
+    process.env.STORYHOLD_LOCAL_NER_URL = "https://models.example.test/gliner";
+    const allowed = getLocalEntityExtractionStatus();
+    assert.equal(allowed.configured, true);
+    assert.equal(allowed.endpointKind, "remote");
+    assert.equal(allowed.sendsSourceTextOffDevice, true);
   } finally {
     process.env = previous;
   }

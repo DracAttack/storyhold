@@ -227,6 +227,46 @@ test("single-attempt execution uses the first configured provider when a preferr
   });
 });
 
+test("managed Anthropic reservation and execution use the same required output cap", async () => {
+  await withGatewayEnvironment(async () => {
+    process.env.STORYHOLD_VERIFICATION_PROVIDER = "anthropic";
+    process.env.AI_INTEGRATIONS_ANTHROPIC_API_KEY = "managed-test-key";
+    process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL = "https://anthropic-managed.invalid";
+    const input: GenerateAiTextInput = {
+      ...singleAttemptInput,
+      maxOutputTokens: 200,
+    };
+    const quote = quoteAiCostReservation(input);
+    assert.equal(quote.maxOutputUnits, 8_192);
+    assert.equal(quote.candidates[0]?.provider, "anthropic");
+
+    const originalFetch = globalThis.fetch;
+    let executionCap = 0;
+    globalThis.fetch = async (request, init) => {
+      const body = request instanceof Request
+        ? await request.clone().json() as { max_tokens?: number }
+        : JSON.parse(String(init?.body)) as { max_tokens?: number };
+      executionCap = Number(body.max_tokens);
+      return new Response(JSON.stringify({
+        id: "msg_test",
+        type: "message",
+        role: "assistant",
+        model: "claude-sonnet-5",
+        content: [{ type: "text", text: "Verified evidence" }],
+        stop_reason: "end_turn",
+        stop_sequence: null,
+        usage: { input_tokens: 10, output_tokens: 2 },
+      }), { status: 200, headers: { "content-type": "application/json" } });
+    };
+    try {
+      await generateAiText(input);
+      assert.equal(executionCap, quote.maxOutputUnits);
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+});
+
 test("an OpenRouter key alone does not enter automatic or demo routing", async () => {
   await withGatewayEnvironment(() => {
     process.env.STORYHOLD_OPENROUTER_API_KEY = "test-openrouter-key";

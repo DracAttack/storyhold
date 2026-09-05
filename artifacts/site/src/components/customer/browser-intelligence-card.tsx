@@ -31,7 +31,14 @@ export function BrowserIntelligenceCard() {
   const [busy, setBusy] = useState(false);
 
   const refresh = async (checkCache = preference === "enabled") => {
-    const nextCapability = await inspectBrowserLorekeeper();
+    const nextCapability = await inspectBrowserLorekeeper().catch((reason) => ({
+      supported: false,
+      reason: reason instanceof Error
+        ? `Private browser intelligence is unavailable: ${reason.message}`
+        : "Private browser intelligence is unavailable in this browser.",
+      model: "",
+      deviceProfile: {},
+    }));
     const nextCache = checkCache
       ? await inspectBrowserLorekeeperCache().catch(() => ({
           cachedModels: [],

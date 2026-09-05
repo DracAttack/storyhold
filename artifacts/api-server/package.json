@@ -8,7 +8,7 @@
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",
     "start:local": "tsx ./src/local.ts",
-    "schema:development": "STORYHOLD_APPLY_DEVELOPMENT_SCHEMA=1 tsx ./src/local.ts",
+    "schema:development": "STORYHOLD_APPLY_DEVELOPMENT_SCHEMA=1 STORYHOLD_DATABASE_ENVIRONMENT=development tsx ./src/local.ts",
     "test": "node ./test.mjs",
     "typecheck:local": "tsc -p tsconfig.local.json --noEmit",
     "typecheck": "tsc -p tsconfig.json --noEmit"

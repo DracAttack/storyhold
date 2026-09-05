@@ -27,7 +27,24 @@ export type LorekeeperNliReceipt = {
   model: string;
   pairCount: number;
   elapsedMilliseconds: number;
+  /**
+   * The endpoint class is recorded with every result so callers never mistake
+   * an explicitly configured remote verifier for an on-device check.
+   */
+  endpointKind?: "loopback" | "remote" | null;
+  sendsSourceTextOffDevice?: boolean;
+  explanation?: string;
   error?: string;
+};
+
+export type LorekeeperNliStatus = {
+  enabled: boolean;
+  configured: boolean;
+  model: string;
+  endpoint: string | null;
+  endpointKind: "loopback" | "remote" | null;
+  sendsSourceTextOffDevice: boolean;
+  explanation: string;
 };
 
 const DEFAULT_MINILM_MODEL = "cross-encoder/ms-marco-MiniLM-L6-v2";
@@ -53,15 +70,22 @@ function loopbackEndpoint(value: string): boolean {
   }
 }
 
-function endpointFor(kind: "minilm" | "rerank" | "nli" | "qwen"): string | null {
+function remoteHttpsEndpoint(value: string): boolean {
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" && !loopbackEndpoint(value);
+  } catch {
+    return false;
+  }
+}
+
+function endpointFor(kind: "minilm" | "rerank" | "qwen"): string | null {
   const explicit = process.env[
     kind === "minilm"
       ? "STORYHOLD_LOCAL_MINILM_URL"
       : kind === "rerank"
       ? "STORYHOLD_LOCAL_RERANKER_URL"
-      : kind === "nli"
-      ? "STORYHOLD_LOCAL_NLI_URL"
-      : "STORYHOLD_LOCAL_QWEN_URL"
+       : "STORYHOLD_LOCAL_QWEN_URL"
   ]?.trim();
   const ner = process.env.STORYHOLD_LOCAL_NER_URL?.trim();
   let value = explicit || "";
@@ -72,9 +96,7 @@ function endpointFor(kind: "minilm" | "rerank" | "nli" | "qwen"): string | null 
         ? "/rerank/fast"
         : kind === "rerank"
         ? "/rerank/final"
-        : kind === "nli"
-        ? "/nli"
-        : "/qwen/audit";
+         : "/qwen/audit";
       url.search = "";
       url.hash = "";
       value = url.toString();
@@ -85,6 +107,59 @@ function endpointFor(kind: "minilm" | "rerank" | "nli" | "qwen"): string | null 
   if (!value) return null;
   const allowRemote = envEnabled("STORYHOLD_LOCAL_MODELS_ALLOW_REMOTE", false);
   return allowRemote || loopbackEndpoint(value) ? value : null;
+}
+
+function nliCandidateEndpoint(): string {
+  const explicit = process.env.STORYHOLD_LOCAL_NLI_URL?.trim();
+  if (explicit) return explicit;
+  const ner = process.env.STORYHOLD_LOCAL_NER_URL?.trim();
+  if (!ner) return "";
+  try {
+    const url = new URL(ner);
+    url.pathname = "/nli";
+    url.search = "";
+    url.hash = "";
+    return url.toString();
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * NLI is optional and deliberately opt-in. Autoscale instances do not run the
+ * Python Lorekeeper daemon, so an unset endpoint means no NLI verdict rather
+ * than an invented local-model result. A remote endpoint requires its own
+ * explicit acknowledgement (the older all-local-models switch is retained for
+ * existing deliberate deployments).
+ */
+export function getLorekeeperNliStatus(): LorekeeperNliStatus {
+  const model = process.env.STORYHOLD_LOCAL_NLI_MODEL?.trim() || DEFAULT_NLI_MODEL;
+  const candidate = nliCandidateEndpoint();
+  const loopback = Boolean(candidate) && loopbackEndpoint(candidate);
+  const allowRemote = envEnabled(
+    "STORYHOLD_LOCAL_NLI_ALLOW_REMOTE",
+    envEnabled("STORYHOLD_LOCAL_MODELS_ALLOW_REMOTE", false),
+  );
+  const configured = Boolean(candidate) && (
+    loopback || (allowRemote && remoteHttpsEndpoint(candidate))
+  );
+  const enabled = envEnabled("STORYHOLD_LOCAL_NLI_ENABLED", Boolean(candidate)) && configured;
+  const endpointKind = candidate ? (loopback ? "loopback" : "remote") : null;
+  return {
+    enabled,
+    configured,
+    model,
+    endpoint: configured ? candidate : null,
+    endpointKind,
+    sendsSourceTextOffDevice: Boolean(candidate && !loopback),
+    explanation: enabled
+      ? loopback
+        ? "A configured loopback NLI verifier compares bounded claim pairs; it does not establish canon or write state."
+        : "A configured remote NLI verifier receives bounded claim pairs. Its verdicts are advisory and server validation still controls canonical state."
+      : candidate && !configured
+        ? "The NLI endpoint was blocked because claim text requires loopback HTTP(S), or an explicitly allowed remote HTTPS endpoint."
+        : "No NLI verifier is configured. Storyhold reports the canon check as skipped rather than claiming a contradiction check ran.",
+  };
 }
 
 function stageControlEndpoint(pathname: "/stage/activate" | "/stage/release"): string | null {
@@ -459,23 +534,24 @@ export async function inspectLorekeeperNliPairs(params: {
   deadlineUnixMs?: number;
 }): Promise<{ results: LorekeeperNliResult[]; receipt: LorekeeperNliReceipt }> {
   const startedAt = Date.now();
-  const model = process.env.STORYHOLD_LOCAL_NLI_MODEL?.trim() || DEFAULT_NLI_MODEL;
-  const endpoint = endpointFor("nli");
-  const enabled = envEnabled("STORYHOLD_LOCAL_NLI_ENABLED", Boolean(endpoint));
+  const runtime = getLorekeeperNliStatus();
   const pairs = params.pairs.slice(0, 160).flatMap((pair) => {
     const id = clean(pair.id, 160);
     const premise = clean(pair.premise, 1_800);
     const hypothesis = clean(pair.hypothesis, 1_800);
     return id && premise && hypothesis ? [{ id, premise, hypothesis }] : [];
   });
-  if (!enabled || !endpoint || pairs.length === 0) {
+  if (!runtime.enabled || !runtime.endpoint || pairs.length === 0) {
     return {
       results: [],
       receipt: {
         status: "disabled",
-        model,
+        model: runtime.model,
         pairCount: pairs.length,
         elapsedMilliseconds: Date.now() - startedAt,
+        endpointKind: runtime.endpointKind,
+        sendsSourceTextOffDevice: runtime.sendsSourceTextOffDevice,
+        explanation: runtime.explanation,
       },
     };
   }
@@ -486,39 +562,53 @@ export async function inspectLorekeeperNliPairs(params: {
       throw new Error("The gameplay validation deadline expired before the NLI check could run.");
     }
     const payload = await postJson(
-      endpoint,
+      runtime.endpoint,
       { pairs, ...(deadlineUnixMs === undefined ? {} : { deadlineUnixMs }) },
       Math.max(1_000, params.timeoutMilliseconds ?? 45_000),
       deadlineUnixMs,
     );
-    const results = rows(payload, "results").flatMap((entry): LorekeeperNliResult[] => {
+    const expectedIds = new Set(pairs.map((pair) => pair.id));
+    const seenIds = new Set<string>();
+    const results = rows(payload, "results").map((entry): LorekeeperNliResult => {
       const id = clean(entry.id, 160);
-      const contradiction = Math.max(0, Math.min(1, Number(entry.contradiction) || 0));
-      const entailment = Math.max(0, Math.min(1, Number(entry.entailment) || 0));
-      const neutral = Math.max(0, Math.min(1, Number(entry.neutral) || 0));
+      const contradiction = Number(entry.contradiction);
+      const entailment = Number(entry.entailment);
+      const neutral = Number(entry.neutral);
+      const probabilities = [contradiction, entailment, neutral];
+      if (
+        !id || !expectedIds.has(id) || seenIds.has(id) ||
+        probabilities.some((score) => !Number.isFinite(score) || score < 0 || score > 1) ||
+        Math.abs(probabilities.reduce((total, score) => total + score, 0) - 1) > 0.05
+      ) {
+        throw new Error("The NLI verifier returned an invalid or mismatched probability result.");
+      }
+      seenIds.add(id);
       const label = [
         ["contradiction", contradiction],
         ["entailment", entailment],
         ["neutral", neutral],
       ].sort((left, right) => Number(right[1]) - Number(left[1]))[0]?.[0];
-      if (!id || !["contradiction", "entailment", "neutral"].includes(String(label))) {
-        return [];
-      }
-      return [{
+      return {
         id,
         contradiction,
         entailment,
         neutral,
         label: label as LorekeeperNliResult["label"],
-      }];
+      };
     });
+    if (results.length !== pairs.length || seenIds.size !== pairs.length) {
+      throw new Error("The NLI verifier did not return exactly one result for every requested comparison.");
+    }
     return {
       results,
       receipt: {
         status: "completed",
-        model: clean(payload.model, 240) || model,
+        model: clean(payload.model, 240) || runtime.model,
         pairCount: pairs.length,
         elapsedMilliseconds: Date.now() - startedAt,
+        endpointKind: runtime.endpointKind,
+        sendsSourceTextOffDevice: runtime.sendsSourceTextOffDevice,
+        explanation: runtime.explanation,
       },
     };
   } catch (error) {
@@ -526,9 +616,12 @@ export async function inspectLorekeeperNliPairs(params: {
       results: [],
       receipt: {
         status: "failed",
-        model,
+        model: runtime.model,
         pairCount: pairs.length,
         elapsedMilliseconds: Date.now() - startedAt,
+        endpointKind: runtime.endpointKind,
+        sendsSourceTextOffDevice: runtime.sendsSourceTextOffDevice,
+        explanation: runtime.explanation,
         error: error instanceof Error ? error.message : String(error),
       },
     };

@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { createServer } from "node:http";
 import test from "node:test";
 import {
+  getLorekeeperNliStatus,
   inspectLorekeeperNliPairs,
   rerankLorekeeperRows,
 } from "./localLorekeeperModels";
@@ -81,6 +82,74 @@ test("local NLI fails open when it is disabled", async () => {
     if (previousEnabled === undefined) delete process.env.STORYHOLD_LOCAL_NLI_ENABLED;
     else process.env.STORYHOLD_LOCAL_NLI_ENABLED = previousEnabled;
   }
+});
+
+test("remote NLI is blocked without an explicit privacy acknowledgement", () => {
+  const previous = { ...process.env };
+  try {
+    process.env.STORYHOLD_LOCAL_NLI_ENABLED = "true";
+    process.env.STORYHOLD_LOCAL_NLI_URL = "https://nli.example.test/verify";
+    delete process.env.STORYHOLD_LOCAL_NLI_ALLOW_REMOTE;
+    delete process.env.STORYHOLD_LOCAL_MODELS_ALLOW_REMOTE;
+    const status = getLorekeeperNliStatus();
+    assert.equal(status.enabled, false);
+    assert.equal(status.configured, false);
+    assert.equal(status.endpoint, null);
+    assert.equal(status.sendsSourceTextOffDevice, true);
+    assert.match(status.explanation, /blocked/i);
+  } finally {
+    process.env = previous;
+  }
+});
+
+test("explicitly allowed remote NLI still requires HTTPS", () => {
+  const previous = { ...process.env };
+  try {
+    process.env.STORYHOLD_LOCAL_NLI_ENABLED = "true";
+    process.env.STORYHOLD_LOCAL_NLI_ALLOW_REMOTE = "true";
+    process.env.STORYHOLD_LOCAL_NLI_URL = "http://nli.example.test/verify";
+    const blocked = getLorekeeperNliStatus();
+    assert.equal(blocked.configured, false);
+    assert.match(blocked.explanation, /HTTPS/);
+    process.env.STORYHOLD_LOCAL_NLI_URL = "https://nli.example.test/verify";
+    const allowed = getLorekeeperNliStatus();
+    assert.equal(allowed.enabled, true);
+    assert.equal(allowed.endpointKind, "remote");
+    assert.equal(allowed.sendsSourceTextOffDevice, true);
+  } finally {
+    process.env = previous;
+  }
+});
+
+test("NLI rejects partial, duplicate, and malformed probability responses", async (t) => {
+  const previous = { ...process.env };
+  const server = createServer((_request, response) => {
+    response.setHeader("content-type", "application/json");
+    response.end(JSON.stringify({
+      results: [
+        { id: "one", contradiction: 0.99, entailment: 0.5, neutral: 0 },
+        { id: "one", contradiction: 0, entailment: 0, neutral: 1 },
+      ],
+    }));
+  });
+  await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve));
+  t.after(async () => {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+    process.env = previous;
+  });
+  const address = server.address();
+  assert.ok(address && typeof address === "object");
+  process.env.STORYHOLD_LOCAL_NLI_ENABLED = "true";
+  process.env.STORYHOLD_LOCAL_NLI_URL = `http://127.0.0.1:${address.port}/nli`;
+  const result = await inspectLorekeeperNliPairs({
+    pairs: [
+      { id: "one", premise: "Mara is alive.", hypothesis: "Mara is dead." },
+      { id: "two", premise: "Mara is alive.", hypothesis: "Mara speaks." },
+    ],
+  });
+  assert.equal(result.receipt.status, "failed");
+  assert.deepEqual(result.results, []);
+  assert.match(result.receipt.error!, /invalid or mismatched/i);
 });
 
 test("MiniLM and BGE are separate sequential reranking stages", async () => {

@@ -87,6 +87,16 @@ if (
     "The Storyhold schema command requires the platform-bound development managed PostgreSQL environment.",
   );
 }
+if (isPublishedDeployment && !usingManagedPostgres) {
+  throw new Error(
+    "Published Storyhold requires Replit managed PostgreSQL (DATABASE_URL); PGlite is local-only.",
+  );
+}
+if (isPublishedDeployment && !process.env.PRIVATE_OBJECT_DIR?.trim()) {
+  throw new Error(
+    "Published Storyhold requires Replit private App Storage (PRIVATE_OBJECT_DIR); local file storage is local-only.",
+  );
+}
 const configuredCausalSecret =
   process.env.STORYHOLD_CAUSAL_SECRET?.trim() ||
   process.env.SESSION_SECRET?.trim();
@@ -95,12 +105,22 @@ const host =
 const port = Number(process.env.PORT || "3000");
 const cookieName = "storyhold.sid";
 const sessionLifetimeMs = 7 * 24 * 60 * 60 * 1000;
-const startupStatusPath = path.join(storageRoot, "startup-status.txt");
 let startupState: "starting" | "ready" = "starting";
 let startupDb: StoryholdDb | undefined;
 
 async function markStartup(stage: string) {
-  await writeFile(startupStatusPath, `${new Date().toISOString()} ${stage}\n`, "utf8");
+  const message = `[storyhold] ${new Date().toISOString()} ${stage}`;
+  if (isPublishedDeployment) {
+    // Autoscale instances have no durable local filesystem. Keep startup
+    // observability in process output rather than creating a local marker.
+    process.stdout.write(`${message}\n`);
+    return;
+  }
+  await writeFile(
+    path.join(storageRoot, "startup-status.txt"),
+    `${message}\n`,
+    "utf8",
+  );
 }
 
 function startupErrorMessage(error: unknown): string {
@@ -155,10 +175,11 @@ async function loadStoryholdIndexHtml() {
   return readFile(indexHtml, "utf8");
 }
 
-// Data and file storage normally share a parent locally, but deployments and
-// maintenance proofs may place them separately. The startup marker is written
-// before World Studio initializes, so ensure its directory exists as well.
-await mkdir(storageRoot, { recursive: true });
+// Local development keeps its vault and startup marker together. Published
+// Autoscale instances use managed PostgreSQL and private App Storage instead.
+if (!isPublishedDeployment) {
+  await mkdir(storageRoot, { recursive: true });
+}
 const app = express();
 app.disable("x-powered-by");
 if (isPublishedDeployment) app.set("trust proxy", 1);

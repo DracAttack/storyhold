@@ -3,6 +3,10 @@ import {
   getLocalEntityExtractionStatus,
   type LocalEntityExtractionStatus,
 } from "./localEntityExtraction";
+import {
+  getLorekeeperNliStatus,
+  type LorekeeperNliStatus,
+} from "./localLorekeeperModels";
 import type { AiBillingSource, AiConnectionSource } from "./aiExecutionPolicy";
 
 export type StoryholdProviderId =
@@ -60,6 +64,8 @@ export type AiRuntimeStatus = {
     privacyMode: "zero-data-retention" | null;
   } | null;
   localExtraction: LocalEntityExtractionStatus;
+  /** Optional local/remote NLI verifier disclosure for canon postchecks. */
+  localNli?: LorekeeperNliStatus;
   providers: AiProviderStatus[];
   routing: {
     director: StoryholdProviderId | null;
@@ -613,6 +619,7 @@ export function getAiRuntimeStatus(
     providerStatus(id, stage, contentMode),
   );
   const localExtraction = getLocalEntityExtractionStatus();
+  const localNli = getLorekeeperNliStatus();
   const selected = selectedProvider(task, contentMode, stage);
   const routing = {
     director: routeProvider("campaign_direction"),
@@ -665,6 +672,7 @@ export function getAiRuntimeStatus(
       stage,
       execution: null,
       localExtraction,
+      localNli,
       providers,
       routing,
       stageRouting,
@@ -694,6 +702,7 @@ export function getAiRuntimeStatus(
       privacyMode: selected.id === "openrouter" ? "zero-data-retention" : null,
     },
     localExtraction,
+    localNli,
     providers,
     routing,
     stageRouting,
@@ -1005,6 +1014,33 @@ function estimatedInputUnits(input: GenerateAiTextInput): number {
   return Math.max(1, Math.ceil(Buffer.byteLength(text, "utf8") / 2.2) + 256);
 }
 
+function usesReplitManagedAnthropic(
+  configuration: ProviderConfiguration,
+): boolean {
+  const configuredBaseURL = configuration.baseURL?.trim() || "";
+  const managedBaseURL =
+    process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL?.trim() || "";
+  return Boolean(
+    configuration.id === "anthropic" &&
+    configuredBaseURL &&
+    managedBaseURL &&
+    withoutTrailingSlash(configuredBaseURL) ===
+      withoutTrailingSlash(managedBaseURL),
+  );
+}
+
+function executionOutputTokenCap(
+  configuration: ProviderConfiguration,
+  input: GenerateAiTextInput,
+): number {
+  // Replit's managed Anthropic contract requires at least 8192. This helper is
+  // shared by reservation and execution so the paid call can never request
+  // more output than the pre-call hold priced.
+  return usesReplitManagedAnthropic(configuration)
+    ? Math.max(input.maxOutputTokens ?? 8_192, 8_192)
+    : input.maxOutputTokens ?? 2_000;
+}
+
 /**
  * Maximum pre-call provider cost across every eligible request candidate.
  * This is an internal hold quote, never a customer-facing dollar amount.
@@ -1013,13 +1049,22 @@ export function quoteAiCostReservation(
   input: GenerateAiTextInput,
 ): AiCostReservationQuote {
   const inputUnits = estimatedInputUnits(input);
-  const maxOutputUnits = Math.max(1, input.maxOutputTokens ?? 2_000);
-  const candidates = configurationsForInput(input).map((configuration) => {
+  const configurations = configurationsForInput(input);
+  const outputCaps = configurations.map((configuration) =>
+    Math.max(1, executionOutputTokenCap(configuration, input))
+  );
+  const maxOutputUnits = Math.max(
+    1,
+    input.maxOutputTokens ?? 2_000,
+    ...outputCaps,
+  );
+  const candidates = configurations.map((configuration, index) => {
     const rates = modelRates(configuration, inputUnits);
+    const candidateOutputUnits = outputCaps[index]!;
     const maximumCostMicros = rates.known
       ? Math.ceil(
           inputUnits * Math.max(rates.input, rates.cacheWriteInput) +
-            maxOutputUnits * rates.output,
+            candidateOutputUnits * rates.output,
         )
       : 0;
     return {
@@ -1083,9 +1128,6 @@ async function callAnthropic(
   configuration: ProviderConfiguration,
   input: GenerateAiTextInput,
 ): Promise<ProviderCallResult> {
-  const usesReplitManagedAnthropic =
-    configuration.baseURL ===
-    process.env.AI_INTEGRATIONS_ANTHROPIC_BASE_URL?.trim();
   const omitsSamplingControls =
     /^(?:claude-(?:opus|sonnet)-5|claude-opus-4-(?:7|8))$/u.test(
       configuration.model,
@@ -1097,9 +1139,7 @@ async function callAnthropic(
   });
   const result = await client.messages.create({
     model: configuration.model,
-    max_tokens: usesReplitManagedAnthropic
-      ? Math.max(input.maxOutputTokens ?? 8_192, 8_192)
-      : input.maxOutputTokens ?? 2_000,
+    max_tokens: executionOutputTokenCap(configuration, input),
     ...(typeof input.temperature === "number" && !omitsSamplingControls
       ? { temperature: input.temperature }
       : {}),
