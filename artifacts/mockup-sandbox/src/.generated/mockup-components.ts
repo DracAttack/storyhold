@@ -3,10 +3,10 @@ type ModuleMap = Record<string, () => Promise<Record<string, unknown>>>;
 export const modules: ModuleMap = {
   "./components/mockups/brainhook-folio/Article.tsx": () => import("../components/mockups/brainhook-folio/Article.tsx"),
   "./components/mockups/brainhook-folio/Home.tsx": () => import("../components/mockups/brainhook-folio/Home.tsx"),
-  "./components/mockups/brainhook-ink/Article.tsx": () => import("../components/mockups/brainhook-ink/Article.tsx"),
-  "./components/mockups/brainhook-ink/Home.tsx": () => import("../components/mockups/brainhook-ink/Home.tsx"),
   "./components/mockups/brainhook-signal/Article.tsx": () => import("../components/mockups/brainhook-signal/Article.tsx"),
   "./components/mockups/brainhook-signal/Home.tsx": () => import("../components/mockups/brainhook-signal/Home.tsx"),
+  "./components/mockups/brainhook-ink/Article.tsx": () => import("../components/mockups/brainhook-ink/Article.tsx"),
+  "./components/mockups/brainhook-ink/Home.tsx": () => import("../components/mockups/brainhook-ink/Home.tsx"),
   "./components/mockups/brainhook-verso/Article.tsx": () => import("../components/mockups/brainhook-verso/Article.tsx"),
   "./components/mockups/brainhook-verso/Home.tsx": () => import("../components/mockups/brainhook-verso/Home.tsx"),
   "./components/mockups/glossary-card-display/EditorialDossier.tsx": () => import("../components/mockups/glossary-card-display/EditorialDossier.tsx"),

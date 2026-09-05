@@ -56,8 +56,8 @@ test("dossier stat reviews save exact immutable two-group bundles without creati
     await db.transaction((tx) => saveEntityStatReviews(tx, { input: value, receipts }));
     await db.transaction((tx) => saveEntityStatReviews(tx, { input: value, receipts }));
     assert.deepEqual(await readEntityStatReviews(db, { reviewId: scope.reviewId, entityId: scope.entityId, editionId: scope.editionId, worldId: scope.worldId }), receipts);
-    assert.equal((await db.query("SELECT count(*) AS count FROM storyhold.entity_review_stat_reviews")).rows[0]?.count, 2);
-    assert.equal((await db.query("SELECT count(*) AS count FROM storyhold.world_analysis_runs")).rows[0]?.count, 0);
+    assert.equal((await db.query<{ count: number }>("SELECT count(*) AS count FROM storyhold.entity_review_stat_reviews")).rows[0]?.count, 2);
+    assert.equal((await db.query<{ count: number }>("SELECT count(*) AS count FROM storyhold.world_analysis_runs")).rows[0]?.count, 0);
     await assert.rejects(db.query("UPDATE storyhold.entity_review_stat_reviews SET step_key = 'changed'"), /immutable/);
     await assert.rejects(db.transaction((tx) => saveEntityStatReviews(tx, { input: value, receipts: reviews(value, "2026-09-03T12:00:01.000Z") })), code("ENTITY_STAT_RECEIPT_MISMATCH"));
   } finally { await db.close(); }
@@ -93,7 +93,7 @@ test("dossier stat links record exact canonical IDs once and never claim altered
     await db.transaction((tx) => saveEntityStatReviews(tx, { input: value, receipts }));
     assert.equal(await db.transaction((tx) => linkEntityStatReviewsToCanon(tx, { input: value, receipts })), 1);
     assert.equal(await db.transaction((tx) => linkEntityStatReviewsToCanon(tx, { input: value, receipts })), 0);
-    const row = (await db.query("SELECT * FROM storyhold.entity_review_stat_verifications")).rows[0]!;
+    const row = (await db.query<{ entity_id: string; dossier_id: string; review_id: string }>("SELECT * FROM storyhold.entity_review_stat_verifications")).rows[0]!;
     assert.equal(row.entity_id, scope.entityId); assert.equal(row.dossier_id, uuid(30)); assert.equal(row.review_id, scope.reviewId);
     await assert.rejects(db.query("UPDATE storyhold.entity_review_stat_verifications SET decision_id = 'changed'"), /immutable/);
     await db.query("UPDATE storyhold.character_dossiers SET profile = jsonb_set(profile, '{estimatedStats,strength,score}', '19')");

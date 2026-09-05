@@ -76,7 +76,7 @@ test("stat receipts are immutable, exact, scoped and idempotently replayable", a
     assert.deepEqual(await db.transaction((tx) => savePremiumStatReview(tx, value)), value);
     assert.deepEqual(await db.transaction((tx) => savePremiumStatReview(tx, structuredClone(value))), value);
     assert.deepEqual(await readPremiumStatReviews(db, scope), [value]);
-    assert.equal((await db.query("SELECT count(*) AS count FROM storyhold.world_analysis_stat_reviews")).rows[0]?.count, 1);
+    assert.equal((await db.query<{ count: number }>("SELECT count(*) AS count FROM storyhold.world_analysis_stat_reviews")).rows[0]?.count, 1);
     await assert.rejects(db.transaction((tx) => savePremiumStatReview(tx, receipt({ completedAt: "2026-09-03T12:00:01.000Z" }))), hasCode("STAT_RECEIPT_MISMATCH"));
     await assert.rejects(readPremiumStatReviews(db, { ...scope, worldId: uuid(99) }), hasCode("STAT_SCOPE_MISMATCH"));
     await assert.rejects(db.query("UPDATE storyhold.world_analysis_stat_reviews SET step_key = 'changed'"), /immutable/);
@@ -239,7 +239,7 @@ test("canonical stat links require durable receipts and exact persisted values, 
     await db.transaction((tx) => savePremiumStatReview(tx, value));
     assert.equal(await db.transaction((tx) => linkPremiumStatReviewsToCanon(tx, [value])), 1);
     assert.equal(await db.transaction((tx) => linkPremiumStatReviewsToCanon(tx, [value])), 0);
-    const links = (await db.query("SELECT * FROM storyhold.world_entity_stat_verifications")).rows;
+    const links = (await db.query<{ entity_id: string; dossier_id: string; stat_name: string; run_id: string }>("SELECT * FROM storyhold.world_entity_stat_verifications")).rows;
     assert.equal(links.length, 1); assert.equal(links[0]?.entity_id, uuid(31)); assert.equal(links[0]?.dossier_id, uuid(30));
     assert.equal(links[0]?.stat_name, "strength"); assert.equal(links[0]?.run_id, scope.analysisRunId);
     await assert.rejects(db.query("UPDATE storyhold.world_entity_stat_verifications SET decision_id = 'changed'"), /immutable/);
@@ -262,7 +262,7 @@ test("canonical stat linker refuses edited dossiers, owner entities and altered 
     const before = (await db.query("SELECT profile FROM storyhold.character_dossiers")).rows;
     assert.equal(await linkPremiumStatReviewsToCanon(db, [value]), 0);
     assert.deepEqual((await db.query("SELECT profile FROM storyhold.character_dossiers")).rows, before);
-    assert.equal((await db.query("SELECT count(*) AS count FROM storyhold.world_entity_stat_verifications")).rows[0]?.count, 0);
+    assert.equal((await db.query<{ count: number }>("SELECT count(*) AS count FROM storyhold.world_entity_stat_verifications")).rows[0]?.count, 0);
   } finally { await db.close(); }
 });
 
@@ -279,7 +279,7 @@ test("creature stat links target entity storage and never infer aliases or ambig
     assert.equal(await linkPremiumStatReviewsToCanon(db, [value]), 0);
     await db.query("DELETE FROM storyhold.world_entities WHERE id = $1", [uuid(32)]);
     assert.equal(await linkPremiumStatReviewsToCanon(db, [value]), 1);
-    const link = (await db.query("SELECT entity_id, dossier_id FROM storyhold.world_entity_stat_verifications")).rows[0];
+    const link = (await db.query<{ entity_id: string; dossier_id: string | null }>("SELECT entity_id, dossier_id FROM storyhold.world_entity_stat_verifications")).rows[0];
     assert.equal(link?.entity_id, uuid(31)); assert.equal(link?.dossier_id, null);
   } finally { await db.close(); }
 });

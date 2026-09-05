@@ -221,7 +221,7 @@ test("owner-confirmed creature stats remain unchanged by paid review", async () 
     await db.query("UPDATE storyhold.world_entities SET classification_source = 'user', review_status = 'user_confirmed'");
     await save(db, input());
     assert.deepEqual((await storedStats(db)).strength, priorStrength);
-    assert.equal((await db.query("SELECT count(*) AS count FROM storyhold.entity_review_stat_verifications")).rows[0]!.count, 0);
+    assert.equal((await db.query<{ count: number }>("SELECT count(*) AS count FROM storyhold.entity_review_stat_verifications")).rows[0]!.count, 0);
   } finally { await db.close(); }
 });
 
@@ -232,7 +232,7 @@ test("owner-edited character stats remain unchanged by paid review", async () =>
     await save(db, input("character"));
     const profile = (await db.query<{ profile: { estimatedStats: Record<string, unknown> } }>("SELECT profile FROM storyhold.character_dossiers WHERE id = $1", [DOSSIER])).rows[0]!.profile;
     assert.deepEqual(profile.estimatedStats.strength, priorStrength);
-    assert.equal((await db.query("SELECT count(*) AS count FROM storyhold.entity_review_stat_verifications")).rows[0]!.count, 0);
+    assert.equal((await db.query<{ count: number }>("SELECT count(*) AS count FROM storyhold.entity_review_stat_verifications")).rows[0]!.count, 0);
   } finally { await db.close(); }
 });
 
@@ -491,14 +491,14 @@ async function modernGraphFixture(db: PGlite) {
 
 async function graphAndStatState(db: PGlite) {
   return {
-    entities: (await db.query("SELECT * FROM storyhold.world_entities ORDER BY id")).rows,
-    dossiers: (await db.query("SELECT * FROM storyhold.character_dossiers ORDER BY id")).rows,
+    entities: (await db.query<{ id: string; relationships: unknown[] }>("SELECT * FROM storyhold.world_entities ORDER BY id")).rows,
+    dossiers: (await db.query<{ profile: unknown }>("SELECT * FROM storyhold.character_dossiers ORDER BY id")).rows,
     stats: (await db.query("SELECT * FROM storyhold.entity_review_stat_reviews ORDER BY step_key")).rows,
     statLinks: (await db.query("SELECT * FROM storyhold.entity_review_stat_verifications ORDER BY step_key,proposal_id")).rows,
     relations: (await db.query("SELECT * FROM storyhold.world_entity_relations ORDER BY id")).rows,
     rules: (await db.query("SELECT * FROM storyhold.world_entity_rules ORDER BY id")).rows,
     memberships: (await db.query("SELECT * FROM storyhold.world_entity_faction_memberships ORDER BY entity_id,faction_entity_id")).rows,
-    relationLinks: (await db.query("SELECT * FROM storyhold.world_entity_relation_verifications ORDER BY step_key,proposal_id")).rows,
+    relationLinks: (await db.query<{ entity_review_id: string; run_id: string | null }>("SELECT * FROM storyhold.world_entity_relation_verifications ORDER BY step_key,proposal_id")).rows,
     ruleLinks: (await db.query("SELECT * FROM storyhold.world_entity_rule_verifications ORDER BY step_key,proposal_id")).rows,
     proof: (await db.query("SELECT verification_snapshot,verification_fingerprint FROM storyhold.entity_review_ai_calls WHERE review_id=$1", [REVIEW])).rows,
   };
@@ -532,7 +532,7 @@ test("modern paid dossier does not display a new relation when the owner row blo
       (id,world_id,canon_edition_id,source_entity_id,relation_type,target_entity_id,relation_status,summary,valid_from_label,valid_until_label,evidence,assignment_source,confidence)
       VALUES($1,$2,$3,$4,'member_of',$5,'active','Owner preserves the old interpretation','','','[]','user',0.8)`,
     [uuid(922), WORLD, EDITION, ENTITY, modern.factionId]);
-    const owner = (await db.query("SELECT * FROM storyhold.world_entity_relations")).rows;
+    const owner = (await db.query<Record<string, unknown>>("SELECT * FROM storyhold.world_entity_relations")).rows;
     await modern.apply();
     const saved = await graphAndStatState(db);
     assert.deepEqual(saved.relations, owner);

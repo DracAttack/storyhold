@@ -58,7 +58,7 @@ function result(request: GenerateAiTextInput, body: unknown): AiTextResult {
   const text = JSON.stringify(body);
   request.validate!(text);
   const runtime = getAiRuntimeStatus(request.task, request.contentMode, request.stage);
-  return { text, runtime, provider: runtime.provider, model: runtime.model, reasoning: "high",
+  return { text, runtime, provider: "openrouter", model: runtime.model, reasoning: "high",
     journalCompletedAt: "2026-09-03T00:00:00.000Z", usage: { inputUnits: 10, outputUnits: 5, cachedInputUnits: 0,
       cacheWriteInputUnits: 0, reasoningUnits: 0, estimatedCostMicros: 100, pricingKnown: true,
       pricingVersion: "fixture", costEstimated: true } };
@@ -92,7 +92,7 @@ test("seven estimates become bounded decisions, survive projection, and complete
         seen.push(step);
         assert.ok(contract(request, "STAT").proposals.length <= 6);
         return result(request, bodyFor(request, params, "verified", step === "verification:1"));
-      }, onCoverage: () => completed.push(seen.length),
+      }, onCoverage: () => { completed.push(seen.length); },
     });
     assert.deepEqual(seen, pages.map((page) => page.stepKey));
     assert.ok(completed.every((count) => count === 2));

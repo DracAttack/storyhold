@@ -687,7 +687,7 @@ test("strict canon loading never consults live world lore surfaces", async () =>
   });
   assert.deepEqual(loaded.evidence.map((row) => row.content), [fixture.quote]);
   assert.deepEqual(loaded.claims.map((row) => row.id), [strictCanonIds.claim]);
-  assert.equal(loaded.entities[0]?.summary, "");
+  assert.equal((loaded.entities[0] as unknown as { summary: string } | undefined)?.summary, "");
   assert.equal(loaded.events[0]?.evidence instanceof Array, true);
   const forbidden = /world_source_chunks|world_knowledge_claims|world_entities|character_dossiers|world_breakdowns|world_reference_sources/;
   assert.equal(calls.some((sql) => forbidden.test(sql)), false);
@@ -714,7 +714,7 @@ test("strict campaign context cannot reuse future live lore or a stale scene pac
     process.env[`STORYHOLD_LOCAL_${name}_URL`] = `http://127.0.0.1:${address.port}/${name.toLowerCase()}`;
   }
   process.env.SOURCE_VAULT_EMBED_PROVIDER = "perplexity";
-  t.mock.method(globalThis, "fetch", async (url) => {
+  t.mock.method(globalThis, "fetch", async (url: Parameters<typeof fetch>[0]) => {
     specialistRequests.push(String(url));
     throw new Error("Live context must not call an embedding or specialist provider.");
   });
@@ -1755,7 +1755,7 @@ test("campaign journal replay rejects malformed provider accounting instead of n
   const invalidAttempt = structuredClone(payload) as typeof payload & {
     directorAi: { priorBillableAttempts: Array<Record<string, unknown>> };
   };
-  delete invalidAttempt.directorAi.priorBillableAttempts[0]?.stage;
+  delete (invalidAttempt.directorAi.priorBillableAttempts[0] as { stage?: string }).stage;
   assert.throws(
     () => generatedTurnFromJournal(JSON.stringify(invalidAttempt)),
     /METERED_AI_SAVED_RESULT_INVALID/,

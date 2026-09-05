@@ -415,7 +415,7 @@ test("AI-led manual completion skips configured local models and records no inve
   process.env.SOURCE_VAULT_EMBED_PROVIDER = "perplexity";
   const db = await fixture(); t.after(() => db.close());
   const requests: string[] = [];
-  t.mock.method(globalThis, "fetch", async (url) => {
+  t.mock.method(globalThis, "fetch", async (url: Parameters<typeof fetch>[0]) => {
     requests.push(String(url));
     assert.equal(String(url), "http://127.0.0.1:8765/gliner2");
     return Response.json({ error: "Local worker cannot load the cached model." }, { status: 503 });

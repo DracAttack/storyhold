@@ -32,8 +32,8 @@ test("temporal labels are trimmed without erasing meaningful boundaries or mutat
     assert.equal(canProjectCurrentFactionMembership({ ...current, validFromLabel: label }, "faction", "character"), false);
     assert.equal(canProjectCurrentFactionMembership({ ...current, validUntilLabel: label }, "faction", "character"), false);
   }
-  for (const malformed of [undefined, null, 0, []]) {
-    assert.equal(canProjectCurrentFactionMembership({ ...current, validFromLabel: malformed } as Link, "faction", "character"), false);
-    assert.equal(canProjectCurrentFactionMembership({ ...current, validUntilLabel: malformed } as Link, "faction", "character"), false);
+  for (const malformed of [undefined, null, 0, []] as unknown[]) {
+    assert.equal(canProjectCurrentFactionMembership({ ...current, validFromLabel: malformed } as unknown as Link, "faction", "character"), false);
+    assert.equal(canProjectCurrentFactionMembership({ ...current, validUntilLabel: malformed } as unknown as Link, "faction", "character"), false);
   }
 });

@@ -151,7 +151,7 @@ test("unknown failures are journaled without returning credits or dispatching an
   try {
     await assert.rejects(executeJournaledEntityReviewCall(db, params({ invoke: async () => { throw new Error("connection lost"); } })), code("OUTCOME_UNRESOLVED"));
     const row = await readEntityReviewCall(db, scope); assert.equal(row?.status, "uncertain"); assert.deepEqual(row?.billable_attempts, []);
-    assert.equal((await db.query("SELECT status FROM storyhold.credit_reservations")).rows[0]?.status, "reserved");
+    assert.equal((await db.query<{ status: string }>("SELECT status FROM storyhold.credit_reservations")).rows[0]?.status, "reserved");
   } finally { await db.close(); }
 });
 

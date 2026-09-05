@@ -96,7 +96,7 @@ test("missing review scope and changed entity/context/source prevent replay", ()
     (value) => { value.conceptResolutionContext = "New source lead."; }, (value) => { value.browserAuditContext = "Different private lead."; },
   ];
   for (const mutate of mutations) { const changed = structuredClone(params); mutate(changed); assert.throws(() => assertEntityStatReviews(changed, receipts)); }
-  assert.throws(() => assertEntityStatReviews(params, receipts.toReversed()), /changed|fixed order/);
+  assert.throws(() => assertEntityStatReviews(params, [...receipts].reverse()), /changed|fixed order/);
   assert.throws(() => assertEntityStatReviews(params, [receipts[0]!]), /incomplete/);
   const tampered = structuredClone(receipts); tampered[0]!.decisions[0]!.confidence = 1;
   assert.throws(() => assertEntityStatReviews(params, tampered), /changed/);
@@ -176,7 +176,7 @@ test("dossier contract describes two groups in one response and cannot be replac
   assert.match(instructions, /statVerifications/);
   assert.equal(instructions.split('<STAT_VERIFICATION_REQUEST trust="unverified">').length, 3);
   assert.throws(() => entityStatInstructions([requests[0]!]), /exactly two/);
-  assert.throws(() => entityStatInstructions(requests.toReversed()), /fixed order/);
+  assert.throws(() => entityStatInstructions([...requests].reverse()), /fixed order/);
   assert.match(entityStatInstructions([]), /statVerifications:\[\]/);
 });
 

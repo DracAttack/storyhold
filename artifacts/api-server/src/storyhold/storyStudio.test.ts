@@ -58,10 +58,13 @@ function aiResult(): AiTextResult {
       sendsSourceTextOffDevice: true,
       explanation: "test",
       localExtraction: {
-        available: false,
-        mode: "unavailable",
-        implementation: "none",
-        model: null,
+        enabled: false,
+        configured: false,
+        provider: "gliner2",
+        model: "",
+        endpoint: null,
+        endpointKind: null,
+        sendsSourceTextOffDevice: false,
         explanation: "test",
       },
       providers: [],
@@ -410,7 +413,11 @@ test("Story Studio returns 409 when a duplicate request id belongs to different 
       return this;
     },
   };
-  await postHandler!({
+  const registeredPostHandler = postHandler as unknown as (
+    req: unknown,
+    res: unknown,
+  ) => Promise<void>;
+  await registeredPostHandler({
     params: { campaignId: FIRST },
     body: {
       requestId: "request_1234",
@@ -422,6 +429,7 @@ test("Story Studio returns 409 when a duplicate request id belongs to different 
   }, response);
 
   assert.equal(status, 409);
-  assert.match(String(body?.error), /different adaptation/);
-  assert.equal("draft" in (body ?? {}), false);
+  const responseBody = (): Record<string, unknown> | null => body;
+  assert.match(String(responseBody()?.error), /different adaptation/);
+  assert.equal("draft" in (responseBody() ?? {}), false);
 });

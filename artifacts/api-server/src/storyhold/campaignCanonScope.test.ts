@@ -100,10 +100,10 @@ test("canon-scope schema rejects updates and permits campaign cascade cleanup", 
     /append-only/,
   );
   await db.query("DELETE FROM storyhold.campaigns WHERE id = $1", [CAMPAIGN]);
-  assert.equal((await db.query(
+  assert.equal((await db.query<{ count: number }>(
     "SELECT count(*)::int AS count FROM storyhold.campaign_canon_evidence_snapshots",
   )).rows[0]?.count, 0);
-  assert.equal((await db.query(
+  assert.equal((await db.query<{ count: number }>(
     "SELECT count(*)::int AS count FROM storyhold.campaign_canon_claim_snapshots",
   )).rows[0]?.count, 0);
   await db.close();

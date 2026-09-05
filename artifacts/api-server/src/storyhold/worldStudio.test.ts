@@ -86,7 +86,12 @@ import {
   LOCAL_ANALYSIS_VERSION,
   PREMIUM_VERIFICATION_PACKET_VERSION,
 } from "./worldStudio";
-import { AiGatewayUnavailableError, priceReportedAiUsage } from "./aiGateway";
+import {
+  AiGatewayUnavailableError,
+  priceReportedAiUsage,
+  type AiBillableAttempt,
+  type AiRuntimeStatus,
+} from "./aiGateway";
 import { CreditEconomyError, creditEconomySchemaSql, reserveCredits } from "./creditEconomy";
 import {
   executeJournaledPremiumCall,
@@ -780,7 +785,7 @@ test("customer AI status hides provider routing while operator status retains it
       director: "openrouter", narration: "openrouter",
       adaptation: "openrouter",
     },
-  } as const;
+  } satisfies AiRuntimeStatus;
   const customer = customerAiRuntimeStatus(runtime, "player");
   assert.equal(customer.configured, true);
   assert.equal(customer.billable, true);
@@ -3052,6 +3057,7 @@ test("global profile revalidation indexes a 200-profile mixed world without unre
     taxonomyFallbackFindingLookups: number;
     taxonomyFallbackBucketRowsExamined: number;
     taxonomyFullFindingScans: number;
+    storedRelationCount: number;
   }> = [];
 
   const revalidated = revalidateGeneratedLocalDossierProfiles({
@@ -4386,7 +4392,41 @@ test("a complete Lorekeeper breakdown restores characters and chapter evidence",
     characters: [{
       name: "Mara",
       aliases: [],
-    } as CharacterFinding],
+      role: "Character",
+      summary: "Mara enters the eastern gate.",
+      traits: [],
+      motivations: [],
+      fears: [],
+      capabilities: [],
+      history: [],
+      origins: [],
+      powers: [],
+      moralSystem: [],
+      physicalCharacteristics: [],
+      relationships: [],
+      relationshipWeb: [],
+      estimatedStats: {
+        strength: { score: 10, confidence: 0, rationale: "", evidence: [] },
+        dexterity: { score: 10, confidence: 0, rationale: "", evidence: [] },
+        constitution: { score: 10, confidence: 0, rationale: "", evidence: [] },
+        intelligence: { score: 10, confidence: 0, rationale: "", evidence: [] },
+        wisdom: { score: 10, confidence: 0, rationale: "", evidence: [] },
+        charisma: { score: 10, confidence: 0, rationale: "", evidence: [] },
+        acrobatics: { score: 10, confidence: 0, rationale: "", evidence: [] },
+      },
+      socioPoliticalAxis: {
+        economic: 0,
+        authority: 0,
+        label: "Undetermined",
+        rationale: "",
+        confidence: 0,
+      },
+      knowledge: [],
+      secrets: [],
+      factionMemberships: [],
+      evidence: [],
+      confidence: 0,
+    }],
     entityRelations: [],
     entityRules: [],
     claims: [],
@@ -5258,15 +5298,15 @@ test("known rejected premium output is a self-service top-up recovery without re
   try {
     await db.exec(premiumReviewJournalSchemaSql);
     const usage = { ...knownRejectedUsage.usage, estimatedCostMicros: 132_000 };
-    const attempt = {
-      provider: "test-provider",
+    const attempt: AiBillableAttempt = {
+      provider: "openrouter",
       model: "test-model",
       resolvedModel: "test-model",
       upstreamProvider: null,
       stage: "verification",
       reasoning: "high",
       usage,
-    } as const;
+    };
     await assert.rejects(executeJournaledPremiumCall(db, {
       runId: KNOWN_FAILURE_RUN_ID,
       stepKey: "verification:0",
@@ -5276,7 +5316,7 @@ test("known rejected premium output is a self-service top-up recovery without re
         maxOutputTokens: 1000, temperature: 0, allowProviderFallback: false,
         providerFailurePolicy: "stop",
       },
-      provider: "test-provider",
+      provider: "openrouter",
       model: "test-model",
       reservationId,
       invoke: async () => {

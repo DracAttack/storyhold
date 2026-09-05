@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { PGlite } from "@electric-sql/pglite";
 import { canonPayloadFingerprint, type JsonObject } from "./analysisVerificationContracts";
-import { getAiRuntimeStatus, type AiTextResult } from "./aiGateway";
+import { getAiRuntimeStatus, type AiTextResult, type StoryholdProviderId } from "./aiGateway";
 import { buildEntityGraphRequest, validateEntityGraphReview } from "./entityGraphVerification";
 import { buildEntityProseRequest, validateEntityProseReview } from "./entityProseVerification";
 import { prepareEntityReviewPages } from "./entityReviewPages";
@@ -59,7 +59,7 @@ function result(raw: unknown, index: number): AiTextResult {
       execution: { connectionId: "managed:openrouter", credentialSource: "environment", connectionSource: "storyhold_managed",
         billingSource: "storyhold_credits", requestedModel: model, resolvedModel: `resolved-page-${index}`, upstreamProvider: "fixture", privacyMode: "zero-data-retention" } } };
 }
-function verifier(result: AiTextResult) {
+function verifier(result: AiTextResult): { provider: StoryholdProviderId; model: string; completedAt: string } {
   return { provider: result.provider, model: result.runtime.execution!.resolvedModel!, completedAt: result.journalCompletedAt! };
 }
 async function fixture(prose = true, alter?: (raw: Record<string, unknown>, index: number) => void) {
@@ -128,7 +128,7 @@ test("prose proof rejects other page provenance, forged time, or changed owner d
   const f = await fixture();
   try {
     const first = verifier(f.completed.entityReviewPages[0]!.result);
-    for (const provenance of [verifier(f.completed.entityReviewPages[1]!.result), { ...first, provider: "anthropic" },
+    for (const provenance of [verifier(f.completed.entityReviewPages[1]!.result), { ...first, provider: "anthropic" as StoryholdProviderId },
       { ...first, model: "other-model" }, { ...first, completedAt: "2026-01-01T00:00:00.000Z" }]) {
       await assert.rejects(f.save({ version: 3, graphs: f.graphs, prose: f.proof(f.raws[0], f.reviewInput, provenance) }), code("VERIFICATION_INVALID"));
     }

@@ -127,7 +127,7 @@ test("journal proof cannot substitute another valid receipt or different actual 
     await assert.rejects(save(db, otherTime), hasCode("VERIFICATION_INVALID"));
     const otherInput = input(); otherInput.userGuidance = "Use the owner's revised direction.";
     await assert.rejects(save(db, proof(completed, response(otherInput), otherInput)), hasCode("VERIFICATION_INVALID"));
-    await assert.rejects(save(db, { ...proof(completed), unexpected: true } as EntityReviewVerificationBundle), hasCode("VERIFICATION_INVALID"));
+    await assert.rejects(save(db, { ...proof(completed), unexpected: true } as unknown as EntityReviewVerificationBundle), hasCode("VERIFICATION_INVALID"));
     assert.equal((await readEntityReviewCall(db, scope))?.verification_snapshot, null);
     await assert.rejects(db.transaction((tx) => saveEntityReviewVerificationBundle(tx, { ...scope, playerId: uuid(99) }, proof(completed))), hasCode("SCOPE_MISMATCH"));
   } finally { await db.close(); }

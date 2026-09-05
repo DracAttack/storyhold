@@ -170,7 +170,7 @@ test("proven stale canon rolls back generated changes but settles the known paid
     assert.equal(saved.summary, "Original dossier");
     assert.equal(saved.hold.status, "settled");
     assert.equal(saved.usageEntries.length, 1); assert.equal(saved.creditEntries.length, 2);
-    assert.equal(saved.usageEntries[0]?.cost_micros, 1500);
+    assert.equal((saved.usageEntries[0] as { cost_micros: number } | undefined)?.cost_micros, 1500);
     assert.deepEqual(await finishJournaledEntityReview(f.db, { scope, apply }), first);
     assert.equal(applications, 1); assert.equal(f.providerCalls(), 1);
   } finally { await f.db.close(); }

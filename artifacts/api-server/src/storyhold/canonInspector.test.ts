@@ -52,9 +52,9 @@ test("one bounded narration read still runs NLI and rejects contradictions or in
   process.env.STORYHOLD_LOCAL_GLINER2_URL = "http://127.0.0.1:8765/gliner2";
   process.env.STORYHOLD_LOCAL_NLI_ENABLED = "true";
   process.env.STORYHOLD_LOCAL_NLI_URL = `http://127.0.0.1:${address.port}/nli`;
-  t.mock.method(globalThis, "fetch", async (_url, options) => {
+  t.mock.method(globalThis, "fetch", async (_url: Parameters<typeof fetch>[0], options?: Parameters<typeof fetch>[1]) => {
     extractionCalls += 1;
-    const payload = JSON.parse(String(options.body));
+    const payload = JSON.parse(String(options?.body));
     deadlines.push(payload.deadlineUnixMs);
     assert.equal(payload.requireLoaded, undefined, "The full narration check may load its required model.");
     return Response.json({ signals: [{ signalType: "story_claim", fields: {

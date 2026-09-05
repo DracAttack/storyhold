@@ -99,7 +99,7 @@ function result(text:string):AiTextResult{return{text,provider:"openrouter",mode
   cachedInputUnits:0,cacheWriteInputUnits:0,reasoningUnits:0,estimatedCostMicros:100,pricingKnown:true,pricingVersion:"test",costEstimated:true},
   runtime:{configured:true,mode:"connected",provider:"openrouter",model:"requested-model",billable:true,sendsSourceTextOffDevice:true,explanation:"offline fixture",
     stage:"verification",execution:{connectionId:"test",credentialSource:"environment",connectionSource:"storyhold_managed",billingSource:"storyhold_credits",
-      requestedModel:"requested-model",resolvedModel:"resolved-model",upstreamProvider:"fixture",privacyMode:"standard"},
+      requestedModel:"requested-model",resolvedModel:"resolved-model",upstreamProvider:"fixture",privacyMode:"zero-data-retention"},
     localExtraction:{enabled:false,configured:false,provider:"gliner2",model:"none",endpoint:null,endpointKind:null,sendsSourceTextOffDevice:false,explanation:"off"},
     providers:[],routing:{director:null,narration:null,adultNarration:null,analysis:null,canonReview:"openrouter"},
     stageRouting:{extraction:null,verification:"openrouter",dossier:null,chronology:"openrouter",director:null,narration:null,adaptation:null}}};}

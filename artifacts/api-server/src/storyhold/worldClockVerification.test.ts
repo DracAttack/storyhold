@@ -227,7 +227,8 @@ test("temporal and epistemic corrections cannot erase qualification or mutate im
   ]) {
     const raw = response(request); const decision = raw.clockVerification.decisions.find((item) => item.proposalId === eventProposal.id)!;
     const corrected = structuredClone(eventProposal.payload) as unknown as Extract<WorldClockPayload, { recordType: "event" }>;
-    mutate(corrected); decision.correctedPayload = corrected;
+    mutate(corrected);
+    (decision as { correctedPayload: WorldClockPayload | null }).correctedPayload = corrected;
     assert.throws(() => validateWorldClockVerification(params, raw, verifier), /immutable|exact event|belief|fact/);
   }
 });
@@ -267,7 +268,7 @@ test("an unclassified event remains unresolved unless its exact receipt authoriz
   const decision = classified.clockVerification.decisions.find((item) =>
     item.proposalId === eventProposal.id
   )!;
-  decision.correctedPayload = {
+  (decision as { correctedPayload: WorldClockPayload | null }).correctedPayload = {
     ...(eventProposal.payload as unknown as Extract<WorldClockPayload, { recordType: "event" }>),
     truthStatus: "fact",
     epistemicHolderId: null,

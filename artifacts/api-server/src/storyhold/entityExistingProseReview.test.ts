@@ -15,7 +15,7 @@ function input(details = ["Dara believed Mira was dead until the spring reunion.
     worldName: "Winter Watch", worldPremise: "A disputed death.", worldGenre: "Fantasy", depth: "full",
     entity: { id: "mira-id", name: "Mira", entityType: "character", aliases: [], summary: "", details, relationships: [] },
     knownEntities: [{ name: "Mira", entityType: "character", aliases: [] }],
-    chunks: [{ id: "chunk-1", sourceId: "source-1", sourceTitle: "Winter", index: 0, content: passage, tokenEstimate: 30 }],
+    chunks: [{ id: "chunk-1", sourceId: "source-1", sourceTitle: "Winter", index: 0, content: passage }],
     premiumStatScope: { worldId: "world-1", editionId: "edition-1", analysisRunId: "review-1" },
     graphReview: { version: 2, relations: [], rules: [], entities: [{ id: "mira-id", name: "Mira", entityType: "character", aliases: [] }] },
     proseReview: { version: 1 }, existingProseReview: buildExistingProseInventory({ details }),

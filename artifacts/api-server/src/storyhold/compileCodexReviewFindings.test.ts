@@ -164,7 +164,7 @@ test("complete-edition review resolves the Old Dog narrator to Ragger", () => {
   assert.match(findings.chapterSummaries[0]?.summary ?? "", /later identified as Anubsika/u);
   assert.deepEqual(findings.chronology[0]?.actors, ["Ragger"]);
   assert.match(findings.chronology[0]?.summary ?? "", /remembered by humanity as Anubis/u);
-  assert.equal(findings.claims[0]?.subject, "Ragger");
+  assert.equal(findings.claims?.[0]?.subject, "Ragger");
   assert.deepEqual(findings.openQuestions, ["Another question"]);
   assert.equal(findings.cohesionProposals.length, 0);
 });
@@ -244,7 +244,7 @@ test("compiled review grounds healing and resuscitation in direct observed passa
   ]);
 
   const regeneration = findings.powers.find((candidate) => candidate.name === "Rapid regeneration");
-  assert.match(regeneration?.details.join(" ") ?? "", /literal immortality remains Alec's own assessment/u);
+  assert.match(regeneration?.details?.join(" ") ?? "", /literal immortality remains Alec's own assessment/u);
   assert.deepEqual(regeneration?.evidence.map((item) => item.chunkId), [
     "d89c40ae-e1ef-464f-b475-2a5477196acd",
     "43c5bf25-bcb5-4e21-8249-93fabc70c682",

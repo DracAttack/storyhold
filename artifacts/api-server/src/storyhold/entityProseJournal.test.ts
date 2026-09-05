@@ -239,6 +239,6 @@ test("claim-link migration is idempotent, retains legacy run proofs and enforces
         (claim_id,run_id,entity_review_id,step_key,proposal_id,decision_id,payload_fingerprint)
         VALUES($1,$2,$3,'verification:0','invalid','invalid','invalid')`, [claimId, run, review]), /constraint/);
     }
-    assert.equal(hash((await f.db.query("SELECT snapshot FROM storyhold.world_analysis_claim_reviews WHERE run_id=$1", [LEGACY_RUN])).rows[0]!.snapshot), hash(legacy));
+    assert.equal(hash((await f.db.query<{ snapshot: JsonObject }>("SELECT snapshot FROM storyhold.world_analysis_claim_reviews WHERE run_id=$1", [LEGACY_RUN])).rows[0]!.snapshot), hash(legacy));
   } finally { await f.db.close(); }
 });

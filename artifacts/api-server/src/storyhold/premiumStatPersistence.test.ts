@@ -88,8 +88,8 @@ test("premium creature estimates cannot follow a local reclassification into a s
     assert.equal(rows[0]!.entity_type, "species");
     assert.equal(rows[0]!.classification_source, "ai");
     assert.ok(isNeutralPremiumStatEstimate(rows[0]!.estimated_stats.strength));
-    assert.equal((await db.query("SELECT count(*) AS count FROM storyhold.world_entity_stat_verifications")).rows[0]!.count, 0);
-    assert.equal((await db.query("SELECT count(*) AS count FROM storyhold.world_analysis_stat_reviews")).rows[0]!.count, 1);
+    assert.equal((await db.query<{ count: number }>("SELECT count(*) AS count FROM storyhold.world_entity_stat_verifications")).rows[0]!.count, 0);
+    assert.equal((await db.query<{ count: number }>("SELECT count(*) AS count FROM storyhold.world_analysis_stat_reviews")).rows[0]!.count, 1);
   } finally { await db.close(); }
 });
 
@@ -110,8 +110,8 @@ test("a matching creature estimate survives actual SQL persistence and links the
       "SELECT entity_id, dossier_id, run_id, stat_name FROM storyhold.world_entity_stat_verifications")).rows;
     assert.deepEqual(links, [{ entity_id: saved.id, dossier_id: null, run_id: scope.analysisRunId, stat_name: "strength" }]);
     assert.equal(await persist(db, input), 0);
-    assert.equal((await db.query("SELECT count(*) AS count FROM storyhold.world_entities")).rows[0]!.count, 1);
-    assert.equal((await db.query("SELECT count(*) AS count FROM storyhold.world_entity_stat_verifications")).rows[0]!.count, 1);
+    assert.equal((await db.query<{ count: number }>("SELECT count(*) AS count FROM storyhold.world_entities")).rows[0]!.count, 1);
+    assert.equal((await db.query<{ count: number }>("SELECT count(*) AS count FROM storyhold.world_entity_stat_verifications")).rows[0]!.count, 1);
   } finally { await db.close(); }
 });
 
@@ -126,6 +126,6 @@ test("reclassifying a new premium estimate preserves an established stat rather 
     assert.equal(await persist(db, input), 0);
     const saved = (await db.query<{ estimated_stats: Record<string, unknown> }>("SELECT estimated_stats FROM storyhold.world_entities WHERE id = $1", [uuid(820)])).rows[0]!;
     assert.deepEqual(saved.estimated_stats.strength, prior);
-    assert.equal((await db.query("SELECT count(*) AS count FROM storyhold.world_entity_stat_verifications")).rows[0]!.count, 0);
+    assert.equal((await db.query<{ count: number }>("SELECT count(*) AS count FROM storyhold.world_entity_stat_verifications")).rows[0]!.count, 0);
   } finally { await db.close(); }
 });

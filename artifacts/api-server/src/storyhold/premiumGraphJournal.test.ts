@@ -20,6 +20,24 @@ const uuid = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, "0
 const scope = { worldId: uuid(1), editionId: uuid(2), analysisRunId: uuid(3) };
 const QUOTE = "Mira joined the Ash Guild. Mira can glow when she sings, casting blue light.";
 const EVIDENCE = [{ chunkId: uuid(20), sourceId: uuid(21), quote: QUOTE }];
+type MaterializedRelation = { id: string; source_analysis_run_id: string | null; summary: string };
+type MaterializedRule = {
+  id: string;
+  canonical_key: string;
+  description: string;
+  trigger_text: string;
+  effect_text: string;
+  assignment_source: string;
+  source_analysis_run_id: string | null;
+  name: string;
+};
+type MaterializedGraphLink = {
+  payload_fingerprint: string;
+  rule_id: string;
+  run_id: string | null;
+  entity_review_id: string;
+  step_key: string;
+};
 const policy = {
   canPassRelation: (_type: unknown, source: string, target: string) => source === "character" && target === "faction",
   assertRelationSemantics: (_relation: EntityRelationFinding, _chunks: Array<{ id: string; sourceId: string; text: string }>) => {},
@@ -87,11 +105,11 @@ async function sync(db: PGlite, receipts: PremiumGraphReviewReceipt[]) {
 }
 async function materialized(db: PGlite) {
   return {
-    relations: (await db.query("SELECT * FROM storyhold.world_entity_relations ORDER BY id")).rows,
-    rules: (await db.query("SELECT * FROM storyhold.world_entity_rules ORDER BY id")).rows,
-    memberships: (await db.query("SELECT * FROM storyhold.world_entity_faction_memberships ORDER BY entity_id")).rows,
-    relationLinks: (await db.query("SELECT * FROM storyhold.world_entity_relation_verifications ORDER BY proposal_id")).rows,
-    ruleLinks: (await db.query("SELECT * FROM storyhold.world_entity_rule_verifications ORDER BY proposal_id")).rows,
+    relations: (await db.query<MaterializedRelation>("SELECT * FROM storyhold.world_entity_relations ORDER BY id")).rows,
+    rules: (await db.query<MaterializedRule>("SELECT * FROM storyhold.world_entity_rules ORDER BY id")).rows,
+    memberships: (await db.query<{ evidence: typeof EVIDENCE }>("SELECT * FROM storyhold.world_entity_faction_memberships ORDER BY entity_id")).rows,
+    relationLinks: (await db.query<MaterializedGraphLink>("SELECT * FROM storyhold.world_entity_relation_verifications ORDER BY proposal_id")).rows,
+    ruleLinks: (await db.query<MaterializedGraphLink>("SELECT * FROM storyhold.world_entity_rule_verifications ORDER BY proposal_id")).rows,
   };
 }
 
@@ -399,10 +417,10 @@ async function dossierFixture(db: PGlite, changes: { relations?: EntityRelationF
       supportingEvidence: [{ chunkId: uuid(20), quote: QUOTE }], contradictingEvidence: [], retrievalRequests: [],
     })),
   } };
-  const result: AiTextResult = { text: JSON.stringify(raw), provider: "test-provider", model: "test-model", reasoning: "high",
+  const result: AiTextResult = { text: JSON.stringify(raw), provider: "openai", model: "test-model", reasoning: "high",
     usage: { inputUnits: 100, outputUnits: 50, cachedInputUnits: 0, cacheWriteInputUnits: 0, reasoningUnits: 0,
       estimatedCostMicros: 100, pricingKnown: true, pricingVersion: "test", costEstimated: false },
-    runtime: { ...getAiRuntimeStatus("canon_review", "standard", "dossier"), provider: "test-provider", model: "test-model" },
+    runtime: { ...getAiRuntimeStatus("canon_review", "standard", "dossier"), provider: "openai", model: "test-model" },
   };
   const saved = await executeJournaledEntityReviewCall(db, {
     scope: dossierScope, reservationId: null, contextSnapshot: JSON.parse(JSON.stringify({ version: 1, input })),
@@ -595,10 +613,10 @@ async function pagedDossierFixture(db: PGlite, options: { count?: number; duplic
     decisions: request.proposals.map((proposal) => ({ proposalId: proposal.id,
       ...decision(index === 1 && proposal.id === duplicate.id && options.duplicate ? options.duplicate : "verified") })),
   } }));
-  const results: AiTextResult[] = raws.map((raw, index) => ({ text: JSON.stringify(raw), provider: "test-provider", model: `page-model-${index}`,
+  const results: AiTextResult[] = raws.map((raw, index) => ({ text: JSON.stringify(raw), provider: "openai", model: `page-model-${index}`,
     reasoning: "high", usage: { inputUnits: 100, outputUnits: 50, cachedInputUnits: 0, cacheWriteInputUnits: 0, reasoningUnits: 0,
       estimatedCostMicros: 100, pricingKnown: true, pricingVersion: "test", costEstimated: false },
-    runtime: { ...getAiRuntimeStatus("canon_review", "standard", "dossier"), provider: "test-provider", model: `page-model-${index}` },
+    runtime: { ...getAiRuntimeStatus("canon_review", "standard", "dossier"), provider: "openai", model: `page-model-${index}` },
   }));
   const saved = await executeJournaledEntityReviewPages(db, {
     scope: dossierScope, reservationId: null, contextSnapshot: JSON.parse(JSON.stringify({ version: 1, input })),

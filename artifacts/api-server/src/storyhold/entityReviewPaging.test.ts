@@ -40,7 +40,7 @@ function result(value: unknown, index: number): AiTextResult {
 function aggregate(pages: ReturnType<typeof premiumEntityReviewPages>, values = pages.map((page, index) => raw(page, index))): PagedEntityReviewResult {
   const results = pages.map((page, index) => ({ stepKey: page.stepKey, result: result(values[index], index) }));
   const priorBillableAttempts: AiBillableAttempt[] = results.slice(0, -1).map(({ result: value }) => ({ provider: value.provider,
-    model: value.model, resolvedModel: value.runtime.execution!.resolvedModel, upstreamProvider: "fixture", stage: "dossier", reasoning: value.reasoning, usage: value.usage }));
+    model: value.model, resolvedModel: value.runtime.execution!.resolvedModel!, upstreamProvider: "fixture", stage: "dossier", reasoning: value.reasoning, usage: value.usage }));
   return { ...results.at(-1)!.result, priorBillableAttempts, entityReviewPages: results };
 }
 

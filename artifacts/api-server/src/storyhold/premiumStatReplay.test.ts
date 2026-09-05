@@ -53,7 +53,7 @@ function reply(request: GenerateAiTextInput, params: WorldAnalysisInput, step: s
   const text = JSON.stringify(body);
   request.validate!(text);
   const runtime = getAiRuntimeStatus(request.task, request.contentMode, request.stage);
-  return { text, runtime, provider: runtime.provider, model: runtime.model, reasoning: "high",
+  return { text, runtime, provider: "openrouter", model: runtime.model, reasoning: "high",
     usage: { inputUnits: 10, outputUnits: 5, cachedInputUnits: 0, cacheWriteInputUnits: 0, reasoningUnits: 0,
       estimatedCostMicros: 100, pricingKnown: true, pricingVersion: "fixture", costEstimated: true } };
 }

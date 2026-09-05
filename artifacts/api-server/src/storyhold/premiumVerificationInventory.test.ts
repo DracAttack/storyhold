@@ -64,7 +64,7 @@ test("historical v2 inventories larger than 64k preserve every finding family ac
   }
   for (const proposal of proposals) assert.ok(JSON.stringify(proposal).length <= 64_000);
   for (const field of CANDIDATE_FIELDS) {
-    assert.deepEqual(proposals.flatMap((proposal) => proposal[field] ?? []), packet[field], `${field} was preserved in order`);
+    assert.deepEqual(proposals.flatMap((proposal) => (proposal[field] ?? []) as unknown[]), packet[field], `${field} was preserved in order`);
   }
   assert.equal(proposals[0]!.summary, packet.summary);
   for (const proposal of proposals.slice(1)) {

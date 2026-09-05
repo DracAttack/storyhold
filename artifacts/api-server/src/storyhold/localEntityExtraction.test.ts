@@ -19,8 +19,8 @@ test("gameplay reads stop after a failure, preserve its detail, and leave thorou
   process.env.STORYHOLD_LOCAL_GLINER2_ENABLED = "true";
   process.env.STORYHOLD_LOCAL_GLINER2_URL = "http://127.0.0.1:8765/gliner2";
   const bodies: Array<Record<string, unknown>> = [];
-  t.mock.method(globalThis, "fetch", async (_url, options) => {
-    bodies.push(JSON.parse(String(options.body)));
+  t.mock.method(globalThis, "fetch", async (_url: Parameters<typeof fetch>[0], options?: Parameters<typeof fetch>[1]) => {
+    bodies.push(JSON.parse(String(options?.body)));
     return Response.json({ error: "Model unavailable: Windows commit capacity exhausted." }, { status: 503 });
   });
   const chunks = ["one", "two", "three"].map((id) => ({ id, sourceId: "book", content: `${id} passage.` }));
@@ -46,11 +46,11 @@ test("gameplay entity deadline covers all segments and records unfinished work",
   process.env.STORYHOLD_LOCAL_GLINER2_ENABLED = "true";
   process.env.STORYHOLD_LOCAL_GLINER2_URL = "http://127.0.0.1:8765/gliner2";
   let requests = 0;
-  t.mock.method(globalThis, "fetch", async (_url, options) => {
+  t.mock.method(globalThis, "fetch", async (_url: Parameters<typeof fetch>[0], options?: Parameters<typeof fetch>[1]) => {
     requests += 1;
     if (requests === 1) return Response.json({ entities: [] });
     return await new Promise<Response>((_resolve, reject) => {
-      options.signal.addEventListener("abort", () => reject(new Error("Gameplay deadline exceeded")), { once: true });
+      options?.signal?.addEventListener("abort", () => reject(new Error("Gameplay deadline exceeded")), { once: true });
     });
   });
   const started = Date.now();

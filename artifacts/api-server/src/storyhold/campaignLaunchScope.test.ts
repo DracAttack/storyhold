@@ -76,14 +76,14 @@ test("world studio upgrades pre-branch campaigns before creating world-card summ
     await db.query("INSERT INTO storyhold.worlds VALUES ($1), ($2)", [WORLD, OTHER_WORLD]);
     await db.query("INSERT INTO storyhold.campaigns (id, world_id) VALUES ($1, $2)", [CAMPAIGN, WORLD]);
     await db.exec(worldStudioSchemaSql);
-    assert.equal((await db.query("SELECT campaign_count FROM storyhold.world_card_stats WHERE world_id = $1", [WORLD])).rows[0]?.campaign_count, 1);
+    assert.equal((await db.query<{ campaign_count: number }>("SELECT campaign_count FROM storyhold.world_card_stats WHERE world_id = $1", [WORLD])).rows[0]?.campaign_count, 1);
     await db.query("INSERT INTO storyhold.campaigns (id, world_id, parent_campaign_id) VALUES ($1, $2, $3)", [BRANCH, WORLD, CAMPAIGN]);
     // The second startup is idempotent and a branch is not another adventure.
     await db.exec(worldStudioSchemaSql);
     assert.deepEqual((await db.query("SELECT world_id, campaign_count FROM storyhold.world_card_stats ORDER BY world_id")).rows, [
       { world_id: WORLD, campaign_count: 1 }, { world_id: OTHER_WORLD, campaign_count: 0 },
     ]);
-    assert.equal((await db.query("SELECT parent_campaign_id FROM storyhold.campaigns WHERE id = $1", [BRANCH])).rows[0]?.parent_campaign_id, CAMPAIGN);
+    assert.equal((await db.query<{ parent_campaign_id: string }>("SELECT parent_campaign_id FROM storyhold.campaigns WHERE id = $1", [BRANCH])).rows[0]?.parent_campaign_id, CAMPAIGN);
   } finally { await db.close(); }
 });
 
@@ -122,19 +122,19 @@ test("campaign-only heroes survive deleting their parent and disappear with the 
     assert.equal(await findWorldCanonicalCharacter(db as never, { characterId: CHARACTER, worldId: WORLD }), null);
     assert.equal(await findWorldCanonicalCharacter(db as never, { characterId: CHARACTER, worldId: OTHER_WORLD }), null);
     await db.query("DELETE FROM storyhold.campaigns WHERE id = $1", [CAMPAIGN]);
-    const hero = (await db.query("SELECT scope_kind, scope_campaign_id FROM storyhold.characters WHERE id = $1", [CHARACTER])).rows[0];
+    const hero = (await db.query<{ scope_kind: string; scope_campaign_id: string | null }>("SELECT scope_kind, scope_campaign_id FROM storyhold.characters WHERE id = $1", [CHARACTER])).rows[0];
     assert.deepEqual(hero, { scope_kind: "campaign", scope_campaign_id: null });
-    assert.equal((await db.query("SELECT perspective_character_id FROM storyhold.campaigns WHERE id = $1", [BRANCH])).rows[0]?.perspective_character_id, CHARACTER);
-    assert.equal((await db.query("SELECT count(*)::int AS count FROM storyhold.campaign_members WHERE campaign_id = $1", [BRANCH])).rows[0]?.count, 1);
+    assert.equal((await db.query<{ perspective_character_id: string }>("SELECT perspective_character_id FROM storyhold.campaigns WHERE id = $1", [BRANCH])).rows[0]?.perspective_character_id, CHARACTER);
+    assert.equal((await db.query<{ count: number }>("SELECT count(*)::int AS count FROM storyhold.campaign_members WHERE campaign_id = $1", [BRANCH])).rows[0]?.count, 1);
     assert.equal(await findWorldCanonicalCharacter(db as never, { characterId: CHARACTER, worldId: WORLD }), null);
     // Delete dependents in the order required by the world's restrictive FKs.
     await db.transaction(async (tx) => {
       await tx.query("DELETE FROM storyhold.campaigns WHERE world_id = $1", [WORLD]);
       await tx.query("DELETE FROM storyhold.worlds WHERE id = $1", [WORLD]);
     });
-    assert.equal((await db.query("SELECT count(*)::int AS count FROM storyhold.characters")).rows[0]?.count, 0);
-    assert.equal((await db.query("SELECT count(*)::int AS count FROM storyhold.vault_memory_chunks")).rows[0]?.count, 0);
-    assert.equal((await db.query("SELECT id FROM storyhold.worlds")).rows[0]?.id, OTHER_WORLD);
+    assert.equal((await db.query<{ count: number }>("SELECT count(*)::int AS count FROM storyhold.characters")).rows[0]?.count, 0);
+    assert.equal((await db.query<{ count: number }>("SELECT count(*)::int AS count FROM storyhold.vault_memory_chunks")).rows[0]?.count, 0);
+    assert.equal((await db.query<{ id: string }>("SELECT id FROM storyhold.worlds")).rows[0]?.id, OTHER_WORLD);
   } finally { await db.close(); }
 });
 
@@ -226,8 +226,8 @@ test("a current-edition imported start freezes source facts even when no clock e
     await persistCampaignCanonScopeSnapshots({ db, campaignId: CAMPAIGN, evidence: prepared.evidence, claims: prepared.claims });
     await db.query("UPDATE storyhold.world_source_chunks SET content = 'Rewritten later' WHERE id = $1", [CHUNK]);
     await db.query("UPDATE storyhold.world_knowledge_claims SET object_text = 'the eastern gate' WHERE id = $1", [CLAIM]);
-    assert.equal((await db.query("SELECT excerpt FROM storyhold.campaign_canon_evidence_snapshots WHERE campaign_id = $1", [CAMPAIGN])).rows[0]?.excerpt, content);
-    assert.equal((await db.query("SELECT object_text FROM storyhold.campaign_canon_claim_snapshots WHERE campaign_id = $1", [CAMPAIGN])).rows[0]?.object_text, "the western gate");
+    assert.equal((await db.query<{ excerpt: string }>("SELECT excerpt FROM storyhold.campaign_canon_evidence_snapshots WHERE campaign_id = $1", [CAMPAIGN])).rows[0]?.excerpt, content);
+    assert.equal((await db.query<{ object_text: string }>("SELECT object_text FROM storyhold.campaign_canon_claim_snapshots WHERE campaign_id = $1", [CAMPAIGN])).rows[0]?.object_text, "the western gate");
     await assert.rejects(db.query("UPDATE storyhold.campaign_canon_claim_snapshots SET object_text = 'tampered' WHERE campaign_id = $1", [CAMPAIGN]), /append-only/);
   } finally { await db.close(); }
 });
