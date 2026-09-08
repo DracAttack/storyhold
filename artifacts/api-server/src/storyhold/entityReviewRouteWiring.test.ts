@@ -2,12 +2,13 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import ts from "typescript";
+import { storyholdSourceUrl } from "./testSourcePath";
 
 // These are bounded source-wiring guards, not HTTP or browser integration
 // tests. Registering all world routes also schedules real intake/model work.
 // Execution, journal and persistence behavior have separate PGlite tests.
 const source = ts.createSourceFile("worldStudio.ts",
-  readFileSync(new URL("./worldStudio.ts", import.meta.url), "utf8"),
+  readFileSync(storyholdSourceUrl("worldStudio.ts"), "utf8"),
   ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 
 function find<T extends ts.Node>(root: ts.Node, predicate: (node: ts.Node) => node is T): T {
@@ -161,7 +162,7 @@ test("saved context serializes and restores canonical-name lookup without queryi
 });
 
 test("the resume UI uses saved directions and skips another browser reading", () => {
-  const component = readFileSync(new URL("../../../site/src/components/customer/entity-ai-review-card.tsx", import.meta.url), "utf8");
+  const component = readFileSync(storyholdSourceUrl("../../../site/src/components/customer/entity-ai-review-card.tsx"), "utf8");
   assert.match(component, /quote\.resume\s*\?\s*quote\.guidance\s*\?\?\s*""/u);
   assert.match(component, /if\s*\(!quote\.resume\s*&&\s*\(browserLorekeeperIsEnabled\(\)/u);
   assert.match(component, /depth:\s*quote\.depth/u);
@@ -212,7 +213,7 @@ test("complete old-prose proof is saved before applying new canon and unresolved
 test("audit-only completion reports reviewed entries without claiming the evidence status stayed unchanged", () => {
   const save = namedFunction("saveEntityReview");
   assert.match(save, /input\.existingProseReview\?\.items.length\s*\|\|\s*input\.compassReview\s*\?\s*\[\]\s*:\s*\["This review did not establish/u);
-  const component = readFileSync(new URL("../../../site/src/components/customer/entity-ai-review-card.tsx", import.meta.url), "utf8");
+  const component = readFileSync(storyholdSourceUrl("../../../site/src/components/customer/entity-ai-review-card.tsx"), "utf8");
   assert.match(component, /result\.existingProseAudit\.reviewedItems\.toLocaleString\(\)/u);
   assert.match(component, /existing entries reviewed\. See Evidence by Section/u);
   assert.match(component, /dossier review is complete/u);

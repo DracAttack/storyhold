@@ -146,6 +146,11 @@ const EXTERNALS = [
   "@google/*",
   "@google-cloud/*",
 
+  // Source-inspection tests use the compiler API at runtime. TypeScript's
+  // CommonJS distribution relies on __filename and must remain an ordinary
+  // runtime dependency when the surrounding test is emitted as ESM.
+  "typescript",
+
   // Transformers.js: dynamically imported by services/embeddings.ts (local
   // embedding provider) only when SOURCE_VAULT_EMBED_PROVIDER=local.  It
   // transitively imports sharp, so externalising it keeps the bundle clean.
@@ -312,6 +317,8 @@ globalThis.require = __cr(import.meta.url);`,
 async function run() {
   const srcDir = path.resolve(artifactDir, "src");
   const outDir = path.resolve(artifactDir, "dist-test");
+  process.env.STORYHOLD_TEST_RUNNER = "1";
+  process.env.STORYHOLD_SOURCE_DIR ??= srcDir;
 
   if (process.argv.includes("--pglite-runtime-check")) {
     process.env.NODE_ENV = "test";

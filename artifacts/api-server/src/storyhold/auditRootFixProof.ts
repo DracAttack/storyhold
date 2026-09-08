@@ -1413,6 +1413,6 @@ function reportFatalError(error: unknown): void {
 }
 
 const invokedPath = process.argv[1] ? pathToFileURL(path.resolve(process.argv[1])).href : "";
-if (invokedPath === import.meta.url) {
+if (process.env.STORYHOLD_TEST_RUNNER !== "1" && invokedPath === import.meta.url) {
   runAuditCli(process.argv.slice(2)).catch(reportFatalError);
 }

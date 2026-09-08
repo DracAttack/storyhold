@@ -2,11 +2,12 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import ts from "typescript";
+import { storyholdSourceUrl } from "./testSourcePath";
 
 // AST/source wiring guards, not HTTP simulations. Separate PGlite/pure tests
 // exercise the loader, immutable history, search planner and review execution.
 function load(name: string) {
-  return ts.createSourceFile(name, readFileSync(new URL(`./${name}`, import.meta.url), "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
+  return ts.createSourceFile(name, readFileSync(storyholdSourceUrl(name), "utf8"), ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
 }
 const source = load("worldStudio.ts");
 function nodes<T extends ts.Node>(root: ts.Node, predicate: (node: ts.Node) => node is T): T[] {

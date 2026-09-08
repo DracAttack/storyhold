@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
+import { storyholdSourceUrl } from "./testSourcePath";
 
 test("legacy Codex enrichment cannot replace owner or receipt-backed World Clock rows", async () => {
-  const source = await readFile(new URL("./applyLocalEnrichment.ts", import.meta.url), "utf8");
+  const source = await readFile(storyholdSourceUrl("applyLocalEnrichment.ts"), "utf8");
   assert.doesNotMatch(source, /DELETE FROM storyhold\.world_clock_events/u);
   assert.match(source, /event\.canon_edition_id = \$2/u);
   assert.match(source, /event\.canonical_key LIKE 'codex-canon-%'/u);
@@ -15,7 +16,7 @@ test("legacy Codex enrichment cannot replace owner or receipt-backed World Clock
 });
 
 test("startup and chapter-map maintenance only retire unowned, unverified generated clock rows", async () => {
-  const source = await readFile(new URL("./worldStudio.ts", import.meta.url), "utf8");
+  const source = await readFile(storyholdSourceUrl("worldStudio.ts"), "utf8");
   assert.doesNotMatch(source, /DELETE FROM storyhold\.world_clock_events/u);
   assert.match(source, /canonical_key LIKE 'source-chapter-v1-%'/u);
   assert.match(source, /canonical_key LIKE 'source-chapter-v2-%'/u);
@@ -28,7 +29,7 @@ test("startup and chapter-map maintenance only retire unowned, unverified genera
 });
 
 test("duplicate repair fails before clock constraints drop if a loser is owner-created or receipt-backed", async () => {
-  const source = await readFile(new URL("./repairDuplicateWorldEntities.ts", import.meta.url), "utf8");
+  const source = await readFile(storyholdSourceUrl("repairDuplicateWorldEntities.ts"), "utf8");
   assert.match(source, /event\.created_by_player_id IS NOT NULL/u);
   assert.match(source, /event\.assignment_source = 'user'/u);
   assert.match(source, /world_clock_event_verifications verification/u);

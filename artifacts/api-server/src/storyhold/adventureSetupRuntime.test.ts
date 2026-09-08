@@ -10,6 +10,7 @@ import {
   type AdventureSetupRow,
 } from "./adventureSetupAccess";
 import { prepareAdventureSetup, registerAdventureSetupRoutes, setupContextFromCampaign, validateSetupResponse } from "./adventureSetupRuntime";
+import { storyholdSourceUrl } from "./testSourcePath";
 import { validateAdventureSetupPlan, type AdventureSetupContext, type AdventureSetupPlan } from "./adventureSetup";
 import { manualStorytellerSha256 } from "./manualStoryteller";
 
@@ -271,9 +272,9 @@ test("manual completion replay validates the accepted plan and returns once with
 });
 
 test("play GET only projects setup and the guard is registered before turn handlers", () => {
-  const play = readFileSync(new URL("./campaignPlay.ts", import.meta.url), "utf8");
-  const studio = readFileSync(new URL("./worldStudio.ts", import.meta.url), "utf8");
-  const runtime = readFileSync(new URL("./adventureSetupRuntime.ts", import.meta.url), "utf8");
+  const play = readFileSync(storyholdSourceUrl("campaignPlay.ts"), "utf8");
+  const studio = readFileSync(storyholdSourceUrl("worldStudio.ts"), "utf8");
+  const runtime = readFileSync(storyholdSourceUrl("adventureSetupRuntime.ts"), "utf8");
   const start = play.indexOf('    "/api/storyhold/campaigns/:campaignId/play",');
   const end = play.indexOf("\n  app.", start);
   assert.ok(start >= 0 && end > start);
@@ -288,7 +289,7 @@ test("play GET only projects setup and the guard is registered before turn handl
 });
 
 test("connected setup has room to finish and never applies canned recovery prose", () => {
-  const runtime = readFileSync(new URL("./adventureSetupRuntime.ts", import.meta.url), "utf8");
+  const runtime = readFileSync(storyholdSourceUrl("adventureSetupRuntime.ts"), "utf8");
   assert.match(runtime, /maxOutputTokens:\s*12000/u);
   assert.doesNotMatch(runtime, /buildDeterministicAdventureSetupPlan|deterministic_fallback/u);
 });

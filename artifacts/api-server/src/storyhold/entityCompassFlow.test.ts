@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { storyholdSourceUrl } from "./testSourcePath";
 import { readFileSync } from "node:fs";
 import { getAiRuntimeStatus, type AiTextResult } from "./aiGateway";
 import { buildEntityCompassRequest } from "./entityCompassVerification";
@@ -103,7 +104,7 @@ test("a missing compass, raw bypass, changed source or changed owner override ca
 });
 
 test("route wiring saves proof before a guarded separate compass write and exposes status only on the owned dossier", () => {
-  const source = readFileSync(new URL("./worldStudio.ts", import.meta.url), "utf8");
+  const source = readFileSync(storyholdSourceUrl("worldStudio.ts"), "utf8");
   const finish = source.slice(source.indexOf("export async function finishSavedEntityReview"), source.indexOf("export async function saveEntityReview"));
   assert.ok(finish.indexOf("version: 5") < finish.indexOf("await saveEntityReview("));
   assert.match(source, /compassReview: reviewed\.compassReview, graphScope: scope/);
