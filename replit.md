@@ -13,7 +13,7 @@ This is a pnpm TypeScript workspace. The source of truth for the hosted app is t
 - `lib/content-utils` — shared Storyhold title capitalization.
 - `lib/api-client-react` — shared fetch/error utilities; the retired magazine's generated client has been removed.
 - `lib/db` — compatibility schema/client for the optional Perplexity embedding usage ledger. Storyhold's primary schema and PostgreSQL adapter live in `artifacts/api-server/src/storyhold` and `src/local.ts`.
-- `scripts` — Storyhold validation, local-development helpers, and optional local-model tools.
+- `scripts` — Storyhold validation, local-development helpers, and the preserved local-model installers, launchers, training, and verification tools.
 
 ## Runtime and Deployment
 
@@ -41,7 +41,9 @@ Storyhold requires PostgreSQL for accounts, sessions, worlds, documents, Lorekee
 
 Premium AI providers are optional until their Storyhold-specific secret is configured. The gateway supports OpenRouter, OpenAI, Anthropic, xAI, Kimi, Perplexity, and Gemini. Keep the SDKs actually imported by the gateway installed; credentials and live provider calls are not needed to build. Leave a lane disabled unless its own key and approved model have been deliberately configured.
 
-The six-model local Canon Intake stack — GLiNER2, coreference, NLI, MiniLM, BGE, and local Qwen — is designed for a capable local machine or a dedicated worker. Its installer downloads Python packages, model weights, and a quantized Qwen GGUF. Do **not** run the Windows PowerShell/CUDA installers or require loopback model endpoints in a normal Replit Autoscale web instance. Hosted intake should use the server's provider gateway or a future worker service.
+The full local Canon Intake stack is part of Storyhold and must be preserved: Qwen, GLiNER2, NLI, coreference, MiniLM, and BGE code, dependencies, installers, configuration, training, and verification tooling must not be deleted, disabled, or replaced with a generic hosted-AI shortcut. Premium Anthropic, browser Qwen, GLiNER/NLI safety, persistence, Source Vault, and campaign play must remain intact.
+
+The local stack may require a capable local machine, a dedicated worker, or an explicitly provisioned deployment shape. Configure that runtime boundary explicitly when those workloads are hosted. Do not run the local-model installers automatically during an ordinary web-service startup unless the deployment has explicitly been provisioned for those workloads.
 
 Browser WebLLM is an optional client-side capability, not a server requirement.
 
@@ -55,5 +57,5 @@ Browser WebLLM is an optional client-side capability, not a server requirement.
 
 - Preserve the Storyhold data model and canonical IDs. Do not replace it with generic chat, blog, or news-site scaffolding.
 - Do not expose internal model names, pipeline stages, or provider mechanics in customer-facing copy.
-- Do not enable local CUDA/model download scripts on Autoscale.
+- Preserve the complete local-model stack. Only gate automatic installer startup by the deployment shape; do not use that operational boundary as permission to omit or remove model capabilities.
 - Treat `training/`, benchmark scripts, screenshots, and local recovery tools as development assets unless a task explicitly targets them.
