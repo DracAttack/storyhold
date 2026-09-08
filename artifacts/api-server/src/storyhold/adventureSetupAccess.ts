@@ -31,12 +31,17 @@ export function publicAdventureSetup(campaign: Record<string, unknown>, row: Adv
     : row.status === "generating" && !activeAdventureSetups.has(String(row.campaign_id)) ? "failed"
     : String(row.status);
   const requestMode = (row?.request as Record<string, unknown> | null)?.mode;
+  const storedFailure = String(row?.last_error ?? "");
+  const failureCode = storedFailure === "content_policy" || storedFailure === "truncated"
+    ? storedFailure
+    : "invalid_response";
   return {
     required,
     status: status as "not_required" | "required" | "awaiting_response" | "generating" | "ready" | "failed",
     opening: status === "ready" && requestMode !== "deterministic_fallback"
       ? (row?.plan as AdventureSetupPlan)?.publicOpening || null
       : null,
+    ...(status === "failed" ? { failureCode } : {}),
   };
 }
 

@@ -164,6 +164,26 @@ test("stop policy preserves a successful first result", async () => {
   });
 });
 
+for (const outcome of ["truncated", "content_policy"] as const) {
+  test(`stop policy reports a completed ${outcome} response distinctly`, async () => {
+    await withFakeProviders(() => new Response(JSON.stringify({
+      choices: [{
+        finish_reason: outcome === "truncated" ? "length" : "content_filter",
+        message: { content: outcome === "truncated" ? "{\"unfinished\":" : "", refusal: outcome === "content_policy" ? "Policy refusal" : undefined },
+      }],
+      usage: { prompt_tokens: 15, completion_tokens: 2000 },
+    }), { status: 200 }), async () => {
+      await assert.rejects(generateAiText(input), (error: unknown) => {
+        assert.ok(error instanceof AiGatewayUnavailableError);
+        assert.equal(error.failureKind, outcome);
+        assert.equal(error.hasUncertainOutcome, false);
+        assert.equal(error.billableAttempts.length, 1);
+        return true;
+      });
+    });
+  });
+}
+
 test("legacy gateway errors do not assert that every possible charge is known", () => {
   const error = new AiGatewayUnavailableError("Historical failure", [], []);
   assert.equal(error.hasUncertainOutcome, undefined);

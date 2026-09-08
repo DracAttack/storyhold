@@ -5,6 +5,7 @@ import {
   Home,
   LogOut,
   Menu,
+  Coins,
   ShieldCheck,
   MessagesSquare,
 } from "lucide-react";
@@ -74,6 +75,12 @@ export default function StoryholdAdminLayout({
           className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium ${location === "/admin/premium-recovery" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
         >
           <ShieldCheck className="h-4 w-4" /> Premium Recovery
+        </Link>}
+        {isPremiumRecoveryOperator(role) && <Link
+          href="/admin/credit-usage"
+          className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium ${location === "/admin/credit-usage" ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted hover:text-foreground"}`}
+        >
+          <Coins className="h-4 w-4" /> Credit Usage
         </Link>}
         {manualEnabled && isPremiumRecoveryOperator(role) ? <Link
           href="/admin/manual-storyteller"

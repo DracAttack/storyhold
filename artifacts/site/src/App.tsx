@@ -38,6 +38,7 @@ const AdminWorlds = React.lazy(() => import("@/pages/admin/Worlds"));
 const AdminWorldStudio = React.lazy(() => import("@/pages/admin/WorldStudio"));
 const AdminPremiumRecovery = React.lazy(() => import("@/pages/admin/PremiumRecovery"));
 const AdminManualStoryteller = React.lazy(() => import("@/pages/admin/ManualStoryteller"));
+const AdminCreditUsage = React.lazy(() => import("@/pages/admin/CreditUsage"));
 const AdminLogin = React.lazy(() => import("@/pages/admin/AdminLogin"));
 const NotAuthorized = React.lazy(() => import("@/pages/admin/NotAuthorized"));
 
@@ -134,6 +135,11 @@ function AppRoutes() {
       <Route path="/admin/manual-storyteller">
         <AdminGuard operatorOnly>
           <AdminManualStoryteller />
+        </AdminGuard>
+      </Route>
+      <Route path="/admin/credit-usage">
+        <AdminGuard operatorOnly>
+          <AdminCreditUsage />
         </AdminGuard>
       </Route>
       <Route path="/admin/worlds/:id">

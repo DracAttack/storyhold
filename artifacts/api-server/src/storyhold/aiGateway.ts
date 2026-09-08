@@ -1126,10 +1126,26 @@ type ProviderCallResult = {
   upstreamProvider: string | null;
 };
 
+export type AiProviderFailureKind =
+  | "content_policy"
+  | "truncated"
+  | "invalid_response"
+  | "empty_response"
+  | "provider_error"
+  | "transport_unknown";
+
+class ProviderOutcomeError extends Error {
+  constructor(message: string, public readonly kind: AiProviderFailureKind) {
+    super(message);
+    this.name = "ProviderOutcomeError";
+  }
+}
+
 class BillableProviderResponseError extends Error {
   constructor(
     message: string,
     public readonly result: ProviderCallResult,
+    public readonly kind: AiProviderFailureKind = "invalid_response",
   ) {
     super(message);
     this.name = "BillableProviderResponseError";
@@ -1169,7 +1185,7 @@ async function callAnthropic(
   const cacheReadInputUnits = numeric(usage.cache_read_input_tokens);
   const cacheWriteInputUnits = numeric(usage.cache_creation_input_tokens);
   const directInputUnits = numeric(usage.input_tokens);
-  return {
+  const providerResult: ProviderCallResult = {
     text,
     resolvedModel: configuration.model,
     upstreamProvider: configuration.label,
@@ -1181,6 +1197,27 @@ async function callAnthropic(
       cacheWriteInputUnits,
     ),
   };
+  const rawResult = result as unknown as Record<string, unknown>;
+  const stopReason = String(rawResult.stop_reason ?? "");
+  const contentBlocks = result.content as unknown as Array<Record<string, unknown>>;
+  if (stopReason === "max_tokens") {
+    throw new BillableProviderResponseError(
+      "Anthropic stopped at the configured output limit.",
+      providerResult,
+      "truncated",
+    );
+  }
+  if (
+    /refusal|content.?filter|safety|policy/iu.test(stopReason) ||
+    contentBlocks.some((block) => /refusal|content.?filter|safety/iu.test(String(block.type ?? "")))
+  ) {
+    throw new BillableProviderResponseError(
+      "Anthropic declined the request under its content policy.",
+      providerResult,
+      "content_policy",
+    );
+  }
+  return providerResult;
 }
 
 async function callCompatible(
@@ -1247,12 +1284,15 @@ async function callCompatible(
         response.headers.get("x-request-id") ||
         response.headers.get("request-id") ||
         response.headers.get("cf-ray");
-      throw new Error(
+      const policyFailure = [400, 403, 422].includes(response.status) &&
+        /moderation|safety|content.?policy|content.?filter|refus/iu.test(raw);
+      throw new ProviderOutcomeError(
         `${configuration.label} returned ${response.status}${
           requestId
             ? ` (request ${requestId.replace(/[^a-zA-Z0-9._:-]/gu, "").slice(0, 120)})`
             : ""
         }.`,
+        policyFailure ? "content_policy" : "provider_error",
       );
     }
     const payload = JSON.parse(raw) as Record<string, unknown>;
@@ -1323,6 +1363,25 @@ async function callCompatible(
         reportedCostMicros,
       ),
     };
+    const finishReason = String(first?.finish_reason ?? "");
+    const refusal = String(message.refusal ?? "");
+    if (finishReason === "length" || finishReason === "max_tokens") {
+      throw new BillableProviderResponseError(
+        `${configuration.label} stopped at the configured output limit.`,
+        providerResult,
+        "truncated",
+      );
+    }
+    if (
+      refusal.trim() ||
+      /content.?filter|safety|refusal|policy/iu.test(finishReason)
+    ) {
+      throw new BillableProviderResponseError(
+        `${configuration.label} declined the request under its content policy.`,
+        providerResult,
+        "content_policy",
+      );
+    }
     if (
       configuration.id === "openrouter" &&
       reportedModel !== configuration.model
@@ -1345,6 +1404,7 @@ export class AiGatewayUnavailableError extends Error {
     public readonly billableAttempts: AiBillableAttempt[] = [],
     /** Undefined is intentionally not proof that every attempted charge is known. */
     public readonly hasUncertainOutcome?: boolean,
+    public readonly failureKind?: AiProviderFailureKind,
   ) {
     super(message);
     this.name = "AiGatewayUnavailableError";
@@ -1368,6 +1428,7 @@ export async function generateAiText(
   const attempts: string[] = [];
   const billableAttempts: AiBillableAttempt[] = [];
   let hasUncertainOutcome = false;
+  let failureKind: AiProviderFailureKind | undefined;
   for (const configuration of configurations) {
     const effectiveReasoning = reasoningForProvider(configuration, reasoning);
     let returnedResult: ProviderCallResult | null = null;
@@ -1412,6 +1473,13 @@ export async function generateAiText(
         priorBillableAttempts: [...billableAttempts],
       };
     } catch (error) {
+      failureKind = error instanceof BillableProviderResponseError || error instanceof ProviderOutcomeError
+        ? error.kind
+        : returnedResult
+          ? returnedResult.text
+            ? "invalid_response"
+            : "empty_response"
+          : "transport_unknown";
       const billedResult = error instanceof BillableProviderResponseError
         ? error.result
         : returnedResult;
@@ -1438,6 +1506,7 @@ export async function generateAiText(
           attempts,
           billableAttempts,
           hasUncertainOutcome,
+          failureKind,
         );
       }
     }
@@ -1447,6 +1516,7 @@ export async function generateAiText(
     attempts,
     billableAttempts,
     hasUncertainOutcome,
+    failureKind,
   );
 }
 

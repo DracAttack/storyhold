@@ -3,6 +3,7 @@ export type AdventureSetupStatus = {
   required: boolean;
   status: "not_required" | "required" | "awaiting_response" | "generating" | "ready" | "failed";
   opening: string | null;
+  failureCode?: "content_policy" | "truncated" | "invalid_response";
 };
 
 export function adventureSetupBlocksPlay(setup: AdventureSetupStatus | null | undefined): boolean {
@@ -41,7 +42,11 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
       409: "This adventure changed. Refresh before trying again.",
       422: "That answer could not be accepted. Review it and try again.",
     };
-    throw new Error(messages[response.status] ?? "Your adventure is saved, but preparation could not finish. Try again in a moment.");
+    let payload: { error?: string; code?: string } = {};
+    try { payload = await response.json(); } catch { /* Use the safe status explanation. */ }
+    throw new Error(payload.code === "ADVENTURE_CONTENT_SETTINGS_REQUIRED"
+      ? payload.error
+      : messages[response.status] ?? "Your adventure is saved, but preparation could not finish. Try again in a moment.");
   }
   return response.json() as Promise<T>;
 }

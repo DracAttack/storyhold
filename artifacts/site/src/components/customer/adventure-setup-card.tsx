@@ -61,6 +61,11 @@ export function AdventureSetupCard({ setup, busy, error, onPrepare, context }: {
 }) {
   const waiting = busy || adventureSetupIsPending(setup);
   const retry = setup?.status === "failed" || Boolean(error);
+  const failureMessage = setup?.failureCode === "content_policy"
+    ? "The model declined this request under its content policy. If this adventure requires adult material, enable Adult Content in profile settings and use an approved adult-fiction provider before retrying."
+    : setup?.failureCode === "truncated"
+      ? "The Premium response reached its output limit before Storyhold could accept it. Your beginning is saved, and no fallback opening was applied."
+      : "The Premium setup response did not pass Storyhold's checks. Your beginning is saved, and no fallback opening was applied.";
   const steps = useMemo(() => preparationSteps(context), [context.characterConcept, context.characterName, context.initialObjective, context.premise, context.tone, context.worldName]);
   const [visibleStep, setVisibleStep] = useState(0);
 
@@ -85,7 +90,7 @@ export function AdventureSetupCard({ setup, busy, error, onPrepare, context }: {
         {waiting
           ? "Your beginning is saved. Storyhold is building the opening around the world and character you chose."
           : retry
-            ? "The Premium setup response did not pass Storyhold's checks. Your beginning is saved, and no fallback opening was applied. Try Premium preparation again when you are ready."
+            ? `${failureMessage} Try Premium preparation again when you are ready.`
             : "Let Storyhold prepare your opening before you make your first choice."}
       </p>
       {waiting ? (

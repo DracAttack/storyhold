@@ -49,12 +49,14 @@ test("only a ready, nonempty public opening is displayed", () => {
 
 test("the compact player card uses safe status copy and never renders private extra fields", () => {
   const privateExtras = { plan: { npcMotive: "SECRET_BETRAYAL", clocks: ["PRIVATE_CLOCK"] }, inputSha256: "PRIVATE_HASH", error: "PRIVATE_PROVIDER_ERROR" };
-  const render = (status: AdventureSetupStatus["status"], busy = false) => renderToStaticMarkup(createElement(AdventureSetupCard, {
-    setup: { ...privateExtras, required: true, status, opening: null }, busy, error: null, onPrepare() {},
+  const render = (status: AdventureSetupStatus["status"], busy = false, failureCode?: AdventureSetupStatus["failureCode"]) => renderToStaticMarkup(createElement(AdventureSetupCard, {
+    setup: { ...privateExtras, required: true, status, opening: null, failureCode }, busy, error: null, onPrepare() {},
     context: { worldName: "Rain at the Western Gate", characterName: "Mara", characterConcept: "A courier seeking work" },
   }));
   assert.match(render("required"), /Prepare Adventure/);
-  assert.match(render("failed"), /Try Again/);
+  assert.match(render("failed"), /Retry Premium Preparation/);
+  assert.match(render("failed", false, "content_policy"), /enable Adult Content/i);
+  assert.match(render("failed", false, "truncated"), /output limit/i);
   for (const status of ["awaiting_response", "generating"] as const) {
     assert.match(render(status), /Preparing Your Adventure/);
     assert.doesNotMatch(render(status), /<button/);
@@ -105,6 +107,11 @@ test("setup failures do not leak infrastructure or private planning details", as
     });
     globalThis.fetch = async () => { throw new Error("PRIVATE_NETWORK_DETAILS"); };
     await assert.rejects(prepareAdventureSetup("campaign-1"), /adventure is saved/);
+    globalThis.fetch = async () => new Response(JSON.stringify({
+      code: "ADVENTURE_CONTENT_SETTINGS_REQUIRED",
+      error: "The model declined this request. Enable Adult Content in profile settings and configure an approved adult-fiction provider.",
+    }), { status: 422 });
+    await assert.rejects(prepareAdventureSetup("campaign-1"), /Enable Adult Content/);
   } finally { globalThis.fetch = originalFetch; }
 });
 
@@ -140,10 +147,10 @@ test("play polls only reads, gates submission, and keeps completed turns visible
 test("quickstart preserves the created campaign when setup needs a retry", () => {
   const source = readFileSync(new URL("../components/customer/quickstart-creator.tsx", import.meta.url), "utf8");
   const saved = source.indexOf("setCreated({ worldId: world.id");
-  const preparing = source.indexOf("await prepareAdventureSetup(campaign.campaign.id)");
-  const recovery = source.indexOf("Your beginning is saved. You can finish preparing it");
+  const preparing = source.indexOf("void prepareAdventureSetup(campaign.campaign.id)");
   const navigation = source.indexOf("navigate(`/profile/campaigns/${campaign.campaign.id}/play`)", preparing);
-  assert.ok(saved >= 0 && saved < preparing && preparing < recovery && recovery < navigation);
+  assert.ok(saved >= 0 && saved < preparing && preparing < navigation);
+  assert.doesNotMatch(source, /await prepareAdventureSetup\(campaign\.campaign\.id\)/);
   assert.doesNotMatch(source.slice(preparing, navigation), /createWorld\(|createCampaign\(/);
   const admin = readFileSync(new URL("../pages/admin/ManualStoryteller.tsx", import.meta.url), "utf8");
   assert.match(admin, /enabled \? <AdventureSetupQueue \/>/);
