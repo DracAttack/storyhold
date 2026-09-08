@@ -40,6 +40,12 @@ test("editing a prepared beginning invalidates its preview and prior launch link
   }
 });
 
+test("campaign creation does not wait for Premium preparation before navigation", () => {
+  assert.match(source, /void prepareAdventureSetup\(campaign\.campaign\.id\)/u);
+  assert.doesNotMatch(source, /await prepareAdventureSetup\(campaign\.campaign\.id\)/u);
+  assert.match(source, /navigate\(`\/profile\/campaigns\/\$\{campaign\.campaign\.id\}\/play`\)/u);
+});
+
 test("quickstart copy stays player-facing", () => {
   assert.doesNotMatch(source, /source snapshot|RPG seed|GLiNER|Qwen|backend/iu);
   assert.match(source, /The world, your role, and the opening situation are locked/u);

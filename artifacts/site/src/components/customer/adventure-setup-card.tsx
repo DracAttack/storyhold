@@ -85,7 +85,7 @@ export function AdventureSetupCard({ setup, busy, error, onPrepare, context }: {
         {waiting
           ? "Your beginning is saved. Storyhold is building the opening around the world and character you chose."
           : retry
-            ? "Your beginning is saved. Try again to finish preparing your adventure."
+            ? "The Premium setup response did not pass Storyhold's checks. Your beginning is saved, and no fallback opening was applied. Try Premium preparation again when you are ready."
             : "Let Storyhold prepare your opening before you make your first choice."}
       </p>
       {waiting ? (
@@ -102,7 +102,7 @@ export function AdventureSetupCard({ setup, busy, error, onPrepare, context }: {
         </div>
       ) : null}
       {error ? <p role="alert" className="mt-2 text-sm text-muted-foreground">{error}</p> : null}
-      {!waiting ? <><p className="mt-3 text-xs text-muted-foreground">Adventure Preparation Uses Credits.</p><Button type="button" onClick={onPrepare} className="mt-4 rounded-xl">{retry ? "Try Again" : "Prepare Adventure"}</Button></> : null}
+      {!waiting ? <><p className="mt-3 text-xs text-muted-foreground">Adventure Preparation Uses Credits. A retry can create a new Premium model charge.</p><Button type="button" onClick={onPrepare} className="mt-4 rounded-xl">{retry ? "Retry Premium Preparation" : "Prepare Adventure"}</Button></> : null}
     </section>
   );
 }

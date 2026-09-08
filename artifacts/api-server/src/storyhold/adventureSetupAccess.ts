@@ -30,16 +30,19 @@ export function publicAdventureSetup(campaign: Record<string, unknown>, row: Adv
   const status = !required ? "not_required" : !row ? "required"
     : row.status === "generating" && !activeAdventureSetups.has(String(row.campaign_id)) ? "failed"
     : String(row.status);
+  const requestMode = (row?.request as Record<string, unknown> | null)?.mode;
   return {
     required,
     status: status as "not_required" | "required" | "awaiting_response" | "generating" | "ready" | "failed",
-    opening: status === "ready" ? (row?.plan as AdventureSetupPlan)?.publicOpening || null : null,
+    opening: status === "ready" && requestMode !== "deterministic_fallback"
+      ? (row?.plan as AdventureSetupPlan)?.publicOpening || null
+      : null,
   };
 }
 
 /** Frozen in manual turn packets. Initial plans are subordinate to later committed reality. */
 export function privateAdventureSetupContext(row: AdventureSetupRow | null | undefined) {
-  if (row?.status !== "ready") return null;
+  if (row?.status !== "ready" || (row.request as Record<string, unknown> | null)?.mode === "deterministic_fallback") return null;
   return {
     setupId: String(row.id), establishedAtStateVersion: Number(row.applied_state_version),
     boundary: "Private initial adventure state, not player knowledge. Current committed facts, revealed knowledge, completed objectives, and matured clocks supersede initial intentions. Goal steps and alternate paths are contingent opportunities, never destined events. Unmet NPCs remain offstage until causally introduced. Clue opportunities are not discoveries. Let choices change motives and plans; never force the initial goal sequence or deliver the premise immediately.",

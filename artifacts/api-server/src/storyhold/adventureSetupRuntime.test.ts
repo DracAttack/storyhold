@@ -130,6 +130,9 @@ test("public setup projection exposes only progress and the approved opening, ne
   for (const status of ["awaiting_response", "failed"]) {
     assert.equal(publicAdventureSetup(campaign(), { ...row, status }).opening, null);
   }
+  const fallback = { ...row, request: { mode: "deterministic_fallback" } };
+  assert.equal(publicAdventureSetup(campaign(), fallback).opening, null);
+  assert.equal(privateAdventureSetupContext(fallback), null);
   assert.deepEqual(publicAdventureSetup(campaign(), null), { required: true, status: "required", opening: null });
 });
 
@@ -282,6 +285,12 @@ test("play GET only projects setup and the guard is registered before turn handl
   const complete = runtime.slice(runtime.indexOf('  app.post("/api/storyhold/admin/adventure-setups/:id/complete"'));
   assert.match(complete, /applyAdventureSetupPlanInTransaction/);
   assert.doesNotMatch(complete, /generateAiText\(|reserveCredits\(|runOrResumeMeteredAiResult\(/);
+});
+
+test("connected setup has room to finish and never applies canned recovery prose", () => {
+  const runtime = readFileSync(new URL("./adventureSetupRuntime.ts", import.meta.url), "utf8");
+  assert.match(runtime, /maxOutputTokens:\s*12000/u);
+  assert.doesNotMatch(runtime, /buildDeterministicAdventureSetupPlan|deterministic_fallback/u);
 });
 
 test("setup snapshots distinguish an untouched beginning from real saved history", () => {

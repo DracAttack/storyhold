@@ -127,16 +127,9 @@ export function QuickstartCreator({ scenario }: { scenario?: StoryholdScenario }
         experienceMode: "solo",
       });
       setCreated({ worldId: world.id, worldName: world.name, campaignId: campaign.campaign.id });
-      // Preparation belongs to this saved campaign. A failed or lost response
-      // must lead to its retry card, never another world creation.
-      try {
-        const result = await prepareAdventureSetup(campaign.campaign.id);
-        toast.success(result.adventureSetup.status === "ready"
-          ? `${world.name} is ready.`
-          : "Your beginning is saved. Storyhold is preparing your adventure.");
-      } catch {
-        toast.error("Your beginning is saved. You can finish preparing it from your adventure.");
-      }
+      // Preparation belongs to this saved campaign, but the player should enter
+      // the adventure immediately instead of waiting on the model request here.
+      void prepareAdventureSetup(campaign.campaign.id).catch(() => undefined);
       navigate(`/profile/campaigns/${campaign.campaign.id}/play`);
     } catch (reason) {
       toast.error(reason instanceof Error ? reason.message : "Storyhold could not create this world.");
