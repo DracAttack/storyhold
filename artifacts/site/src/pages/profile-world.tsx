@@ -135,16 +135,19 @@ export default function ProfileWorld() {
       ) : (
         <div className="mt-5">
           <section className="storyhold-glass relative overflow-hidden rounded-3xl p-5 sm:p-6">
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_90%_10%,rgba(56,189,248,0.14),transparent_36%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_90%_10%,rgba(215,175,100,0.12),transparent_40%)]" />
             <div className="relative">
               <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-start">
                 <div className="min-w-0 xl:flex-1">
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">{toChicagoTitleCase(detail.world.genre || "Your World")}</p>
-                  <h1 className="mt-2 font-serif text-3xl font-bold tracking-tight sm:text-4xl">{detail.world.name}</h1>
-                  <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{detail.world.premise || detail.world.description || "This world is ready for its first story."}</p>
+                  <div className="flex items-center gap-2">
+                    <span className="h-px w-6 bg-primary/40"></span>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary/80">{toChicagoTitleCase(detail.world.genre || "Your World")}</p>
+                  </div>
+                  <h1 className="mt-3 font-serif text-4xl font-bold tracking-tight sm:text-5xl bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent drop-shadow-sm">{detail.world.name}</h1>
+                  <p className="mt-3 max-w-3xl text-sm leading-relaxed text-foreground/80">{detail.world.premise || detail.world.description || "This world is ready for its first story."}</p>
                 </div>
                 <div className="flex w-full flex-wrap gap-2 xl:w-auto xl:justify-end">
-                  <Button asChild className="rounded-xl shadow-[0_10px_28px_-16px_rgba(56,189,248,0.9)]">
+                  <Button asChild className="rounded-xl shadow-[0_10px_28px_-16px_rgba(215,175,100,0.9)] text-primary-foreground font-bold hover:brightness-110">
                     <Link href={activeCampaign
                       ? `/profile/campaigns/${activeCampaign.id}/play`
                       : `/profile/worlds/${detail.world.id}?section=contract`}
@@ -162,16 +165,16 @@ export default function ProfileWorld() {
                   </Button>
                 </div>
               </div>
-              <div className="mt-4 flex flex-wrap gap-1.5">
-                <Badge variant="outline" className="border-white/10"><FileText className="mr-1.5 h-3.5 w-3.5 text-primary" />{detail.world.sourceCount} source{detail.world.sourceCount === 1 ? "" : "s"}</Badge>
-                <Badge variant="outline" className="border-white/10"><BookOpen className="mr-1.5 h-3.5 w-3.5 text-primary" />{formatNumber(detail.world.wordCount)} words</Badge>
-                <Badge variant="outline" className="border-white/10"><UsersRound className="mr-1.5 h-3.5 w-3.5 text-primary" />{detail.world.peopleCount} character{detail.world.peopleCount === 1 ? "" : "s"}</Badge>
-                <Badge variant="outline" className="border-white/10"><Sparkles className="mr-1.5 h-3.5 w-3.5 text-primary" />{detail.world.campaignCount} campaign{detail.world.campaignCount === 1 ? "" : "s"}</Badge>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <Badge variant="outline" className="border-primary/20 bg-black/30 px-3 py-1.5 text-xs text-foreground/80 shadow-inner"><FileText className="mr-2 h-4 w-4 text-primary/70" />{detail.world.sourceCount} source{detail.world.sourceCount === 1 ? "" : "s"}</Badge>
+                <Badge variant="outline" className="border-primary/20 bg-black/30 px-3 py-1.5 text-xs text-foreground/80 shadow-inner"><BookOpen className="mr-2 h-4 w-4 text-primary/70" />{formatNumber(detail.world.wordCount)} words</Badge>
+                <Badge variant="outline" className="border-primary/20 bg-black/30 px-3 py-1.5 text-xs text-foreground/80 shadow-inner"><UsersRound className="mr-2 h-4 w-4 text-primary/70" />{detail.world.peopleCount} character{detail.world.peopleCount === 1 ? "" : "s"}</Badge>
+                <Badge variant="outline" className="border-primary/20 bg-black/30 px-3 py-1.5 text-xs text-foreground/80 shadow-inner"><Sparkles className="mr-2 h-4 w-4 text-primary/70" />{detail.world.campaignCount} campaign{detail.world.campaignCount === 1 ? "" : "s"}</Badge>
               </div>
             </div>
           </section>
 
-          <nav className="storyhold-neu-inset mt-3 grid grid-cols-2 gap-1 rounded-xl border border-white/8 bg-black/20 p-1 sm:grid-cols-4" aria-label="World sections">
+          <nav className="mt-6 grid grid-cols-2 gap-2 rounded-2xl border border-white/5 bg-black/40 p-2 sm:grid-cols-4 shadow-inner" aria-label="World sections">
             {[
               ["overview", BookOpen, "Overview"],
               ["clock", Clock3, "World Clock"],
@@ -180,8 +183,8 @@ export default function ProfileWorld() {
             ].map(([value, Icon, label]) => {
               const TabIcon = Icon as typeof BookOpen;
               return (
-                <button key={String(value)} type="button" onClick={() => chooseSection(value as WorldSection)} className={`flex items-center justify-center rounded-lg px-3 py-2 text-xs font-semibold transition-colors sm:text-sm ${section === value ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-white/[0.035] hover:text-foreground"}`}>
-                  <TabIcon className="mr-2 h-4 w-4" /> {toChicagoTitleCase(String(label))}
+                <button key={String(value)} type="button" onClick={() => chooseSection(value as WorldSection)} className={`flex items-center justify-center rounded-xl px-3 py-2.5 text-xs font-bold uppercase tracking-wider transition-all sm:text-[10px] ${section === value ? "bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-md" : "text-muted-foreground hover:bg-white/5 hover:text-primary"}`}>
+                  <TabIcon className="mr-2 h-3.5 w-3.5" /> {toChicagoTitleCase(String(label))}
                 </button>
               );
             })}
@@ -194,24 +197,26 @@ export default function ProfileWorld() {
           {section === "overview" ? (
             <>
               {understandingSummary ? (
-                <Card className="mt-4 rounded-2xl border-primary/20 bg-primary/[0.045] p-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">Storyhold's Understanding</p>
-                  <p className="mt-2 text-sm leading-6 text-foreground/90">{understandingSummary}</p>
+                <Card className="mt-6 rounded-3xl border-primary/20 bg-gradient-to-br from-primary/[0.08] to-transparent p-6 shadow-sm">
+                  <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.25em] text-primary">
+                    <Sparkles className="h-3.5 w-3.5" /> Storyhold's Understanding
+                  </p>
+                  <p className="mt-3 text-base leading-relaxed text-foreground/90">{understandingSummary}</p>
                 </Card>
               ) : detail.sources.length ? (
-                <Card className="mt-5 rounded-3xl border-white/8 bg-white/[0.025] p-6">
-                  <div className="flex items-start gap-3"><Loader2 className="mt-0.5 h-5 w-5 animate-spin text-primary" /><div><p className="font-semibold">Storyhold Is Still Reading This World.</p><p className="mt-1 text-sm leading-6 text-muted-foreground">Its people, places, rules, and chronology will appear as evidence is processed.</p></div></div>
+                <Card className="mt-6 rounded-3xl border border-primary/20 bg-primary/[0.05] p-6">
+                  <div className="flex items-start gap-4"><Loader2 className="mt-0.5 h-6 w-6 animate-spin text-primary" /><div><p className="font-serif text-2xl font-bold text-foreground">Storyhold Is Still Reading This World.</p><p className="mt-2 text-sm leading-relaxed text-muted-foreground/90">Its people, places, rules, and chronology will appear as evidence is processed.</p></div></div>
                 </Card>
               ) : (
-                <Card className="mt-5 rounded-3xl border-white/8 bg-white/[0.025] p-6"><p className="font-semibold">This World Began from an Idea.</p><p className="mt-1 text-sm leading-6 text-muted-foreground">Its canon will grow as campaigns introduce and commit new people, places, mechanics, and consequences.</p></Card>
+                <Card className="mt-6 rounded-3xl border-white/5 bg-black/20 p-8 text-center shadow-inner"><BookOpen className="mx-auto h-8 w-8 text-primary/40" /><p className="mt-4 font-serif text-2xl font-bold text-foreground">This World Began from an Idea.</p><p className="mt-2 text-sm leading-relaxed text-muted-foreground max-w-md mx-auto">Its canon will grow as campaigns introduce and commit new people, places, mechanics, and consequences.</p></Card>
               )}
 
-              <details className="group mt-4 rounded-2xl border border-white/8 bg-white/[0.025]">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 text-sm font-semibold hover:bg-white/[0.025]">
-                  <span className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" />References and Canon Maintenance{openQualityCount ? <Badge variant="outline" className="ml-1 text-[10px]">{openQualityCount} notice{openQualityCount === 1 ? "" : "s"}</Badge> : null}</span>
-                  <ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" />
+              <details className="group mt-6 rounded-3xl border border-white/5 bg-black/10 shadow-sm transition-colors hover:border-primary/20">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 font-serif text-2xl font-bold hover:bg-white/5 rounded-3xl transition-colors">
+                  <span className="flex items-center gap-3"><Sparkles className="h-5 w-5 text-primary" />References and Canon Maintenance{openQualityCount ? <Badge variant="outline" className="ml-3 border-amber-500/30 bg-amber-500/10 text-[10px] text-amber-200">{openQualityCount} notice{openQualityCount === 1 ? "" : "s"}</Badge> : null}</span>
+                  <ChevronDown className="h-5 w-5 text-muted-foreground transition-transform group-open:rotate-180" />
                 </summary>
-                <div className="border-t border-white/8 px-3 pb-3">
+                <div className="border-t border-white/5 px-6 pb-6 pt-4 bg-black/20 rounded-b-3xl">
                   <WorldLorekeeperPanel detail={detail} onChanged={() => refresh()} />
                   <WorldConceptResolutionPanel detail={detail} onChanged={() => refresh()} />
                 </div>
@@ -219,30 +224,34 @@ export default function ProfileWorld() {
 
               <WorldEntityPanel detail={detail} onChanged={() => refresh()} />
 
-              <div className="mt-4 grid gap-3 xl:grid-cols-2">
-                <Card className="rounded-2xl border-white/8 bg-white/[0.025] p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="flex items-center gap-2"><History className="h-4 w-4 text-primary" /><h2 className="font-serif text-xl font-bold">Timeline at a Glance</h2></div>
-                    {chronology.length > overviewChronology.length ? <Button type="button" variant="ghost" size="sm" className="shrink-0" onClick={() => chooseSection("clock")}>Full Clock</Button> : null}
+              <div className="mt-6 grid gap-4 xl:grid-cols-2">
+                <Card className="rounded-3xl border-white/5 bg-black/10 p-6 shadow-sm">
+                  <div className="flex items-center justify-between gap-3 border-b border-white/5 pb-4">
+                    <div className="flex items-center gap-3"><History className="h-5 w-5 text-primary" /><h2 className="font-serif text-2xl font-bold">Timeline at a Glance</h2></div>
+                    {chronology.length > overviewChronology.length ? <Button type="button" variant="outline" size="sm" className="shrink-0 border-primary/20 text-primary hover:bg-primary/10" onClick={() => chooseSection("clock")}>Full Clock</Button> : null}
                   </div>
-                  {overviewChronology.length ? <div className="mt-3 space-y-2">{overviewChronology.map((event, index) => <div key={event.name}>{index === currentFrontierIndex ? <p className="mb-1.5 mt-3 text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">Current Canon Frontier</p> : null}<div className="rounded-lg border border-white/8 bg-black/15 px-3 py-2"><p className="text-sm font-semibold">{toChicagoTitleCase(event.name)}</p>{event.summary ? <p className="mt-0.5 line-clamp-2 text-xs leading-5 text-muted-foreground">{event.summary}</p> : null}</div></div>)}</div> : <p className="mt-3 text-sm leading-6 text-muted-foreground">Major events will appear here as the source chronology is established.</p>}
+                  <div className="pt-4">
+                    {overviewChronology.length ? <div className="space-y-3">{overviewChronology.map((event, index) => <div key={event.name}>{index === currentFrontierIndex ? <p className="mb-2 mt-4 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Current Canon Frontier</p> : null}<div className="group rounded-xl border border-white/5 bg-black/20 px-4 py-3 transition-colors hover:border-primary/20 hover:bg-primary/5"><p className="font-serif text-lg font-bold group-hover:text-primary transition-colors">{toChicagoTitleCase(event.name)}</p>{event.summary ? <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{event.summary}</p> : null}</div></div>)}</div> : <p className="mt-2 text-sm leading-relaxed text-muted-foreground">Major events will appear here as the source chronology is established.</p>}
+                  </div>
                 </Card>
 
-                <Card className="rounded-2xl border-white/8 bg-white/[0.025] p-4">
-                  <div className="flex items-center gap-2"><Globe2 className="h-4 w-4 text-primary" /><h2 className="font-serif text-xl font-bold">Rules and Powers</h2></div>
-                  <div className="mt-3 space-y-2">{(detail.breakdown?.worldRules ?? []).slice(0, 5).map((rule) => <div key={rule.name} className="rounded-lg border border-white/8 bg-black/15 px-3 py-2"><p className="text-sm font-semibold">{rule.name}</p><p className="mt-0.5 line-clamp-2 text-xs leading-5 text-muted-foreground">{rule.summary}</p></div>)}</div>
-                  {!detail.breakdown?.worldRules.length ? <p className="mt-4 text-sm leading-6 text-muted-foreground">World rules will be committed from sources and fair rulings during play.</p> : null}
+                <Card className="rounded-3xl border-white/5 bg-black/10 p-6 shadow-sm">
+                  <div className="flex items-center gap-3 border-b border-white/5 pb-4"><Globe2 className="h-5 w-5 text-primary" /><h2 className="font-serif text-2xl font-bold">Rules and Powers</h2></div>
+                  <div className="pt-4">
+                    <div className="space-y-3">{(detail.breakdown?.worldRules ?? []).slice(0, 5).map((rule) => <div key={rule.name} className="group rounded-xl border border-white/5 bg-black/20 px-4 py-3 transition-colors hover:border-primary/20 hover:bg-primary/5"><p className="font-serif text-lg font-bold group-hover:text-primary transition-colors">{rule.name}</p><p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">{rule.summary}</p></div>)}</div>
+                    {!detail.breakdown?.worldRules.length ? <p className="mt-2 text-sm leading-relaxed text-muted-foreground">World rules will be committed from sources and fair rulings during play.</p> : null}
+                  </div>
                 </Card>
 
-                <details className="group rounded-2xl border border-white/8 bg-white/[0.025] xl:col-span-2">
-                  <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-semibold"><span className="flex items-center gap-2"><Sparkles className="h-4 w-4 text-primary" />Open Possibilities <span className="text-xs font-normal text-muted-foreground">({detail.breakdown?.openQuestions.length ?? 0})</span></span><ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
-                  <div className="border-t border-white/8 px-4 py-3">{detail.breakdown?.openQuestions.length ? <ul className="grid gap-2 text-sm leading-5 text-foreground/85 md:grid-cols-2">{detail.breakdown.openQuestions.slice(0, 8).map((question) => <li key={question} className="rounded-lg bg-black/15 px-3 py-2">{question}</li>)}</ul> : <p className="text-sm leading-6 text-muted-foreground">Possibilities remain uncommitted until the director schedules them or play makes them real.</p>}</div>
+                <details className="group rounded-3xl border border-white/5 bg-black/10 xl:col-span-2 shadow-sm transition-colors hover:border-primary/20">
+                  <summary className="flex cursor-pointer list-none items-center justify-between px-6 py-5 font-serif text-2xl font-bold"><span className="flex items-center gap-3"><Sparkles className="h-5 w-5 text-primary" />Open Possibilities <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary tracking-widest uppercase">{detail.breakdown?.openQuestions.length ?? 0}</span></span><ChevronDown className="h-5 w-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
+                  <div className="border-t border-white/5 px-6 py-5 bg-black/20 rounded-b-3xl">{detail.breakdown?.openQuestions.length ? <ul className="grid gap-3 text-sm leading-relaxed text-foreground/80 md:grid-cols-2">{detail.breakdown.openQuestions.slice(0, 8).map((question) => <li key={question} className="rounded-xl border border-white/5 bg-black/20 px-4 py-3 shadow-inner">{question}</li>)}</ul> : <p className="text-sm leading-relaxed text-muted-foreground">Possibilities remain uncommitted until the director schedules them or play makes them real.</p>}</div>
                 </details>
               </div>
 
-              <details className="group mt-3 rounded-2xl border border-white/8 bg-white/[0.025]">
-                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 text-sm font-semibold"><span className="flex items-center gap-2"><FileText className="h-4 w-4 text-primary" />Sources in This World <span className="text-xs font-normal text-muted-foreground">({detail.sources.length})</span></span><ChevronDown className="h-4 w-4 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
-                <div className="border-t border-white/8 px-4 py-3">{detail.sources.length ? <div className="space-y-2">{detail.sources.map((source) => <div key={source.id} className="flex flex-col justify-between gap-1 rounded-lg bg-black/15 px-3 py-2 text-sm sm:flex-row sm:items-center"><div className="min-w-0"><p className="truncate font-semibold">{source.title}</p><p className="text-xs text-muted-foreground">{source.sourceKind.replaceAll("_", " ")} · {source.chronologyRelation.replaceAll("_", " ")}{source.chronologyLabel ? ` · ${source.chronologyLabel}` : ""}</p></div><span className="shrink-0 text-xs text-muted-foreground">{formatNumber(source.wordCount)} words</span></div>)}</div> : <p className="text-sm text-muted-foreground">No imported sources. This world will grow from its World Contract and campaigns.</p>}</div>
+              <details className="group mt-4 rounded-3xl border border-white/5 bg-black/10 shadow-sm transition-colors hover:border-primary/20">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 font-serif text-2xl font-bold"><span className="flex items-center gap-3"><FileText className="h-5 w-5 text-primary" />Sources in This World <span className="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary tracking-widest uppercase">{detail.sources.length}</span></span><ChevronDown className="h-5 w-5 text-muted-foreground transition-transform group-open:rotate-180" /></summary>
+                <div className="border-t border-white/5 px-6 py-5 bg-black/20 rounded-b-3xl">{detail.sources.length ? <div className="space-y-3">{detail.sources.map((source) => <div key={source.id} className="flex flex-col justify-between gap-3 rounded-xl border border-white/5 bg-black/20 px-4 py-3 sm:flex-row sm:items-center"><div className="min-w-0"><p className="truncate font-semibold text-foreground/90">{source.title}</p><p className="mt-1 text-xs font-medium uppercase tracking-wider text-muted-foreground/70">{source.sourceKind.replaceAll("_", " ")} · {source.chronologyRelation.replaceAll("_", " ")}{source.chronologyLabel ? ` · ${source.chronologyLabel}` : ""}</p></div><span className="shrink-0 rounded-md bg-white/5 px-2.5 py-1 text-xs font-medium text-muted-foreground">{formatNumber(source.wordCount)} words</span></div>)}</div> : <p className="text-sm text-muted-foreground">No imported sources. This world will grow from its World Contract and campaigns.</p>}</div>
               </details>
             </>
           ) : null}

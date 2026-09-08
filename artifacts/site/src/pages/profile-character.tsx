@@ -118,7 +118,7 @@ function AliasBadge({
   attribution?: CharacterAliasAttribution;
 }) {
   const [open, setOpen] = useState(false);
-  if (!attribution) return <Badge variant="secondary">{alias}</Badge>;
+  if (!attribution) return <Badge variant="secondary" className="bg-black/20 border-white/5 text-foreground/80 hover:bg-black/30 transition-colors font-medium shadow-sm">{alias}</Badge>;
   return (
     <HoverCard open={open} onOpenChange={setOpen} openDelay={180} closeDelay={100}>
       <HoverCardTrigger asChild>
@@ -126,7 +126,7 @@ function AliasBadge({
           type="button"
           className={badgeVariants({
             variant: "secondary",
-            className: "cursor-help hover:border-primary/30 hover:bg-primary/[0.08] focus-visible:ring-2 focus-visible:ring-primary/60",
+            className: "cursor-help bg-primary/10 border-primary/20 text-primary shadow-sm hover:border-primary/40 hover:bg-primary/15 transition-all focus-visible:ring-2 focus-visible:ring-primary/60 font-medium",
           })}
           aria-label={`Why ${alias} is listed as a name for this character`}
           aria-expanded={open}
@@ -139,29 +139,29 @@ function AliasBadge({
           {alias}
         </button>
       </HoverCardTrigger>
-      <HoverCardContent align="start" className="w-80 rounded-2xl border-primary/20 bg-background/95 p-4 shadow-2xl backdrop-blur-xl">
+      <HoverCardContent align="start" className="w-80 rounded-2xl border-primary/20 bg-background/95 p-5 shadow-xl backdrop-blur-xl">
         <div className="flex items-start justify-between gap-3">
           <div>
-            <p className="font-serif text-lg font-bold text-foreground">{alias}</p>
-            <p className="mt-0.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
+            <p className="font-serif text-xl font-bold text-foreground">{alias}</p>
+            <p className="mt-1 text-[10px] font-bold uppercase tracking-[0.2em] text-primary/80">
               {aliasKindLabel(attribution.kind)}
             </p>
           </div>
-          {attribution.attributedBy ? <Badge variant="outline">Used by {attribution.attributedBy}</Badge> : null}
+          {attribution.attributedBy ? <Badge variant="outline" className="border-white/10 text-xs">Used by {attribution.attributedBy}</Badge> : null}
         </div>
-        <p className="mt-3 text-sm leading-6 text-muted-foreground">{attribution.explanation}</p>
+        <p className="mt-4 text-sm leading-relaxed text-foreground/90">{attribution.explanation}</p>
         {attribution.temporalScope === "single_scene" ? (
-          <Badge variant="outline" className="mt-3 border-sky-300/25 bg-sky-300/[0.06] text-sky-100">Scene-Specific Description</Badge>
+          <Badge variant="outline" className="mt-3 border-primary/30 bg-primary/5 text-primary text-xs">Scene-Specific Description</Badge>
         ) : null}
         {attribution.semanticLimits.length ? (
-          <ul className="mt-3 space-y-1.5 text-xs leading-5 text-foreground/85">
-            {attribution.semanticLimits.map((limit) => <li key={limit}>• {limit}</li>)}
+          <ul className="mt-4 space-y-2 text-xs leading-relaxed text-foreground/80">
+            {attribution.semanticLimits.map((limit) => <li key={limit} className="flex gap-2"><span className="text-primary/50 mt-1">•</span><span>{limit}</span></li>)}
           </ul>
         ) : null}
-        {attribution.quote ? <blockquote className="mt-3 border-l-2 border-primary/35 pl-3 text-xs italic leading-5 text-foreground/85">“{attribution.quote}”</blockquote> : null}
+        {attribution.quote ? <blockquote className="mt-4 border-l-2 border-primary/40 pl-3.5 py-1 text-xs italic leading-relaxed text-foreground/80 bg-gradient-to-r from-primary/5 to-transparent">“{attribution.quote}”</blockquote> : null}
         {attribution.sourceTitle || attribution.chapterTitle ? (
-          <p className="mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <BookOpen className="h-3.5 w-3.5 text-primary" />
+          <p className="mt-4 flex items-center gap-1.5 text-[11px] font-medium text-primary/60">
+            <BookOpen className="h-3.5 w-3.5" />
             {[attribution.sourceTitle, attribution.chapterTitle].filter(Boolean).join(" · ")}
           </p>
         ) : null}
@@ -234,37 +234,66 @@ function DetailList({
   title: heading,
   values,
   empty,
+  onEditRequest,
 }: {
   title: string;
   values: string[];
   empty: string;
+  onEditRequest?: () => void;
 }) {
   const [visibleCount, setVisibleCount] = useState(DOSSIER_PREVIEW_ITEMS);
   const page = dossierListWindow(values, visibleCount);
+
+  if (values.length === 0) {
+    return (
+      <div className="group relative overflow-hidden rounded-2xl border border-dashed border-white/10 bg-black/10 transition-colors hover:border-primary/30 hover:bg-primary/[0.02]">
+        <div className="px-5 py-4">
+          <h2 className="font-serif text-lg font-bold text-foreground/70">{heading}</h2>
+          <p className="mt-1 text-sm leading-6 text-muted-foreground/80">{empty}</p>
+          {onEditRequest ? (
+            <button
+              type="button"
+              onClick={onEditRequest}
+              className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-primary/70 transition-colors hover:text-primary"
+            >
+              <Pencil className="h-3 w-3" />
+              Add Manual Notes
+            </button>
+          ) : null}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <details className="group rounded-2xl border border-white/8 bg-white/[0.025]">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
-        <h2 className="font-serif text-lg font-bold">{heading}</h2>
-        <span className="rounded-full border border-white/8 bg-black/20 px-2 py-0.5 text-[10px] text-muted-foreground">{values.length}</span>
-      </summary>
-      {values[0] ? <p className="-mt-1 line-clamp-2 px-4 pb-3 text-xs leading-5 text-muted-foreground group-open:hidden">{values[0]}</p> : null}
-      {values.length ? (
-        <ul className="space-y-1.5 border-t border-white/8 px-3 py-3 text-sm leading-5 text-foreground/85">
-          {page.visibleValues.map((value, index) => (
-            <li key={`${value}-${index}`} className="rounded-lg bg-black/15 px-3 py-2">
-              {value}
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="border-t border-white/8 px-4 py-3 text-sm leading-6 text-muted-foreground">{empty}</p>
-      )}
-      {values.length > DOSSIER_PREVIEW_ITEMS ? <div className="flex flex-wrap items-center gap-2 border-t border-white/8 px-4 py-3">
-        <span className="mr-auto text-xs text-muted-foreground" aria-live="polite">Showing {page.shownCount} of {page.total}</span>
-        {page.hasMore ? <><Button type="button" size="sm" variant="outline" onClick={() => setVisibleCount(page.nextCount)}>Show More</Button><Button type="button" size="sm" variant="ghost" onClick={() => setVisibleCount(page.total)}>Show All</Button></> : null}
-        {page.shownCount > DOSSIER_PREVIEW_ITEMS ? <Button type="button" size="sm" variant="ghost" onClick={() => setVisibleCount(DOSSIER_PREVIEW_ITEMS)}>Show Fewer</Button> : null}
-      </div> : null}
-    </details>
+    <div className="group rounded-2xl border border-primary/10 bg-gradient-to-b from-primary/[0.03] to-transparent shadow-sm">
+      <div className="flex items-center justify-between gap-3 px-5 pt-4 pb-3">
+        <h2 className="font-serif text-xl font-bold text-primary">{heading}</h2>
+        <span className="rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">{values.length}</span>
+      </div>
+      <ul className="space-y-2 px-4 pb-4 text-sm leading-6 text-foreground/90">
+        {page.visibleValues.map((value, index) => (
+          <li key={`${value}-${index}`} className="relative pl-5">
+            <span className="absolute left-1.5 top-2.5 h-1.5 w-1.5 rounded-full bg-primary/40"></span>
+            {value}
+          </li>
+        ))}
+      </ul>
+      {values.length > DOSSIER_PREVIEW_ITEMS ? (
+        <div className="flex flex-wrap items-center gap-3 border-t border-primary/10 bg-black/10 px-5 py-3 rounded-b-2xl">
+          <span className="mr-auto text-xs font-medium text-muted-foreground" aria-live="polite">Showing {page.shownCount} of {page.total}</span>
+          {page.hasMore ? (
+            <>
+              <Button type="button" size="sm" variant="outline" className="border-primary/20 hover:bg-primary/10 hover:text-primary" onClick={() => setVisibleCount(page.nextCount)}>Show More</Button>
+              <Button type="button" size="sm" variant="ghost" className="hover:text-primary" onClick={() => setVisibleCount(page.total)}>Show All</Button>
+            </>
+          ) : null}
+          {page.shownCount > DOSSIER_PREVIEW_ITEMS ? (
+            <Button type="button" size="sm" variant="ghost" className="hover:text-primary" onClick={() => setVisibleCount(DOSSIER_PREVIEW_ITEMS)}>Show Fewer</Button>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -278,12 +307,12 @@ function PremiumReadingNotice({
   locked?: boolean;
 }) {
   return (
-    <div className="mt-3 flex items-start justify-between gap-3 rounded-xl border border-emerald-300/15 bg-emerald-300/[0.045] px-3 py-2.5">
-      <div className="flex min-w-0 items-start gap-2">
-        {locked ? <Lock className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-300" /> : <Sparkles className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-300" />}
-        <p className="text-[11px] leading-5 text-muted-foreground"><strong className="text-foreground">{heading}</strong> {children}</p>
+    <div className="mt-4 flex items-start justify-between gap-4 rounded-xl border border-primary/20 bg-gradient-to-r from-primary/[0.08] to-transparent px-4 py-3 shadow-inner">
+      <div className="flex min-w-0 items-start gap-3">
+        {locked ? <Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary/80" /> : <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />}
+        <p className="text-xs leading-relaxed text-foreground/80"><strong className="text-primary font-semibold block sm:inline">{heading}</strong> {children}</p>
       </div>
-      <a href="#dossier-deep-reading" className="shrink-0 text-[10px] font-semibold text-emerald-300 transition-colors hover:text-emerald-200">Improve</a>
+      <a href="#dossier-deep-reading" className="shrink-0 mt-1 sm:mt-0 text-[10px] font-bold uppercase tracking-wider text-primary transition-colors hover:text-primary/70">Improve</a>
     </div>
   );
 }
@@ -656,21 +685,23 @@ export default function ProfileCharacter() {
     <ProfileFrame>
       <Link href={`/profile/worlds/${worldId}`} className="inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-foreground"><ArrowLeft className="mr-2 h-4 w-4" /> Back to {worldName || "world"}</Link>
 
-      <section className="storyhold-glass relative mt-5 overflow-hidden rounded-3xl p-5 sm:p-6">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_90%_0%,rgba(56,189,248,0.16),transparent_38%)]" />
+      <section className="storyhold-glass relative mt-5 overflow-hidden rounded-3xl p-6 sm:p-8">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_90%_0%,rgba(215,175,100,0.12),transparent_45%)]" />
         <div className="relative">
           <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary">Character Dossier</p>
-              <h1 className="mt-2 font-serif text-3xl font-bold tracking-tight sm:text-4xl">{character.name}</h1>
-              {character.role ? <p className="mt-2 text-base font-semibold text-primary/90">{character.role}</p> : null}
-              <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">{character.summary || "Storyhold has identified this person, but their fuller history still needs evidence."}</p>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className="h-px w-6 bg-primary/40"></span>
+                <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-primary/80">Character Archive</p>
+              </div>
+              <h1 className="mt-3 font-serif text-4xl font-bold tracking-tight sm:text-5xl bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text text-transparent drop-shadow-sm">{character.name}</h1>
+              {character.role ? <p className="mt-2 text-lg font-serif italic text-primary/90">{character.role}</p> : null}
+              <p className="mt-3 max-w-3xl text-sm leading-relaxed text-foreground/80">{character.summary || "Storyhold has identified this person, but their fuller history still needs evidence."}</p>
             </div>
-            <div className="flex w-fit flex-col gap-2 sm:items-end">
-              <Badge variant="outline" className="w-fit border-primary/25 bg-primary/[0.06] px-3 py-1.5"><Sparkles className="mr-1.5 h-3.5 w-3.5" />{confidenceLabel(character.confidence, character.role)}</Badge>
-              <Button type="button" size="sm" variant="outline" className="rounded-xl" onClick={() => setDossierEditing((current) => !current)}>
-                {dossierEditing ? <X className="h-3.5 w-3.5" /> : <Pencil className="h-3.5 w-3.5" />}
-                {dossierEditing ? "Close editor" : "Edit dossier yourself"}
+            <div className="flex w-fit flex-col gap-2 sm:items-end shrink-0">
+              <Badge variant="outline" className="w-fit border-primary/30 bg-primary/10 px-3 py-1.5 text-xs text-primary shadow-sm"><Sparkles className="mr-1.5 h-3 w-3" />{confidenceLabel(character.confidence, character.role)}</Badge>
+              <Button type="button" size="sm" variant="outline" className="rounded-xl border-white/10 hover:border-primary/40 hover:bg-primary/10 hover:text-primary transition-all" onClick={() => setDossierEditing((current) => !current)}>
+                {dossierEditing ? <><X className="mr-2 h-3.5 w-3.5" /> Close editor</> : <><Pencil className="mr-2 h-3.5 w-3.5" /> Edit dossier yourself</>}
               </Button>
             </div>
           </div>
@@ -681,25 +712,28 @@ export default function ProfileCharacter() {
               attribution={character.aliasAttributions.find((entry) => entry.alias.toLocaleLowerCase() === alias.toLocaleLowerCase())}
             />
           ))}</div> : null}
-          <details className="mt-3 text-xs text-muted-foreground"><summary className="inline-flex cursor-pointer items-center gap-1.5 font-semibold hover:text-foreground"><Fingerprint className="h-3.5 w-3.5 text-primary" />Identity record</summary><p className="mt-2 rounded-lg bg-black/20 px-3 py-2 font-mono">{character.id}</p></details>
+          <details className="mt-4 text-[11px] text-muted-foreground"><summary className="inline-flex cursor-pointer items-center gap-1.5 font-medium hover:text-primary transition-colors"><Fingerprint className="h-3.5 w-3.5 text-primary/70" />View canonical identity record</summary><div className="mt-3 flex items-center gap-3"><span className="h-px flex-1 bg-white/5"></span><p className="rounded-md border border-white/5 bg-black/30 px-3 py-1.5 font-mono text-[10px] text-muted-foreground shadow-inner">{character.id}</p><span className="h-px flex-1 bg-white/5"></span></div></details>
         </div>
       </section>
 
       {error ? <Card className="mt-5 rounded-2xl border-red-400/20 bg-red-400/[0.05] p-4 text-sm text-red-100">{error}</Card> : null}
 
       {dossierEditing ? (
-        <Card className="mt-5 rounded-3xl border-primary/20 bg-primary/[0.035] p-5 sm:p-6">
-          <form className="space-y-4" onSubmit={saveManualDossier}>
-            <div><h2 className="font-serif text-2xl font-bold">Edit {character.name} manually</h2><p className="mt-1 text-sm leading-6 text-muted-foreground">No AI is used. Enter one fact per line; blank sections stay blank.</p></div>
-            <div className="grid gap-3 md:grid-cols-2">
-              <label className="text-xs font-semibold text-muted-foreground">Role<Input className="mt-1" value={manualRole} onChange={(event) => setManualRole(event.target.value)} maxLength={240} placeholder="Executive, scout, antagonist..." /></label>
-              <label className="text-xs font-semibold text-muted-foreground">Also known as<Input className="mt-1" value={manualAliases} onChange={(event) => setManualAliases(event.target.value)} placeholder="Comma-separated aliases" /></label>
+        <Card className="mt-6 rounded-3xl border border-primary/30 bg-black/40 p-6 sm:p-8 shadow-2xl backdrop-blur-sm relative z-10" id="manual-editor">
+          <form className="space-y-6" onSubmit={saveManualDossier}>
+            <div className="border-b border-white/10 pb-4"><h2 className="font-serif text-3xl font-bold text-primary">Edit {character.name} Manually</h2><p className="mt-2 text-sm leading-relaxed text-foreground/70">No AI is used. Enter one fact per line; blank sections stay blank.</p></div>
+            <div className="grid gap-5 md:grid-cols-2">
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Role<Input className="mt-2 border-white/10 bg-black/20 focus-visible:border-primary/50" value={manualRole} onChange={(event) => setManualRole(event.target.value)} maxLength={240} placeholder="Executive, scout, antagonist..." /></label>
+              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Also known as<Input className="mt-2 border-white/10 bg-black/20 focus-visible:border-primary/50" value={manualAliases} onChange={(event) => setManualAliases(event.target.value)} placeholder="Comma-separated aliases" /></label>
             </div>
-            <label className="block text-xs font-semibold text-muted-foreground">Biography / summary<Textarea className="mt-1 min-h-28" value={manualSummary} onChange={(event) => setManualSummary(event.target.value)} maxLength={4_000} /></label>
-            <div className="grid gap-3 md:grid-cols-2">
-              {editableProfileFields.map(({ key, label }) => <label key={key} className="text-xs font-semibold text-muted-foreground">{label}<Textarea className="mt-1 min-h-28" value={manualFields[key]} onChange={(event) => setManualFields((current) => ({ ...current, [key]: event.target.value }))} placeholder="One supported fact per line" /></label>)}
+            <label className="block text-xs font-bold uppercase tracking-wider text-muted-foreground">Biography / summary<Textarea className="mt-2 min-h-28 border-white/10 bg-black/20 focus-visible:border-primary/50" value={manualSummary} onChange={(event) => setManualSummary(event.target.value)} maxLength={4_000} /></label>
+            <div className="space-y-5 border-t border-white/10 pt-5">
+              <h3 className="font-serif text-xl font-bold text-primary/90">Dossier Details</h3>
+              <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                {editableProfileFields.map(({ key, label }) => <label key={key} className="block text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{label}<Textarea className="mt-2 min-h-24 border-white/10 bg-black/20 text-xs focus-visible:border-primary/50" value={manualFields[key]} onChange={(event) => setManualFields((current) => ({ ...current, [key]: event.target.value }))} placeholder="One supported fact per line" /></label>)}
+              </div>
             </div>
-            <div className="flex justify-end gap-2"><Button type="button" variant="ghost" disabled={saving} onClick={() => setDossierEditing(false)}>Cancel</Button><Button type="submit" disabled={saving}>{saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}Save manual dossier</Button></div>
+            <div className="flex justify-end gap-3 border-t border-white/10 pt-5"><Button type="button" variant="ghost" className="hover:bg-white/5 hover:text-foreground" disabled={saving} onClick={() => setDossierEditing(false)}>Cancel</Button><Button type="submit" disabled={saving} className="bg-primary text-primary-foreground font-bold shadow-md hover:brightness-110">{saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}Save Dossier</Button></div>
           </form>
         </Card>
       ) : null}
@@ -707,75 +741,95 @@ export default function ProfileCharacter() {
       {holdEntity ? <div id="dossier-deep-reading" className="mt-5 scroll-mt-24"><EntityAiReviewCard worldId={worldId} entityId={holdEntity.id} name={character.name} entityType="character" onComplete={refreshHold} /></div> : null}
       <div className="mt-3"><DossierEvidence key={character.id} review={proseReview} /></div>
 
-      <div className="mt-4 grid gap-4 xl:grid-cols-[1.12fr_0.88fr]">
-        <div className="space-y-4">
-          <Card className="rounded-2xl border-primary/15 bg-primary/[0.025] p-4">
-            <div className="flex items-center gap-2"><Brain className="h-4 w-4 text-primary" /><div><h2 className="font-serif text-xl font-bold">Storyhold Understanding</h2><p className="text-xs text-muted-foreground">What the manuscript currently establishes about {character.name}.</p></div></div>
+      <div className="mt-6 grid gap-5 xl:grid-cols-[1.12fr_0.88fr]">
+        <div className="space-y-5">
+          <Card className="rounded-3xl border-primary/20 bg-gradient-to-br from-primary/[0.05] to-transparent p-6 shadow-sm">
+            <div className="flex items-center gap-3"><Brain className="h-5 w-5 text-primary" /><div><h2 className="font-serif text-2xl font-bold">Storyhold Understanding</h2><p className="mt-1 text-xs leading-relaxed text-muted-foreground">What the manuscript currently establishes about {character.name}.</p></div></div>
             <PremiumReadingNotice title="Premium Deep Reading Adds the Inner Story.">It substantially improves evolving motivations, private beliefs, secrets, contradictions, turning points, and chapter-by-chapter character development.</PremiumReadingNotice>
-            {establishedGroups.length ? <div className="mt-3 grid gap-2 sm:grid-cols-2">{establishedGroups.map((group) => <DetailList key={`${character.id}:${group.title}`} {...group} />)}</div> : <p className="mt-3 text-sm leading-6 text-muted-foreground">The source passages are indexed, but no durable character details have been established yet.</p>}
-            {pendingGroups.length && establishedGroups.length ? <details className="mt-3 rounded-xl border border-white/8 bg-black/15 p-3"><summary className="cursor-pointer text-xs font-semibold">{pendingGroups.length} Areas Still Waiting for Direct Evidence</summary><div className="mt-3 grid gap-2 sm:grid-cols-2">{pendingGroups.map((group) => <p key={group.title} className="rounded-lg bg-black/15 px-3 py-2 text-xs text-muted-foreground"><strong className="text-foreground/80">{group.title}:</strong> {group.empty}</p>)}</div></details> : null}
+            {establishedGroups.length ? <div className="mt-3 grid gap-3 sm:grid-cols-2">{establishedGroups.map((group) => <DetailList key={`${character.id}:${group.title}`} {...group} onEditRequest={() => setDossierEditing(true)} />)}</div> : <p className="mt-3 text-sm leading-6 text-muted-foreground">The source passages are indexed, but no durable character details have been established yet.</p>}
+            {pendingGroups.length && establishedGroups.length ? <details className="mt-4 rounded-xl border border-white/5 bg-black/10"><summary className="cursor-pointer px-4 py-3 text-xs font-semibold text-primary hover:text-primary/80 transition-colors">See {pendingGroups.length} Areas Still Waiting for Direct Evidence</summary><div className="px-3 pb-3 border-t border-white/5 pt-3 grid gap-3 sm:grid-cols-2">{pendingGroups.map((group) => <DetailList key={`${character.id}:${group.title}`} {...group} onEditRequest={() => setDossierEditing(true)} />)}</div></details> : null}
           </Card>
 
-          <Card className="rounded-2xl border-white/8 bg-white/[0.025] p-4">
-            <div className="flex items-center gap-2"><Gauge className="h-4 w-4 text-primary" /><div><h2 className="font-serif text-xl font-bold">Estimated Abilities</h2><p className="text-xs text-muted-foreground">Open a score for its source evidence.</p></div></div>
+          <Card className="rounded-3xl border-white/5 bg-black/10 p-6 shadow-sm">
+            <div className="flex items-center gap-3"><Gauge className="h-5 w-5 text-primary" /><div><h2 className="font-serif text-2xl font-bold">Estimated Abilities</h2><p className="mt-1 text-xs leading-relaxed text-muted-foreground">Open a score for its source evidence.</p></div></div>
             <PremiumReadingNotice title="These Are Preliminary Evidence Estimates.">Premium Deep Reading weighs transformations, injuries, equipment, repeated feats, creature forms, and changes over time before settling a score.</PremiumReadingNotice>
-            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
               {statNames.map((name) => {
                 const stat = character.profile.estimatedStats[name];
                 const evidence = stat.evidence ?? [];
                 const established = stat.confidence >= 0.2 && evidence.length > 0;
-                return <details key={name} className="group rounded-xl border border-white/8 bg-black/20 text-center">
-                  <summary className="cursor-pointer list-none p-3">
-                    <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{title(name)}</p>
-                    <p className="mt-1 font-serif text-2xl font-bold">{established ? stat.score : "—"}</p>
-                    <p className="text-xs font-semibold text-primary">{established ? modifier(stat.score) : "Not Established"}</p>
-                    <div className="mx-auto mt-2 h-1 max-w-16 overflow-hidden rounded-full bg-white/8"><div className="h-full rounded-full bg-primary" style={{ width: `${established ? Math.max(5, stat.confidence * 100) : 0}%` }} /></div>
-                    <p className="mt-1.5 text-[9px] text-muted-foreground group-open:hidden">{established ? `${evidence.length} source ${evidence.length === 1 ? "passage" : "passages"}` : "Waiting for Evidence"}</p>
+                return <details key={name} className="group rounded-xl border border-white/5 bg-black/20 text-center transition-colors hover:border-primary/30 hover:bg-primary/[0.03]">
+                  <summary className="cursor-pointer list-none p-4">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{title(name)}</p>
+                    <p className={`mt-2 font-serif text-3xl font-bold ${established ? 'text-foreground' : 'text-foreground/30'}`}>{established ? stat.score : "—"}</p>
+                    <p className={`mt-0.5 text-sm font-semibold ${established ? 'text-primary' : 'text-primary/40'}`}>{established ? modifier(stat.score) : "Unknown"}</p>
+                    <div className="mx-auto mt-3 h-1 w-12 overflow-hidden rounded-full bg-white/5"><div className="h-full rounded-full bg-gradient-to-r from-primary/50 to-primary transition-all duration-700" style={{ width: `${established ? Math.max(10, stat.confidence * 100) : 0}%` }} /></div>
+                    <p className="mt-2 text-[9px] uppercase tracking-wider text-muted-foreground group-open:hidden">{established ? `${evidence.length} cited source${evidence.length === 1 ? "" : "s"}` : "Awaiting evidence"}</p>
                   </summary>
-                  <div className="space-y-3 border-t border-white/8 px-3 py-3 text-left">
-                    <p className="text-xs leading-5 text-muted-foreground">{stat.rationale || "This score is still waiting for a source-grounded assessment."}</p>
-                    {evidence.length ? <div className="space-y-2">{evidence.map((item) => { const shown = evidencePresentation(item); return <blockquote key={shown.key} className="rounded-lg border-l-2 border-primary/40 bg-black/20 px-2.5 py-2"><p className="text-[11px] leading-4 text-foreground/80">“{shown.quote}”</p><cite className="mt-1 block text-[9px] not-italic text-muted-foreground">{shown.citation}</cite></blockquote>; })}</div> : <p className="rounded-lg bg-amber-300/[0.06] px-2.5 py-2 text-[10px] leading-4 text-amber-100/80">No direct passage is attached to this score yet. Guide a dossier review toward this ability before relying on it.</p>}
+                  <div className="space-y-4 border-t border-primary/10 bg-black/10 px-4 py-4 text-left shadow-inner">
+                    <p className="text-xs leading-5 text-foreground/80">{stat.rationale || "This score is still waiting for a source-grounded assessment."}</p>
+                    {evidence.length ? <div className="space-y-2">{evidence.map((item) => { const shown = evidencePresentation(item); return <blockquote key={shown.key} className="rounded-lg border-l-2 border-primary/40 bg-black/20 px-3 py-2"><p className="text-[11px] leading-relaxed text-foreground/85">“{shown.quote}”</p><cite className="mt-1.5 block text-[9px] font-medium not-italic text-primary/70">{shown.citation}</cite></blockquote>; })}</div> : <p className="rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-[10px] leading-relaxed text-primary/80">No direct passage is attached to this score yet. Guide a dossier review toward this ability before relying on it.</p>}
                   </div>
                 </details>;
               })}
             </div>
           </Card>
 
-          <Card className="rounded-2xl border-white/8 bg-white/[0.025] p-4">
-            <div className="flex items-center gap-2"><Network className="h-4 w-4 text-primary" /><div><h2 className="font-serif text-xl font-bold">Connections</h2><p className="text-xs text-muted-foreground">People, places, groups, creatures, and objects.</p></div></div>
+          <Card className="rounded-3xl border-white/5 bg-black/10 p-6 shadow-sm">
+            <div className="flex items-center gap-3"><Network className="h-5 w-5 text-primary" /><div><h2 className="font-serif text-2xl font-bold">Connections</h2><p className="mt-1 text-xs leading-relaxed text-muted-foreground">People, places, groups, creatures, and objects.</p></div></div>
             <PremiumReadingNotice title="Premium Deep Reading Clarifies the Relationship Web.">It distinguishes literal from metaphorical bonds, tracks changing loyalties, and explains the events that shaped each connection.</PremiumReadingNotice>
-            {relationshipRows.length ? <div className="mt-3 grid gap-2 sm:grid-cols-2">{relationshipRows.map((relationship, index) => {
-              const content = <><div className="flex items-start justify-between gap-2"><p className="truncate text-sm font-semibold">{relationship.name}</p><Badge variant="outline" className="shrink-0 text-[9px]">{relationship.category}</Badge></div><div className="mt-1.5 flex flex-wrap gap-1">{relationship.labels.slice(0, 2).map((label) => <Badge key={label} variant="secondary" className="text-[9px]">{label}</Badge>)}{relationship.labels.length > 2 ? <span className="text-[10px] text-muted-foreground">+{relationship.labels.length - 2}</span> : null}</div>{relationship.summaries[0] ? <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-muted-foreground">{relationship.summaries[0]}</p> : null}</>;
-              return relationship.href ? <Link key={relationship.key || `${relationship.name}-${index}`} href={relationship.href} className="rounded-xl border border-white/8 bg-black/20 p-3 transition-colors hover:border-primary/35 hover:bg-primary/[0.04]">{content}</Link> : <div key={relationship.key || `${relationship.name}-${index}`} className="rounded-xl border border-white/8 bg-black/20 p-3">{content}</div>;
+            {relationshipRows.length ? <div className="mt-4 grid gap-3 sm:grid-cols-2">{relationshipRows.map((relationship, index) => {
+              const content = (
+                <>
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="truncate font-serif text-lg font-bold text-foreground/90 group-hover:text-primary transition-colors">{relationship.name}</p>
+                    <Badge variant="outline" className="shrink-0 text-[9px] uppercase tracking-wider border-white/10 bg-black/20 text-muted-foreground">{relationship.category}</Badge>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {relationship.labels.slice(0, 2).map((label) => <Badge key={label} variant="secondary" className="text-[10px] bg-primary/5 text-primary/80 border-primary/20">{label}</Badge>)}
+                    {relationship.labels.length > 2 ? <span className="text-[10px] font-medium text-muted-foreground">+{relationship.labels.length - 2}</span> : null}
+                  </div>
+                  {relationship.summaries[0] ? <p className="mt-2.5 line-clamp-2 text-xs leading-relaxed text-foreground/75">{relationship.summaries[0]}</p> : null}
+                </>
+              );
+              return relationship.href ? (
+                <Link key={relationship.key || `${relationship.name}-${index}`} href={relationship.href} className="group rounded-xl border border-white/5 bg-black/10 p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/[0.04] hover:shadow-md">
+                  {content}
+                </Link>
+              ) : (
+                <div key={relationship.key || `${relationship.name}-${index}`} className="group rounded-xl border border-dashed border-white/10 bg-black/10 p-4">
+                  {content}
+                </div>
+              );
             })}</div> : <p className="mt-3 text-sm leading-6 text-muted-foreground">No evidence-backed relationships have been mapped yet.</p>}
             {holdEntity && hold ? <details className="mt-5 border-t border-white/8 pt-4"><summary className="cursor-pointer text-sm font-semibold text-primary">Manage Canonical Connections</summary><div className="mt-4"><EntityConnectionEditor entity={holdEntity} entities={hold.entities} busy={connectionBusy} onCreate={addConnection} /></div>{holdRelations.length ? <div className="mt-4 grid gap-2 sm:grid-cols-2">{holdRelations.map((relation) => { const display = connectionLabel(relation, hold.entityId); return <div key={relation.id} className="flex items-center justify-between gap-3 rounded-xl border border-white/8 bg-black/20 px-3 py-2 text-xs"><span><strong>{display.otherName}</strong><span className="ml-2 text-muted-foreground">{display.label}</span></span><button type="button" className="rounded-lg p-1.5 text-muted-foreground hover:bg-white/10 hover:text-foreground" aria-label={`Remove connection to ${display.otherName}`} disabled={connectionBusy} onClick={() => removeConnection(relation)}><X className="h-3.5 w-3.5" /></button></div>; })}</div> : null}</details> : <p className="mt-4 text-xs text-muted-foreground">This older dossier is waiting for its Hold card to be synchronized.</p>}
           </Card>
 
         </div>
 
-        <div className="space-y-4">
-          <Card className="rounded-3xl border-white/8 bg-white/[0.025] p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3"><div className="flex items-start gap-3"><Scale className="mt-1 h-5 w-5 shrink-0 text-primary" /><div><h2 className="font-serif text-xl font-bold">Socio-Political Estimate</h2><p className="mt-1 text-xs leading-5 text-muted-foreground">An interpretation of motive and conduct, not a moral verdict or an immutable fact.</p></div></div><Badge variant="outline" className="shrink-0">{compass.label}</Badge></div>
-            <p className="mt-3 text-xs leading-5 text-muted-foreground">{compass.explanation}</p>
-            {!hasInterpretedAxis ? <p className="mt-2 text-xs leading-5 text-muted-foreground">Premium Deep Reading can check this position against the manuscript. Your saved estimate remains available below, and you can set your own position.</p> : null}
-            <details className="mt-4" open={hasInterpretedAxis}>
-              <summary className="cursor-pointer text-xs font-semibold text-primary">{hasInterpretedAxis ? "View Position" : "View Saved Unreviewed Estimate"}</summary>
-              <div className="mt-3 grid gap-4 sm:grid-cols-[9rem_1fr] sm:items-center">
-              <div className="relative h-36 overflow-hidden rounded-xl border border-white/10 bg-black/20">
-                <div className="absolute inset-x-0 top-1/2 h-px bg-white/15" /><div className="absolute inset-y-0 left-1/2 w-px bg-white/15" />
-                <span className="absolute left-1/2 top-1.5 -translate-x-1/2 text-[8px] uppercase tracking-wide text-muted-foreground">Authority</span><span className="absolute bottom-1.5 left-1/2 -translate-x-1/2 text-[8px] uppercase tracking-wide text-muted-foreground">Liberty</span><span className="absolute right-1.5 top-1/2 -translate-y-1/2 text-[8px] uppercase tracking-wide text-muted-foreground">Market</span><span className="absolute left-1.5 top-1/2 -translate-y-1/2 text-[8px] uppercase tracking-wide text-muted-foreground">Collective</span>
-                <div className="absolute h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-black bg-primary shadow-[0_0_14px_rgba(56,189,248,0.6)]" style={{ left: `${(axis.economic + 100) / 2}%`, top: `${(100 - axis.authority) / 2}%` }} />
+        <div className="space-y-5">
+          <Card className="rounded-3xl border-white/5 bg-black/10 p-6 shadow-sm">
+            <div className="flex flex-wrap items-start justify-between gap-3"><div className="flex items-start gap-3"><Scale className="mt-1 h-5 w-5 shrink-0 text-primary" /><div><h2 className="font-serif text-2xl font-bold">Socio-Political Estimate</h2><p className="mt-1 text-xs leading-relaxed text-muted-foreground">An interpretation of motive and conduct, not a moral verdict or an immutable fact.</p></div></div><Badge variant="outline" className="shrink-0 border-primary/20 bg-primary/5 text-primary shadow-sm uppercase tracking-wider text-[10px]">{compass.label}</Badge></div>
+            <p className="mt-3 text-sm leading-relaxed text-foreground/80">{compass.explanation}</p>
+            {!hasInterpretedAxis ? <p className="mt-2 text-xs leading-relaxed text-muted-foreground">Premium Deep Reading can check this position against the manuscript. Your saved estimate remains available below, and you can set your own position.</p> : null}
+            <details className="mt-5" open={hasInterpretedAxis}>
+              <summary className="cursor-pointer text-xs font-semibold text-primary/80 transition-colors hover:text-primary">{hasInterpretedAxis ? "View Position" : "View Saved Unreviewed Estimate"}</summary>
+              <div className="mt-4 grid gap-5 sm:grid-cols-[10rem_1fr] sm:items-center">
+              <div className="relative h-40 overflow-hidden rounded-xl border border-white/5 bg-black/30 shadow-inner">
+                <div className="absolute inset-x-0 top-1/2 h-px bg-white/10" /><div className="absolute inset-y-0 left-1/2 w-px bg-white/10" />
+                <span className="absolute left-1/2 top-2 -translate-x-1/2 text-[9px] font-bold uppercase tracking-widest text-primary/40">Authority</span><span className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[9px] font-bold uppercase tracking-widest text-primary/40">Liberty</span><span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold uppercase tracking-widest text-primary/40">Market</span><span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] font-bold uppercase tracking-widest text-primary/40">Collective</span>
+                <div className="absolute h-4 w-4 -translate-x-1/2 -translate-y-1/2 rounded-full border-[3px] border-black bg-primary shadow-[0_0_16px_rgba(215,175,100,0.4)]" style={{ left: `${(axis.economic + 100) / 2}%`, top: `${(100 - axis.authority) / 2}%` }} />
               </div>
-              <div><p className="font-semibold">{axis.label}</p><p className="mt-1 whitespace-pre-wrap break-words text-sm leading-5 text-muted-foreground">{axis.rationale}</p><div className="mt-3 flex flex-wrap gap-2 text-xs"><span className="rounded-full border border-white/10 bg-black/20 px-2.5 py-1">Economic <strong className="text-primary">{axis.economic}</strong></span><span className="rounded-full border border-white/10 bg-black/20 px-2.5 py-1">Authority <strong className="text-primary">{axis.authority}</strong></span>{compass.authorControlled ? <span className="rounded-full border border-primary/20 bg-primary/[0.06] px-2.5 py-1 text-primary">Author-Controlled</span> : null}</div></div>
+              <div><p className="font-serif text-lg font-bold text-foreground/90">{axis.label}</p><p className="mt-1.5 whitespace-pre-wrap break-words text-xs leading-relaxed text-foreground/75">{axis.rationale}</p><div className="mt-4 flex flex-wrap gap-2 text-[10px] font-medium uppercase tracking-wider"><span className="rounded-md border border-white/10 bg-black/20 px-3 py-1.5 shadow-sm">Economic <strong className="text-primary ml-1">{axis.economic}</strong></span><span className="rounded-md border border-white/10 bg-black/20 px-3 py-1.5 shadow-sm">Authority <strong className="text-primary ml-1">{axis.authority}</strong></span>{compass.authorControlled ? <span className="rounded-md border border-primary/20 bg-primary/10 px-3 py-1.5 text-primary shadow-sm">Author-Controlled</span> : null}</div></div>
               </div>
             </details>
-            {compass.timeframe || compass.perspective || compass.evidence.length || compass.retrievalRequests.length ? <details className="mt-4 border-t border-white/8 pt-3">
-              <summary className="cursor-pointer text-xs font-semibold text-primary">View Context and Source Passages</summary>
-              <div className="mt-3 space-y-3 text-xs leading-5 text-muted-foreground">
+            {compass.timeframe || compass.perspective || compass.evidence.length || compass.retrievalRequests.length ? <details className="mt-5 border-t border-white/5 pt-4">
+              <summary className="cursor-pointer text-xs font-semibold text-primary/80 transition-colors hover:text-primary">View Context and Source Passages</summary>
+              <div className="mt-4 space-y-4 text-xs leading-relaxed text-foreground/80">
                 {compass.timeframe ? <p><strong className="text-foreground">Timeframe:</strong> {compass.timeframe}</p> : null}
                 {compass.perspective ? <p><strong className="text-foreground">Viewpoint:</strong> {compass.perspective}</p> : null}
-                {compass.evidence.map((evidence, index) => <blockquote key={index} className="rounded-lg border-l-2 border-primary/40 bg-black/15 px-3 py-2">
-                  <p className="whitespace-pre-wrap break-words">“{evidence.quote}”</p>
+                {compass.evidence.map((evidence, index) => <blockquote key={index} className="rounded-xl border-l-2 border-primary/40 bg-black/20 px-4 py-3 shadow-inner">
+                  <p className="whitespace-pre-wrap break-words italic">“{evidence.quote}”</p>
                   <footer className="mt-1 text-[10px]">Manuscript Passage · {compassEvidenceLabel(evidence.axes, evidence.perspective)}</footer>
                 </blockquote>)}
                 {compass.retrievalRequests.length ? <div><p className="font-medium text-foreground">Still Worth Checking</p><ul className="mt-1 list-disc space-y-1 pl-4">{compass.retrievalRequests.map((request, index) => <li key={index} className="break-words">{request}</li>)}</ul></div> : null}

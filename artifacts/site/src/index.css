@@ -70,89 +70,91 @@
 }
 
 /* ══════════════════════════════════════════════════
-   STORYHOLD NIGHT THEME
-   Primary palette: near-black, clean white, electric blue, and signal green.
+   STORYHOLD ARCHIVE THEME
+   Primary palette: Deep slate, aged parchment, amber gold, and crimson.
    ══════════════════════════════════════════════════ */
 :root {
-  --button-outline: rgba(255,255,255, .10);
-  --badge-outline: rgba(255,255,255, .05);
-  --opaque-button-border-intensity: 9;
-  --elevate-1: rgba(255,255,255, .03);
-  --elevate-2: rgba(255,255,255, .08);
+  --button-outline: rgba(255,255,255, .08);
+  --badge-outline: rgba(255,255,255, .06);
+  --opaque-button-border-intensity: 6;
+  --elevate-1: rgba(255,255,255, .02);
+  --elevate-2: rgba(255,255,255, .06);
 
-  /* ── Background: #0D0D10 ── */
-  --background: 240 11% 6%;
-  /* ── Foreground: #EEEBE4 ── */
-  --foreground: 43 27% 91%;
-  /* ── Border: #2A2A32 ── */
-  --border: 240 9% 18%;
+  /* ── Background: Deep espresso slate ── */
+  --background: 240 10% 8%;
+  /* ── Foreground: Warm parchment ── */
+  --foreground: 38 33% 88%;
+  /* ── Border: Subtle charcoal ── */
+  --border: 240 6% 16%;
 
-  /* ── Card: #161619 ── */
-  --card: 240 7% 9%;
-  --card-foreground: 43 27% 91%;
-  --card-border: 240 9% 18%;
+  /* ── Card: Rich dark slate ── */
+  --card: 240 7% 10%;
+  --card-foreground: 38 33% 88%;
+  --card-border: 240 6% 16%;
 
   /* ── Sidebar ── */
-  --sidebar: 240 7% 9%;
-  --sidebar-foreground: 43 27% 91%;
-  --sidebar-border: 240 9% 18%;
-  --sidebar-primary: 198 92% 62%;
-  --sidebar-primary-foreground: 240 11% 6%;
-  --sidebar-accent: 240 9% 13%;
-  --sidebar-accent-foreground: 43 27% 91%;
-  --sidebar-ring: 198 92% 62%;
+  --sidebar: 240 7% 10%;
+  --sidebar-foreground: 38 33% 88%;
+  --sidebar-border: 240 6% 16%;
+  --sidebar-primary: 43 74% 66%;
+  --sidebar-primary-foreground: 240 10% 8%;
+  --sidebar-accent: 240 6% 14%;
+  --sidebar-accent-foreground: 38 33% 88%;
+  --sidebar-ring: 43 74% 66%;
 
-  --popover: 240 7% 9%;
-  --popover-foreground: 43 27% 91%;
-  --popover-border: 240 9% 18%;
+  --popover: 240 7% 10%;
+  --popover-foreground: 38 33% 88%;
+  --popover-border: 240 6% 16%;
 
-  /* ── Primary: luminous blue; secondary signal: green ── */
-  --primary: 198 92% 62%;
-  --primary-foreground: 240 11% 6%;
+  /* ── Primary: Antique Amber Gold ── */
+  --primary: 43 74% 66%;
+  --primary-foreground: 240 10% 8%;
 
-  /* ── Secondary ── */
-  --secondary: 240 9% 13%;
-  --secondary-foreground: 43 27% 91%;
+  /* ── Secondary: Soft brass / deep brown ── */
+  --secondary: 35 20% 16%;
+  --secondary-foreground: 38 33% 88%;
 
-  /* ── Muted: #9A9AAA ── */
-  --muted: 240 9% 18%;
-  --muted-foreground: 240 7% 62%;
+  /* ── Muted: Dusky gray-brown ── */
+  --muted: 240 5% 18%;
+  --muted-foreground: 35 12% 62%;
 
-  --accent: 153 72% 48%;
-  --accent-foreground: 240 11% 6%;
+  /* ── Accent: Deep emerald green ── */
+  --accent: 153 35% 42%;
+  --accent-foreground: 38 33% 88%;
 
-  --destructive: 0 62% 50%;
-  --destructive-foreground: 43 27% 91%;
+  /* ── Destructive: Faded crimson ── */
+  --destructive: 0 50% 48%;
+  --destructive-foreground: 38 33% 88%;
 
-  --input: 240 9% 18%;
-  --ring: 198 92% 62%;
+  --input: 240 6% 18%;
+  --ring: 43 74% 66%;
 
-  --chart-1: 198 92% 62%;
-  --chart-2: 153 72% 48%;
-  --chart-3: 210 20% 88%;
-  --chart-4: 216 76% 55%;
-  --chart-5: 170 60% 44%;
+  --chart-1: 43 74% 66%;
+  --chart-2: 153 35% 42%;
+  --chart-3: 38 33% 88%;
+  --chart-4: 216 30% 55%;
+  --chart-5: 0 40% 50%;
 
-  /* ── Typography: Zilla Slab (serif), Lato (sans/body), JetBrains Mono ── */
+  /* ── Typography: Zilla Slab / Playfair (serif), Lato (sans/body), JetBrains Mono ── */
   --app-font-sans: "Lato", system-ui, sans-serif;
   --app-font-serif: "Cormorant Garamond", Georgia, serif;
   --app-font-body: "Lato", system-ui, sans-serif;
   --app-font-mono: "JetBrains Mono", monospace;
 
-  /* Internal article link — sky blue */
-  --link-internal: 199 89% 48%;
+  /* Internal article link — Amber */
+  --link-internal: 43 74% 66%;
 
   /* Soft architectural corners and deep, diffused elevation. */
-  --radius: 0.875rem;
+  --radius: 0.75rem;
 
-  --shadow-2xs: 0 1px 2px hsl(240 20% 2% / 0.28);
-  --shadow-xs:  0 2px 8px hsl(240 20% 2% / 0.24);
-  --shadow-sm:  0 8px 22px -14px hsl(240 20% 1% / 0.86), inset 0 1px 0 hsl(0 0% 100% / 0.035);
-  --shadow:     0 16px 38px -24px hsl(240 20% 1% / 0.92), inset 0 1px 0 hsl(0 0% 100% / 0.04);
-  --shadow-md:  0 20px 48px -28px hsl(240 20% 1% / 0.96), 0 8px 20px -16px hsl(198 92% 62% / 0.12), inset 0 1px 0 hsl(0 0% 100% / 0.045);
-  --shadow-lg:  0 28px 64px -32px hsl(240 20% 1% / 0.98), 0 12px 32px -24px hsl(198 92% 62% / 0.16), inset 0 1px 0 hsl(0 0% 100% / 0.05);
-  --shadow-xl:  0 36px 86px -38px hsl(240 20% 1% / 1), 0 18px 44px -28px hsl(198 92% 62% / 0.18), inset 0 1px 0 hsl(0 0% 100% / 0.055);
-  --shadow-2xl: 0 44px 110px -42px hsl(240 20% 1% / 1), 0 24px 56px -32px hsl(153 72% 48% / 0.16), inset 0 1px 0 hsl(0 0% 100% / 0.06);
+  --shadow-2xs: 0 1px 2px hsl(240 20% 2% / 0.35);
+  --shadow-xs:  0 2px 8px hsl(240 20% 2% / 0.30);
+  --shadow-sm:  0 8px 22px -14px hsl(240 20% 1% / 0.90), inset 0 1px 0 hsl(0 0% 100% / 0.03);
+  --shadow:     0 16px 38px -24px hsl(240 20% 1% / 0.95), inset 0 1px 0 hsl(0 0% 100% / 0.035);
+  --shadow-md:  0 20px 48px -28px hsl(240 20% 1% / 0.98), 0 8px 20px -16px hsl(43 74% 66% / 0.08), inset 0 1px 0 hsl(0 0% 100% / 0.04);
+  --shadow-lg:  0 28px 64px -32px hsl(240 20% 1% / 1), 0 12px 32px -24px hsl(43 74% 66% / 0.12), inset 0 1px 0 hsl(0 0% 100% / 0.045);
+  --shadow-xl:  0 36px 86px -38px hsl(240 20% 1% / 1), 0 18px 44px -28px hsl(43 74% 66% / 0.14), inset 0 1px 0 hsl(0 0% 100% / 0.05);
+  --shadow-2xl: 0 44px 110px -42px hsl(240 20% 1% / 1), 0 24px 56px -32px hsl(43 74% 66% / 0.16), inset 0 1px 0 hsl(0 0% 100% / 0.055);
 
   /* Fallbacks */
   --sidebar-primary-border: hsl(from hsl(var(--sidebar-primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
@@ -178,12 +180,12 @@
     @apply font-sans antialiased bg-background text-foreground selection:bg-primary/20 selection:text-primary;
     -webkit-font-smoothing: antialiased;
     min-height: 100vh;
-    background-color: #09090d;
+    background-color: #121214;
     background-image:
-      radial-gradient(circle at 9% -8%, rgba(56, 189, 248, 0.14), transparent 31rem),
-      radial-gradient(circle at 92% 16%, rgba(34, 197, 94, 0.08), transparent 34rem),
-      radial-gradient(circle at 52% 105%, rgba(56, 189, 248, 0.07), transparent 38rem),
-      linear-gradient(145deg, #0b0a0e 0%, #0e0d12 48%, #09090d 100%);
+      radial-gradient(circle at 9% -8%, rgba(215, 175, 100, 0.08), transparent 31rem),
+      radial-gradient(circle at 92% 16%, rgba(215, 175, 100, 0.05), transparent 34rem),
+      radial-gradient(circle at 52% 105%, rgba(100, 50, 40, 0.05), transparent 38rem),
+      linear-gradient(145deg, #151416 0%, #0d0d0f 48%, #121214 100%);
     background-attachment: fixed;
   }
 
@@ -219,10 +221,10 @@
 @layer components {
   .storyhold-glass {
     background: linear-gradient(145deg, rgba(31, 29, 36, 0.82), rgba(16, 15, 20, 0.72));
-    border: 1px solid rgba(255, 255, 255, 0.095);
+    border: 1px solid rgba(215, 175, 100, 0.15);
     box-shadow:
       0 28px 64px -34px rgba(0, 0, 0, 0.95),
-      0 12px 30px -26px rgba(56, 189, 248, 0.28),
+      0 12px 30px -26px rgba(215, 175, 100, 0.12),
       inset 0 1px 0 rgba(255, 255, 255, 0.055),
       inset 0 -1px 0 rgba(0, 0, 0, 0.32);
   }
@@ -263,10 +265,10 @@
 
   .storyhold-lift:hover {
     transform: translateY(-2px);
-    border-color: rgba(56, 189, 248, 0.28);
+    border-color: rgba(215, 175, 100, 0.28);
     box-shadow:
       0 28px 58px -34px rgba(0, 0, 0, 1),
-      0 14px 32px -26px rgba(56, 189, 248, 0.38),
+      0 14px 32px -26px rgba(215, 175, 100, 0.18),
       inset 0 1px 0 rgba(255, 255, 255, 0.06);
   }
 }
@@ -281,7 +283,7 @@
 }
 
 * {
-  scrollbar-color: rgba(56, 189, 248, 0.42) rgba(255, 255, 255, 0.025);
+  scrollbar-color: rgba(215, 175, 100, 0.22) rgba(255, 255, 255, 0.025);
   scrollbar-width: thin;
 }
 
@@ -289,7 +291,7 @@
    otherwise make the opened option list nearly unreadable. */
 .storyhold-select {
   min-height: 2.75rem;
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  border: 1px solid rgba(215, 175, 100, 0.2);
   border-radius: 0.625rem;
   background-color: #19171b;
   color: #f8f2e9;
@@ -300,11 +302,11 @@
 }
 
 .storyhold-select:hover {
-  border-color: rgba(56, 189, 248, 0.56);
+  border-color: rgba(215, 175, 100, 0.4);
 }
 
 .storyhold-select:focus-visible {
-  outline: 2px solid rgba(56, 189, 248, 0.82);
+  outline: 2px solid rgba(215, 175, 100, 0.6);
   outline-offset: 2px;
 }
 

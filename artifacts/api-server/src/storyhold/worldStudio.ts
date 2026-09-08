@@ -8553,6 +8553,37 @@ async function ensureEntityCharacterDossier(
   return id;
 }
 
+async function reconcileEntityCharacterDossiers(
+  db: StudioDb,
+  worldId: string,
+  editionId: string,
+) {
+  const entities = await db.query<Record<string, unknown>>(
+    `SELECT *
+       FROM storyhold.world_entities
+      WHERE world_id = $1
+        AND canon_edition_id = $2
+        AND entity_type = 'character'
+        AND pull_status = 'active'
+        AND (scanner_present = true
+          OR classification_source = 'user'
+          OR review_status = 'user_confirmed')
+      ORDER BY created_at ASC`,
+    [worldId, editionId],
+  );
+  for (const entity of entities.rows) {
+    await ensureEntityCharacterDossier(db, {
+      worldId,
+      editionId,
+      entity,
+      canonicalCharacterId:
+        typeof entity.canonical_character_id === "string"
+          ? entity.canonical_character_id
+          : null,
+    });
+  }
+}
+
 export function campaignCharacterNormalizedName(
   name: string,
   characterId: string,
@@ -15556,6 +15587,7 @@ export function registerWorldStudioRoutes(params: {
       }
       res.setHeader("Cache-Control", "private, no-store");
       await ensureWorldEntities(db, worldId, edition.id);
+      await reconcileEntityCharacterDossiers(db, worldId, edition.id);
       const [
         sources,
         breakdowns,

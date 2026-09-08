@@ -885,20 +885,20 @@ export function WorldEntityPanel({ detail, onChanged }: { detail: WorldDetail; o
       {groups.length ? <div className="mt-3 space-y-2">{groups.map((group) => {
         const sectionKey = filter === "hidden" ? "hidden" : group.value;
         const collapsed = collapsedSections.has(sectionKey);
-        return <section key={sectionKey} className="rounded-xl border border-white/8 bg-black/10 px-3 py-1.5"><button type="button" className="flex w-full items-center justify-between gap-3 py-1.5 text-left" onClick={() => toggleSection(sectionKey)} aria-expanded={!collapsed}><div className="flex min-w-0 items-center gap-2">{collapsed ? <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 shrink-0 text-primary" />}<h3 className="font-serif text-lg font-bold">{group.plural}</h3></div><Badge variant="outline" className="shrink-0 border-white/10">{filter === "hidden" ? counts.hidden : counts[group.value as WorldEntityType] ?? group.entities.length}</Badge></button>{!collapsed ? <><div className="mt-1 columns-1 gap-2 border-t border-white/8 pt-2 xl:columns-2">{group.entities.map((entity) => {
+        return <section key={sectionKey} className="mb-4"><button type="button" className="group flex w-full items-center justify-between gap-3 py-2 text-left transition-colors hover:text-primary" onClick={() => toggleSection(sectionKey)} aria-expanded={!collapsed}><div className="flex min-w-0 items-center gap-2">{collapsed ? <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" /> : <ChevronDown className="h-5 w-5 shrink-0 text-primary" />}<h3 className="font-serif text-2xl font-bold tracking-tight">{group.plural}</h3></div><Badge variant="outline" className="shrink-0 border-white/10 bg-black/20 text-xs shadow-sm">{filter === "hidden" ? counts.hidden : counts[group.value as WorldEntityType] ?? group.entities.length}</Badge></button>{!collapsed ? <><div className="mt-3 columns-1 gap-3 xl:columns-2">{group.entities.map((entity) => {
         const isContextAnnotation = entity.entityType === "term" || entity.entityType === "cultural_reference";
         if (isContextAnnotation) return <div
           key={entity.id}
-          className="mb-2 break-inside-avoid rounded-xl border border-white/8 bg-black/20 px-3 py-3 sm:px-4"
+          className="mb-3 break-inside-avoid rounded-xl border border-white/5 bg-black/10 px-4 py-4 shadow-sm"
         >
           <div className="flex flex-wrap items-center gap-2">
-            <h4 className="font-semibold">{entity.name}</h4>
-            <Badge variant="outline" className="shrink-0 border-white/10 text-[9px]">{category(entity.entityType).label}</Badge>
+            <h4 className="font-serif text-lg font-bold text-foreground/90">{entity.name}</h4>
+            <Badge variant="outline" className="shrink-0 border-white/10 bg-black/20 text-[9px] uppercase tracking-wider">{category(entity.entityType).label}</Badge>
           </div>
-          <p className="mt-1 break-words text-xs leading-5 text-foreground/75">{entity.summary}</p>
-          {entity.details.length ? <div className="mt-2 flex flex-wrap gap-1.5">{entity.details.map((detailLine) => <span key={detailLine} className="rounded-full border border-white/10 px-2 py-1 text-[10px] text-muted-foreground">{detailLine}</span>)}</div> : null}
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <p className="text-[10px] text-muted-foreground">Context annotation · {mentionLabel(entity, true)}</p>
+          <p className="mt-2 break-words text-xs leading-relaxed text-foreground/75">{entity.summary}</p>
+          {entity.details.length ? <div className="mt-3 flex flex-wrap gap-2">{entity.details.map((detailLine) => <span key={detailLine} className="rounded-md border border-white/10 bg-black/20 px-2 py-1 text-[10px] text-muted-foreground shadow-inner">{detailLine}</span>)}</div> : null}
+          <div className="mt-3 flex flex-wrap items-center gap-3 border-t border-white/5 pt-3">
+            <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Context annotation · {mentionLabel(entity, true)}</p>
             <ContextEvidenceBadge evidence={entity.evidence} sourceTitles={sourceTitles} />
           </div>
         </div>;
@@ -910,21 +910,21 @@ export function WorldEntityPanel({ detail, onChanged }: { detail: WorldDetail; o
           return <article
             id={`hold-card-${entity.id}`}
             key={entity.id}
-            className="mb-2 break-inside-avoid rounded-xl border border-amber-300/20 bg-amber-300/[0.035] px-3 py-3 sm:px-4"
+            className="mb-3 break-inside-avoid rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-500/5 to-transparent px-4 py-4 shadow-sm"
           >
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h4 className="font-semibold">{entity.name}</h4>
-                  <Badge variant="outline" className="shrink-0 border-amber-300/30 text-[9px] text-amber-100">Needs Sorting</Badge>
+                  <h4 className="font-serif text-lg font-bold text-foreground/90">{entity.name}</h4>
+                  <Badge variant="outline" className="shrink-0 border-amber-500/40 bg-amber-500/10 text-[9px] uppercase tracking-wider text-amber-200">Needs Sorting</Badge>
                 </div>
-                <p className="mt-1 text-[11px] text-muted-foreground">{mentionLabel(entity, true)}{entity.aliases.length ? ` · Possible matches: ${entity.aliases.slice(0, 3).join(", ")}${entity.aliases.length > 3 ? ` +${entity.aliases.length - 3}` : ""}` : ""}</p>
+                <p className="mt-1 text-[11px] font-medium text-muted-foreground/80">{mentionLabel(entity, true)}{entity.aliases.length ? ` · Matches: ${entity.aliases.slice(0, 3).join(", ")}${entity.aliases.length > 3 ? ` +${entity.aliases.length - 3}` : ""}` : ""}</p>
               </div>
               {isBusy ? <Loader2 className="h-4 w-4 animate-spin text-primary" /> : null}
             </div>
-            {entity.summary ? <p className="mt-2 line-clamp-3 text-xs leading-5 text-foreground/80">{entity.summary}</p> : null}
-            {entity.details.length ? <p className="mt-2 line-clamp-2 text-[11px] leading-5 text-muted-foreground">{entity.details.slice(0, 2).join(" · ")}</p> : null}
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            {entity.summary ? <p className="mt-3 line-clamp-3 text-xs leading-relaxed text-foreground/80">{entity.summary}</p> : null}
+            {entity.details.length ? <p className="mt-2 line-clamp-2 text-[11px] leading-relaxed text-muted-foreground">{entity.details.slice(0, 2).join(" · ")}</p> : null}
+            <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-amber-500/20 pt-4">
               <ContextEvidenceBadge evidence={entity.evidence} sourceTitles={sourceTitles} />
               <span className="text-[10px] text-muted-foreground">This lead stays out of canon until you sort or merge it.</span>
             </div>
@@ -967,21 +967,33 @@ export function WorldEntityPanel({ detail, onChanged }: { detail: WorldDetail; o
         return <Link
           key={entity.id}
           href={dossierHref}
-          className="group mb-2 flex w-full min-w-0 break-inside-avoid items-center gap-3 rounded-xl border border-white/8 bg-black/20 px-3 py-3 transition-colors hover:border-primary/25 hover:bg-primary/[0.045] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60 sm:px-4"
+          className="group mb-2 flex w-full min-w-0 break-inside-avoid items-center gap-4 rounded-xl border border-white/5 bg-black/10 px-4 py-3.5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:bg-primary/[0.04] hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
           aria-label={`Open ${entity.name}'s dossier`}
         >
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-primary/20 bg-primary/5 text-primary/80 group-hover:bg-primary/15 group-hover:text-primary transition-colors">
+            <BookOpen className="h-4 w-4" />
+          </div>
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2">
-              <h4 className="truncate font-semibold">{entity.name}</h4>
-              <Badge variant="outline" className="shrink-0 border-white/10 text-[9px]">{category(entity.entityType).label}</Badge>
-              {entity.pullStatus === "do_not_pull" ? <Badge variant="outline" className="shrink-0 border-amber-300/20 text-[9px] text-amber-100">Hidden</Badge> : null}
+              <h4 className="truncate font-serif text-lg font-bold text-foreground/90 group-hover:text-primary transition-colors">{entity.name}</h4>
+              <Badge variant="outline" className="shrink-0 border-white/10 bg-black/20 text-[9px] uppercase tracking-wider">{category(entity.entityType).label}</Badge>
+              {entity.pullStatus === "do_not_pull" ? <Badge variant="outline" className="shrink-0 border-amber-500/30 bg-amber-500/10 text-[9px] text-amber-200">Hidden</Badge> : null}
             </div>
-            <p className="mt-1 truncate text-[11px] text-muted-foreground">
+            <p className="mt-0.5 truncate text-xs text-muted-foreground/80">
               {mentionLabel(entity, false)}
-              {entity.aliases.length ? ` · ${aliasLabel(entity)} ${entity.aliases.slice(0, 2).join(", ")}${entity.aliases.length > 2 ? ` +${entity.aliases.length - 2}` : ""}` : ""}
+              {entity.aliases.length ? <span className="ml-1.5 border-l border-white/10 pl-1.5 italic"> {aliasLabel(entity)} {entity.aliases.slice(0, 2).join(", ")}{entity.aliases.length > 2 ? ` +${entity.aliases.length - 2}` : ""}</span> : ""}
             </p>
+            <p className="mt-2 line-clamp-2 text-sm leading-5 text-foreground/75">
+              {entity.summary || "A living dossier ready to grow with scenes, source evidence, and your own notes."}
+            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <Badge variant="outline" className="border-primary/15 bg-primary/[0.04] text-[9px] text-primary/80">
+                {entity.evidence.length ? "Source-backed" : "Author-created"}
+              </Badge>
+              {entity.reviewStatus === "user_confirmed" ? <span className="text-[10px] text-muted-foreground">Author confirmed</span> : null}
+            </div>
           </div>
-          <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" />
+          <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground/40 transition-transform group-hover:translate-x-1 group-hover:text-primary" />
         </Link>;
 
         const expanded = expandedIds.has(entity.id);
@@ -1014,8 +1026,8 @@ export function WorldEntityPanel({ detail, onChanged }: { detail: WorldDetail; o
             <div className="mt-4 grid gap-2 sm:grid-cols-[0.8fr_1.2fr_auto]"><select value={entity.entityType} onChange={(event) => classify(entity, event.target.value as WorldEntityType)} disabled={isBusy} className="storyhold-select min-h-9 py-1.5 text-xs">{categories.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</select><select value={mergeTargets[entity.id] ?? ""} onChange={(event) => setMergeTargets((current) => ({ ...current, [entity.id]: event.target.value }))} disabled={isBusy} className="storyhold-select min-h-9 min-w-0 py-1.5 text-xs"><option value="">Choose an AKA or duplicate to merge...</option>{mergeOptions.map((candidate) => <option key={candidate.id} value={candidate.id}>{candidate.name} ({category(candidate.entityType).label})</option>)}</select><Button type="button" size="sm" variant="outline" disabled={!mergeTargets[entity.id] || isBusy} onClick={() => merge(entity)}><GitMerge className="h-3.5 w-3.5" /> Merge</Button></div>
             <div className="mt-4 flex flex-wrap items-center justify-between gap-2"><Button asChild type="button" size="sm" variant="ghost"><Link href={dossierHref ?? "#storyhold-entries"}>Open full {entity.entityType === "character" ? "person" : category(entity.entityType).label.toLocaleLowerCase()} dossier <ChevronRight className="h-3.5 w-3.5" /></Link></Button><div className="flex flex-wrap gap-2"><Button type="button" size="sm" variant="ghost" className="text-muted-foreground" disabled={isBusy} onClick={() => suppress(entity)}><ArchiveRestore className="h-3.5 w-3.5" /> Hide from stories</Button><Button type="button" size="sm" variant="outline" className="border-red-400/25 text-red-200 hover:bg-red-500/10 hover:text-red-100" disabled={isBusy} onClick={() => setDeleteTarget(entity)}><Trash2 className="h-3.5 w-3.5" /> Delete entry</Button></div></div>
           </>}</div> : null}</article>;
-      })}</div>{group.entities.length < matching.filter((entity) => filter === "all" ? entity.entityType === group.value : true).length ? <div className="mt-3 flex justify-center"><Button type="button" size="sm" variant="outline" onClick={() => setVisibleLimit((current) => current + 12)}>Show 12 more {group.plural.toLocaleLowerCase()}</Button></div> : null}</> : null}</section>;
-      })}</div> : <div className="mt-5 rounded-2xl border border-dashed border-white/10 p-8 text-center"><Check className="mx-auto h-5 w-5 text-primary" /><p className="mt-2 font-semibold">Nothing in this section.</p><p className="mt-1 text-sm text-muted-foreground">Try another section or clear the search.</p></div>}
+      })}</div>{group.entities.length < matching.filter((entity) => filter === "all" ? entity.entityType === group.value : true).length ? <div className="mt-3 flex justify-center"><Button type="button" size="sm" variant="outline" onClick={() => setVisibleLimit((current) => current + 12)}>Show 12 more {group.plural.toLocaleLowerCase()}</Button></div> : null}</> : <div className="rounded-2xl border border-dashed border-primary/20 bg-primary/[0.025] px-6 py-10 text-center"><BookOpen className="mx-auto h-7 w-7 text-primary/70" /><h4 className="mt-3 font-serif text-xl font-bold">{query.trim() ? "No matching people found" : `No ${group.plural.toLocaleLowerCase()} established yet`}</h4><p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-muted-foreground">{query.trim() ? "Try a different name, alias, or phrase." : group.value === "character" ? "People appear here when they are named in accepted scenes or manuscripts, or when you create them yourself. Planned cast stays private until it enters the story." : "This part of the Hold grows from accepted sources, committed play, and your own records."}</p>{!query.trim() && group.value === "character" ? <Button type="button" className="mt-5" onClick={() => { setNewType("character"); setShowAdd(true); document.getElementById("storyhold-entries")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}><Plus className="h-4 w-4" />Add a person yourself</Button> : null}</div>}</section>;
+      })}</div> : <div className="mt-5 rounded-2xl border border-dashed border-white/10 bg-black/10 p-10 text-center shadow-inner"><BookOpen className="mx-auto h-8 w-8 text-primary/40" /><p className="mt-4 font-serif text-xl font-bold text-foreground/80">Nothing in this archive section.</p><p className="mt-2 text-sm text-muted-foreground max-w-md mx-auto">Try another category, or add a new person to start building your cast manually.</p></div>}
 
       <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => { if (!open && !busyId) setDeleteTarget(null); }}>
         <AlertDialogContent className="border-red-400/25 bg-[#111014] shadow-2xl shadow-black/75 sm:max-w-lg">

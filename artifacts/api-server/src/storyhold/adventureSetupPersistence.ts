@@ -69,6 +69,28 @@ function normalizedName(value: string): string {
   return value.normalize("NFKC").replace(/\s+/gu, " ").trim().toLocaleLowerCase();
 }
 
+export function adventureSetupTextMentionsName(text: string, name: string): boolean {
+  const normalizeApostrophes = (value: string) =>
+    value.normalize("NFKC").replace(/[\u2018\u2019\u02b9\u02bb\u02bc\uff07]/gu, "'");
+  const normalizedText = normalizeApostrophes(text);
+  const normalizedParts = normalizeApostrophes(name).trim().split(/\s+/u).filter(Boolean);
+  if (!normalizedParts.length) return false;
+  const escapedName = normalizedParts
+    .map((part) => part.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&"))
+    .join("\\s+");
+  return new RegExp(
+    `(^|[^\\p{L}\\p{N}'-])${escapedName}(?=$|[^\\p{L}\\p{N}'-]|'s(?:$|[^\\p{L}\\p{N}'-]))`,
+    "iu",
+  )
+    .test(normalizedText);
+}
+
+function groundedSetupCast(plan: AdventureSetupPlan) {
+  return plan.cast.filter((npc) =>
+    adventureSetupTextMentionsName(plan.publicOpening, npc.name),
+  );
+}
+
 async function projectAdventureFoundationInTransaction(params: {
   db: SetupDb;
   setupId: string;
@@ -82,23 +104,22 @@ async function projectAdventureFoundationInTransaction(params: {
   const { db, campaign, plan } = params;
   const worldId = String(campaign.world_id);
   const editionId = String(campaign.canon_edition_id);
+  const groundedCast = groundedSetupCast(plan);
+  const groundedNames = new Set(groundedCast.map((npc) => normalizedName(npc.name)));
+  const ungroundedCast = plan.cast.filter((npc) => !groundedNames.has(normalizedName(npc.name)));
+  const mentionsUngroundedCast = (...values: string[]) =>
+    ungroundedCast.some((npc) =>
+      values.some((value) => adventureSetupTextMentionsName(value, npc.name)),
+    );
+  const safePublishedSummary = (value: string, fallback: string) =>
+    mentionsUngroundedCast(value) ? fallback : value;
   const sourceId = randomUUID();
   const sourceKey = `adventure-foundation-${params.setupId}`;
   const sourceText = [
-    String(record(campaign.start_contract).startingPoint ?? ""),
-    String(record(record(campaign.start_contract).worldContract).premise ?? ""),
     plan.publicOpening,
-    foundation.settingBaseline,
-    foundation.identitySecrecy.truth,
-    ...foundation.broaderForces.flatMap((force) => [
-      `${force.name}: ${force.summary}`,
-      force.relationshipToCampaign,
-    ]),
-    ...foundation.unresolvedBackground.flatMap((entry) => [
-      entry.question,
-      entry.currentTruth,
-    ]),
-    ...plan.secrets.map((secret) => secret.truth),
+    ...(mentionsUngroundedCast(foundation.settingBaseline)
+      ? []
+      : [foundation.settingBaseline]),
   ].filter(Boolean).join("\n\n");
   const sourceHash = createHash("sha256").update(
     `adventure-foundation:${params.setupId}:${sourceText}`,
@@ -169,7 +190,10 @@ async function projectAdventureFoundationInTransaction(params: {
   const worldEntityId = await upsertEntity(
     String(campaign.name ?? "Adventure World"),
     "place",
-    foundation.settingBaseline,
+    safePublishedSummary(
+      foundation.settingBaseline,
+      "The setting established by the accepted adventure opening.",
+    ),
   );
   const characterName =
     String(campaign.character_name ?? "") ||
@@ -178,16 +202,24 @@ async function projectAdventureFoundationInTransaction(params: {
   const characterEntityId = await upsertEntity(
     characterName,
     "character",
-    foundation.identitySecrecy.truth,
+    safePublishedSummary(
+      foundation.identitySecrecy.truth,
+      "The player character established by the accepted adventure opening.",
+    ),
   );
   const castEntityIds = new Map<string, string>();
-  for (const npc of plan.cast) {
+  for (const npc of groundedCast) {
     castEntityIds.set(
       normalizedName(npc.name),
-      await upsertEntity(npc.name, "character", npc.publicSummary),
+      await upsertEntity(
+        npc.name,
+        "character",
+        safePublishedSummary(npc.publicSummary, `${npc.name} appears in the accepted adventure opening.`),
+      ),
     );
   }
   for (const force of foundation.broaderForces) {
+    if (mentionsUngroundedCast(force.name, force.summary, force.relationshipToCampaign)) continue;
     await upsertEntity(force.name, "faction", force.summary);
   }
   const evidence = (summary: string) =>
@@ -212,21 +244,34 @@ async function projectAdventureFoundationInTransaction(params: {
         objectText, String(campaign.current_time_label ?? ""), summary, evidence(summary)],
     );
   };
-  await insertClaim(worldEntityId, "setting_baseline", foundation.settingBaseline,
-    "The accepted adventure foundation's setting baseline.");
-  await insertClaim(characterEntityId, "identity", foundation.identitySecrecy.truth,
-    `Identity is ${foundation.identitySecrecy.status}; known by ${foundation.identitySecrecy.knownBy.join(", ")}.`);
+  if (!mentionsUngroundedCast(foundation.settingBaseline)) {
+    await insertClaim(worldEntityId, "setting_baseline", foundation.settingBaseline,
+      "The accepted adventure foundation's setting baseline.");
+  }
+  if (!mentionsUngroundedCast(
+    foundation.identitySecrecy.truth,
+    foundation.identitySecrecy.exposureStakes,
+    ...foundation.identitySecrecy.knownBy,
+  )) {
+    await insertClaim(characterEntityId, "identity", foundation.identitySecrecy.truth,
+      `Identity is ${foundation.identitySecrecy.status}; known by ${foundation.identitySecrecy.knownBy.join(", ")}.`);
+  }
   for (const secret of plan.secrets) {
-    const namedCast = plan.cast.find((npc) =>
+    if (mentionsUngroundedCast(secret.truth, ...secret.clues, ...secret.discoverableVia)) continue;
+    const plannedCast = plan.cast.find((npc) =>
       normalizedName(secret.truth).startsWith(`${normalizedName(npc.name)} `),
     );
-    const subjectId = namedCast
-      ? castEntityIds.get(normalizedName(namedCast.name)) ?? characterEntityId
-      : characterEntityId;
+    if (plannedCast && !castEntityIds.has(normalizedName(plannedCast.name))) continue;
+    const subjectId = plannedCast
+      ? castEntityIds.get(normalizedName(plannedCast.name)) ?? characterEntityId
+      : normalizedName(secret.truth).startsWith(`${normalizedName(characterName)} `)
+        ? characterEntityId
+        : worldEntityId;
     await insertClaim(subjectId, `secret_${secret.key}`, secret.truth,
       `A foundation secret discoverable via: ${secret.discoverableVia.join("; ")}`);
   }
   for (const entry of foundation.unresolvedBackground) {
+    if (mentionsUngroundedCast(entry.question, entry.currentTruth)) continue;
     await insertClaim(worldEntityId, `background_${entry.key}`, entry.currentTruth,
       entry.question);
   }
@@ -397,7 +442,16 @@ export async function applyAdventureSetupPlanInTransaction(params: {
     ...snapshot.state.characters.map((character) => character.name),
     ...snapshot.state.companions.map((companion) => companion.name),
   ];
-  for (const npc of plan.cast) {
+  const groundedCast = groundedSetupCast(plan);
+  const groundedCastNames = new Set(groundedCast.map((npc) => normalizedName(npc.name)));
+  const ungroundedCast = plan.cast.filter((npc) => !groundedCastNames.has(normalizedName(npc.name)));
+  const safeNpcSummary = (npc: AdventureSetupPlan["cast"][number]) =>
+    ungroundedCast.some((hiddenNpc) =>
+      adventureSetupTextMentionsName(npc.publicSummary, hiddenNpc.name),
+    )
+      ? `${npc.name} appears in the accepted adventure opening.`
+      : npc.publicSummary;
+  for (const npc of groundedCast) {
     if (npc.presence !== "present" || npc.existingSubject || knownNames.some((name) => sameName(name, npc.name))) continue;
     const canonicalKey = stateKey(npc.name);
     if (summaryRows.some((row) => row.canonical_key === canonicalKey)) continue;
@@ -409,8 +463,14 @@ export async function applyAdventureSetupPlanInTransaction(params: {
                $8::jsonb, '[]'::jsonb, $9, 'campaign')
        ON CONFLICT (campaign_id, entity_type, canonical_key) DO NOTHING`,
       [randomUUID(), campaign.world_id, campaign.canon_edition_id, campaign.id,
-        canonicalKey, npc.name, npc.publicSummary,
-        JSON.stringify([{ stateVersion: nextVersion, summary: npc.publicSummary, facts: [] }]), nextVersion],
+        canonicalKey, npc.name,
+        safeNpcSummary(npc),
+        JSON.stringify([{
+          stateVersion: nextVersion,
+          summary: safeNpcSummary(npc),
+          facts: [],
+        }]),
+        nextVersion],
     );
     knownNames.push(npc.name);
   }

@@ -3,7 +3,11 @@ import { createHash, randomUUID } from "node:crypto";
 import test from "node:test";
 import { PGlite } from "@electric-sql/pglite";
 import { type AdventureSetupContext, type AdventureSetupPlan } from "./adventureSetup";
-import { adventureSetupSchemaSql, applyAdventureSetupPlanInTransaction } from "./adventureSetupPersistence";
+import {
+  adventureSetupSchemaSql,
+  adventureSetupTextMentionsName,
+  applyAdventureSetupPlanInTransaction,
+} from "./adventureSetupPersistence";
 import {
   campaignRpgPersistenceSchemaSql, initializeCampaignRpgState,
   loadCampaignRpgSnapshot, loadCampaignRpgStateEvents,
@@ -17,6 +21,19 @@ const EDITION = "71000000-0000-4000-8000-000000000014";
 const SAVED_SUMMARY = "Mara waits at the harbor gate after asking the guard for directions.";
 const SAVED_NARRATION = "The guard points toward the quay. Mara has not left the gate.";
 const MARA_KEY = `mara-${createHash("sha256").update("mara").digest("hex").slice(0, 12)}`;
+
+test("setup cast grounding requires a complete name mention", () => {
+  assert.equal(adventureSetupTextMentionsName("Debra calls across the kitchen.", "Debra"), true);
+  assert.equal(adventureSetupTextMentionsName("DEBRA calls across the kitchen.", "Debra"), true);
+  assert.equal(adventureSetupTextMentionsName("The hall is crowded.", "Al"), false);
+  assert.equal(adventureSetupTextMentionsName("No one has met Riley.", "Riley"), true);
+  assert.equal(adventureSetupTextMentionsName("Osa's ledger is hidden.", "Osa"), true);
+  assert.equal(adventureSetupTextMentionsName("The ledger belongs to Osa.", "Osa"), true);
+  assert.equal(adventureSetupTextMentionsName("O’Rourke’s ledger is hidden.", "O'Rourke"), true);
+  assert.equal(adventureSetupTextMentionsName("O’Neil waits at the gate.", "Neil"), false);
+  assert.equal(adventureSetupTextMentionsName("Anne-Marie waits at the gate.", "Marie"), false);
+  assert.equal(adventureSetupTextMentionsName("", "Vex"), false);
+});
 
 function plan(): AdventureSetupPlan {
   return {
@@ -198,9 +215,7 @@ test("adventure setup applies atomically without creating a turn, spending, or l
     assert.equal(rpgEvents[0]!.delta.turnAccepted, undefined);
     const summaries = (await db.query<Record<string, unknown>>("SELECT * FROM storyhold.campaign_state_summaries WHERE campaign_id=$1", [setup.campaignId])).rows;
     assert.deepEqual(summaries.find((row) => row.display_name === "Mara"), beforeSummary);
-    assert.deepEqual(summaries.map((row) => row.display_name).sort(), ["Mara", "Osa"]);
-    assert.equal(summaries.find((row) => row.display_name === "Osa")!.canonical_key,
-      `osa-${createHash("sha256").update("osa").digest("hex").slice(0, 12)}`);
+    assert.deepEqual(summaries.map((row) => row.display_name).sort(), ["Mara"]);
     const clocks = (await db.query<Record<string, unknown>>("SELECT * FROM storyhold.world_clock_events WHERE campaign_id=$1 ORDER BY chronology_order", [setup.campaignId])).rows;
     assert.equal(clocks.length, 2);
     for (const [index, clock] of clocks.entries()) {
