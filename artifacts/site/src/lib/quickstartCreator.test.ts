@@ -56,7 +56,9 @@ test("campaign creation does not wait for Premium preparation before navigation"
 
 test("starting an adventure immediately replaces the form with a locked loading screen", () => {
   assert.match(source, /launchLockedRef\.current \|\| busy/u);
-  assert.match(source, /launchLockedRef\.current = true;\s*setBusy\(true\)/u);
+  assert.match(source, /launchLockedRef\.current = true;[\s\S]*?flushSync\(\(\) => setBusy\(true\)\)/u);
+  assert.match(source, /requestAnimationFrame\(\(\) => requestAnimationFrame\(\(\) => resolve\(\)\)\)/u);
+  assert.match(source, /flushSync\(\(\) => setBusy\(true\)\)[\s\S]*?await new Promise[\s\S]*?const world = await createWorld/u);
   assert.match(source, /if \(busy\) \{[\s\S]*?aria-label="Adventure Preparation"[\s\S]*?Adventure creation in progress/u);
   assert.match(source, /repeated clicks cannot create duplicate adventures/u);
 });

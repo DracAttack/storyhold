@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { flushSync } from "react-dom";
 import { Check, Dice5, Loader2, LockKeyhole, Sparkles, WandSparkles } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
@@ -108,7 +109,13 @@ export function QuickstartCreator({ scenario }: { scenario?: StoryholdScenario }
       return;
     }
     launchLockedRef.current = true;
-    setBusy(true);
+    // Commit the preparation screen before beginning any network or database
+    // work. A normal state update may remain batched until the async handler
+    // yields, leaving the start button looking inert during campaign creation.
+    flushSync(() => setBusy(true));
+    await new Promise<void>((resolve) => {
+      requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
+    });
     try {
       const name = worldName.trim() || suggestedName(worldPremise);
       const world = await createWorld({
