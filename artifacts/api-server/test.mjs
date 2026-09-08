@@ -5,7 +5,7 @@ import { run as runNodeTests } from "node:test";
 import { spec } from "node:test/reporters";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { build as esbuild, transform as transformWithEsbuild } from "esbuild";
-import { readFile, rm, readdir } from "node:fs/promises";
+import { copyFile, readFile, rm, readdir } from "node:fs/promises";
 import { spawn } from "node:child_process";
 
 // The repo has no test framework installed (vitest/jest). This runner executes
@@ -252,6 +252,15 @@ globalThis.require = __cr(import.meta.url);`,
   });
 
   const bundled = await findFilesBySuffix(outDir, ".test.mjs");
+  const bundleDirs = new Set(bundled.map((file) => path.dirname(file)));
+  const pgliteEntry = localRequire.resolve("@electric-sql/pglite");
+  const pgliteDistDir = path.dirname(pgliteEntry);
+  for (const bundleDir of bundleDirs) {
+    for (const asset of ["pglite.data", "pglite.wasm", "initdb.wasm"]) {
+      await copyFile(path.join(pgliteDistDir, asset), path.join(bundleDir, asset));
+    }
+  }
+
   // NODE_ENV=test keeps code-under-test in its non-production branch (every
   // NODE_ENV check in the app compares against "production") while signalling
   // the logger to skip its pino-pretty worker-thread transport, which can't be
