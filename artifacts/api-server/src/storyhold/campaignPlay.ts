@@ -5195,6 +5195,7 @@ function prepareTurn(
   narratorReasoning: ReasoningLevel;
   contentMode: ContentMode;
   engineEnvelope: DeterministicEngineEnvelope;
+  directionFromResponse: (response: string) => CampaignDirection;
   validateResolution: (resolution: CampaignResolution) => void;
   inspectNarration: (
     direction: CampaignDirection,
@@ -5278,11 +5279,67 @@ function prepareTurn(
       content: `DIRECTOR OUTPUT RESERVATION CAPACITY ONLY: ${"x".repeat(16_000)}`,
     },
   ];
+  const validateDirection = (direction: CampaignDirection) => {
+    const resolution = combineDirectionAndNarration(direction, {
+      narration: DIRECTOR_PLACEHOLDER_NARRATION,
+    });
+    assertCampaignResolutionCausality(resolution);
+    assertNarratorSemantics(engineEnvelope, resolution);
+    assertResolutionAgainstCanonicalContext(context, resolution, engineEnvelope);
+    assertTurnProgressionContract(engineEnvelope.progression, resolution);
+    assertCampaignRpgResolution(context, resolution, engineEnvelope, action);
+  };
+  const directionFromResponse = (response: string): CampaignDirection => {
+    try {
+      const direction = parseCampaignDirection(response);
+      validateDirection(direction);
+      return direction;
+    } catch {
+      let sceneSummary = "";
+      try {
+        sceneSummary = parseCampaignDirection(response).sceneSummary;
+      } catch {
+        // Invalid JSON still receives a conservative server-owned resolution.
+      }
+      const direction: CampaignDirection = {
+        sceneSummary:
+          sceneSummary ||
+          `The player attempted ${text(action, 500)}. The immediate action was resolved without adding unverified canon.`,
+        outcome: engineEnvelope.resolution.outcome,
+        worldTimeLabel: text(context.campaign.current_time_label, 160),
+        timeAdvanceMinutes: engineEnvelope.resolution.timeAdvanceMinutes,
+        stateChanges: [],
+        rpgStateChange: null,
+        clockEvents: [],
+        memories: [],
+        propositions: [],
+        storyMoves: [],
+        progression: {
+          actionScope: engineEnvelope.progression.actionScope,
+          resolvedAction: text(action, 600),
+          objectiveImpact: "none",
+          objectiveTargetsAdvanced: [],
+          advancementSource: "none",
+          causalSteps: [
+            `The player attempted ${text(action, 500)}.`,
+            `The deterministic engine resolved the immediate action as ${engineEnvelope.resolution.outcome}.`,
+          ],
+        },
+        resolveClockEventIds: [],
+        acknowledgedMaturedClockEventIds: [
+          ...engineEnvelope.clockEligibility.acknowledgeMatured,
+        ],
+      };
+      validateDirection(direction);
+      return direction;
+    }
+  };
   return {
     directorReasoning,
     narratorReasoning,
     contentMode: content.mode,
     engineEnvelope,
+    directionFromResponse,
     validateResolution: (resolution) => {
       assertResolutionAgainstCanonicalContext(
         context,
@@ -5348,16 +5405,11 @@ async function generateDirectionForBrowserNarrator(
   const directorAi = await generateAiText({
     ...prepared.directorRequest,
     validate: (response) => {
-      parsedDirection = parseCampaignDirection(response);
-      const resolution = combineDirectionAndNarration(parsedDirection, {
-        narration: DIRECTOR_PLACEHOLDER_NARRATION,
-      });
-      assertCampaignResolutionCausality(resolution);
-      assertNarratorSemantics(prepared.engineEnvelope, resolution);
-      prepared.validateResolution(resolution);
+      parsedDirection = prepared.directionFromResponse(response);
     },
   });
-  const direction = parsedDirection ?? parseCampaignDirection(directorAi.text);
+  const direction =
+    parsedDirection ?? prepared.directionFromResponse(directorAi.text);
   const resolution = combineDirectionAndNarration(direction, {
     narration: DIRECTOR_PLACEHOLDER_NARRATION,
   });
@@ -5407,17 +5459,12 @@ async function generateTurn(
   const directorAi = await generateAiText({
     ...prepared.directorRequest,
     validate: (response) => {
-      parsedDirection = parseCampaignDirection(response);
-      const resolution = combineDirectionAndNarration(parsedDirection, {
-        narration: DIRECTOR_PLACEHOLDER_NARRATION,
-      });
-      assertCampaignResolutionCausality(resolution);
-      assertNarratorSemantics(prepared.engineEnvelope, resolution);
-      prepared.validateResolution(resolution);
+      parsedDirection = prepared.directionFromResponse(response);
     },
   });
   completedAiResults.push(directorAi);
-  const direction = parsedDirection ?? parseCampaignDirection(directorAi.text);
+  const direction =
+    parsedDirection ?? prepared.directionFromResponse(directorAi.text);
   const directorResolution = combineDirectionAndNarration(direction, {
     narration: DIRECTOR_PLACEHOLDER_NARRATION,
   });
