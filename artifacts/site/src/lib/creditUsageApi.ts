@@ -2,7 +2,6 @@ export type CreditUsageSummary = {
   allTimeCredits: number;
   sevenDayCredits: number;
   todayCredits: number;
-  allTimeCostMicros: number;
   settledRequests: number;
 };
 
@@ -18,6 +17,24 @@ export type CreditUsageEntry = {
 export type CreditUsageReport = {
   summary: CreditUsageSummary;
   recent: CreditUsageEntry[];
+  provider: {
+    summary: {
+      allTimeCostMicros: number;
+      sevenDayCostMicros: number;
+      todayCostMicros: number;
+      unchargedCostMicros: number;
+      requests: number;
+    };
+    recent: Array<{
+      operation: string;
+      provider: string | null;
+      model: string | null;
+      costMicros: number;
+      creditsCharged: number;
+      occurredAt: string;
+      failed: boolean;
+    }>;
+  };
 };
 
 function apiBase() {

@@ -7,8 +7,12 @@ test("admin credit usage reads settled accounting through the private route", as
   const originalFetch = globalThis.fetch;
   const calls: Array<{ url: string; options?: RequestInit }> = [];
   const report = {
-    summary: { allTimeCredits: 42, sevenDayCredits: 10, todayCredits: 3, allTimeCostMicros: 1234, settledRequests: 2 },
+    summary: { allTimeCredits: 42, sevenDayCredits: 10, todayCredits: 3, settledRequests: 2 },
     recent: [],
+    provider: {
+      summary: { allTimeCostMicros: 1234, sevenDayCostMicros: 1234, todayCostMicros: 500, unchargedCostMicros: 300, requests: 2 },
+      recent: [],
+    },
   };
   globalThis.fetch = async (url, options) => {
     calls.push({ url: String(url), options });
@@ -31,4 +35,6 @@ test("credit usage remains inside operator-only admin navigation", () => {
   assert.match(nav, /isPremiumRecoveryOperator\(role\)[\s\S]*?\/admin\/credit-usage/u);
   assert.match(server, /\/api\/storyhold\/admin\/credit-usage[\s\S]*?Operator access is required/u);
   assert.match(server, /player_id = \$1 AND status = 'settled'/u);
+  assert.match(server, /known_billable_failure/u);
+  assert.match(server, /NOT became_credit_charge/u);
 });
