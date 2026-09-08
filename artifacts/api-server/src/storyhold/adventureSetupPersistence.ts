@@ -65,6 +65,224 @@ function stateKey(subject: string): string {
   return `${readable}-${createHash("sha256").update(lower).digest("hex").slice(0, 12)}`;
 }
 
+function normalizedName(value: string): string {
+  return value.normalize("NFKC").replace(/\s+/gu, " ").trim().toLocaleLowerCase();
+}
+
+async function projectAdventureFoundationInTransaction(params: {
+  db: SetupDb;
+  setupId: string;
+  campaign: Row;
+  playerId: string;
+  plan: AdventureSetupPlan;
+  stateVersion: number;
+}) {
+  const foundation = params.plan.worldFoundation;
+  if (!foundation) return;
+  const { db, campaign, plan } = params;
+  const worldId = String(campaign.world_id);
+  const editionId = String(campaign.canon_edition_id);
+  const sourceId = randomUUID();
+  const sourceKey = `adventure-foundation-${params.setupId}`;
+  const sourceText = [
+    String(record(campaign.start_contract).startingPoint ?? ""),
+    String(record(record(campaign.start_contract).worldContract).premise ?? ""),
+    plan.publicOpening,
+    foundation.settingBaseline,
+    foundation.identitySecrecy.truth,
+    ...foundation.broaderForces.flatMap((force) => [
+      `${force.name}: ${force.summary}`,
+      force.relationshipToCampaign,
+    ]),
+    ...foundation.unresolvedBackground.flatMap((entry) => [
+      entry.question,
+      entry.currentTruth,
+    ]),
+    ...plan.secrets.map((secret) => secret.truth),
+  ].filter(Boolean).join("\n\n");
+  const sourceHash = createHash("sha256").update(
+    `adventure-foundation:${params.setupId}:${sourceText}`,
+  ).digest("hex");
+  const wordCount = sourceText.trim() ? sourceText.trim().split(/\s+/u).length : 0;
+  const source = (await db.query<{ id: string }>(
+    `INSERT INTO storyhold.world_sources
+      (id, world_id, canon_edition_id, uploaded_by_player_id, canonical_key,
+       title, original_filename, media_type, document_type, source_class,
+       canon_status, raw_file_path, content_hash, extracted_text, extraction_method,
+       byte_size, word_count, char_count, chunk_count, processing_status,
+       source_kind, chronology_order, chronology_relation, chronology_label,
+       chronology_notes, chronology_review_status)
+     VALUES ($1,$2,$3,$4,$5,'Adventure Foundation','adventure-foundation.txt',
+       'text/plain','generated_adventure_foundation','user_created','canon',$6,$7,$8,
+       'storyhold_adventure_setup',$9,$10,$11,1,'ready','timeline',1,'origin',$12,
+       'Generated from the accepted adventure opening and foundation.','reviewed')
+     ON CONFLICT (world_id, canonical_key) DO UPDATE SET
+       extracted_text=EXCLUDED.extracted_text, content_hash=EXCLUDED.content_hash,
+       word_count=EXCLUDED.word_count, char_count=EXCLUDED.char_count,
+       chronology_order=EXCLUDED.chronology_order,
+       chronology_label=EXCLUDED.chronology_label, chronology_notes=EXCLUDED.chronology_notes
+     RETURNING id`,
+    [sourceId, worldId, editionId, params.playerId, sourceKey,
+      `storyhold://adventure-setup/${params.setupId}`, sourceHash, sourceText,
+      Buffer.byteLength(sourceText, "utf8"), wordCount, sourceText.length,
+      String(campaign.current_time_label ?? "The beginning")],
+  )).rows[0];
+  const savedSourceId = source?.id ?? sourceId;
+  await db.query(
+    `INSERT INTO storyhold.world_source_chunks
+      (id, source_id, world_id, canon_edition_id, chunk_index, content,
+       content_hash, char_count, metadata)
+     VALUES ($1,$2,$3,$4,0,$5,$6,$7,$8::jsonb)
+     ON CONFLICT (source_id, chunk_index) DO UPDATE SET
+       content=EXCLUDED.content, content_hash=EXCLUDED.content_hash,
+       char_count=EXCLUDED.char_count, metadata=EXCLUDED.metadata`,
+    [randomUUID(), savedSourceId, worldId, editionId, sourceText, sourceHash,
+      sourceText.length, JSON.stringify({ kind: "adventure_foundation", setupId: params.setupId })],
+  );
+  const upsertEntity = async (
+    name: string,
+    entityType: string,
+    summary: string,
+  ): Promise<string> => {
+    const normalized = normalizedName(name);
+    const row = (await db.query<{ id: string }>(
+      `INSERT INTO storyhold.world_entities
+        (id, world_id, canon_edition_id, canonical_key, normalized_name, name,
+         entity_type, summary, evidence, mention_count, mention_source_count,
+         confidence, classification_source, review_status)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9::jsonb,1,1,1,'ai','verified')
+       ON CONFLICT (world_id, canon_edition_id, normalized_name) DO UPDATE SET
+         summary=CASE WHEN storyhold.world_entities.summary='' THEN EXCLUDED.summary
+                      ELSE storyhold.world_entities.summary END,
+         entity_type=CASE WHEN storyhold.world_entities.entity_type='ambiguous'
+                          THEN EXCLUDED.entity_type
+                          ELSE storyhold.world_entities.entity_type END,
+         evidence=storyhold.world_entities.evidence || EXCLUDED.evidence
+       RETURNING id`,
+      [randomUUID(), worldId, editionId, `setup-${params.setupId}-${stateKey(name)}`,
+        normalized, name, entityType, summary,
+        JSON.stringify([{ sourceId: savedSourceId, setupId: params.setupId }])],
+    )).rows[0];
+    if (!row) fail("FOUNDATION_ENTITY_FAILED");
+    return row.id;
+  };
+  const worldEntityId = await upsertEntity(
+    String(campaign.name ?? "Adventure World"),
+    "place",
+    foundation.settingBaseline,
+  );
+  const characterName =
+    String(campaign.character_name ?? "") ||
+    String(record(record(campaign.start_contract).character).name ?? "") ||
+    "Player Character";
+  const characterEntityId = await upsertEntity(
+    characterName,
+    "character",
+    foundation.identitySecrecy.truth,
+  );
+  const castEntityIds = new Map<string, string>();
+  for (const npc of plan.cast) {
+    castEntityIds.set(
+      normalizedName(npc.name),
+      await upsertEntity(npc.name, "character", npc.publicSummary),
+    );
+  }
+  for (const force of foundation.broaderForces) {
+    await upsertEntity(force.name, "faction", force.summary);
+  }
+  const evidence = (summary: string) =>
+    JSON.stringify([{ sourceId: savedSourceId, setupId: params.setupId, summary }]);
+  const insertClaim = async (
+    subjectId: string,
+    predicate: string,
+    objectText: string,
+    summary: string,
+  ) => {
+    const fingerprint = createHash("sha256")
+      .update(`${worldId}:${editionId}:${subjectId}:${predicate}:${objectText}`)
+      .digest("hex");
+    await db.query(
+      `INSERT INTO storyhold.world_knowledge_claims
+        (id, world_id, canon_edition_id, fingerprint, subject_entity_id,
+         predicate, object_text, truth_status, valid_from_label, summary,
+         evidence, confidence, claim_status, assignment_source)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,'fact',$8,$9,$10::jsonb,1,'active','ai')
+       ON CONFLICT (world_id, canon_edition_id, fingerprint) DO NOTHING`,
+      [randomUUID(), worldId, editionId, fingerprint, subjectId, predicate,
+        objectText, String(campaign.current_time_label ?? ""), summary, evidence(summary)],
+    );
+  };
+  await insertClaim(worldEntityId, "setting_baseline", foundation.settingBaseline,
+    "The accepted adventure foundation's setting baseline.");
+  await insertClaim(characterEntityId, "identity", foundation.identitySecrecy.truth,
+    `Identity is ${foundation.identitySecrecy.status}; known by ${foundation.identitySecrecy.knownBy.join(", ")}.`);
+  for (const secret of plan.secrets) {
+    const namedCast = plan.cast.find((npc) =>
+      normalizedName(secret.truth).startsWith(`${normalizedName(npc.name)} `),
+    );
+    const subjectId = namedCast
+      ? castEntityIds.get(normalizedName(namedCast.name)) ?? characterEntityId
+      : characterEntityId;
+    await insertClaim(subjectId, `secret_${secret.key}`, secret.truth,
+      `A foundation secret discoverable via: ${secret.discoverableVia.join("; ")}`);
+  }
+  for (const entry of foundation.unresolvedBackground) {
+    await insertClaim(worldEntityId, `background_${entry.key}`, entry.currentTruth,
+      entry.question);
+  }
+  await db.query(
+    `INSERT INTO storyhold.world_clock_events
+      (id, world_id, canon_edition_id, campaign_id, source_id,
+       created_by_player_id, canonical_key, event_kind, title, summary,
+       world_time_label, chronology_order, visibility, knowledge_status,
+       evidence, status, temporal_status, importance, created_state_version)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,'scene',$8,$9,$10,1,'campaign','observed',
+       $11::jsonb,'committed','relative','major',$12)
+     ON CONFLICT (world_id, canonical_key) DO UPDATE SET
+       source_id=EXCLUDED.source_id, title=EXCLUDED.title, summary=EXCLUDED.summary,
+       world_time_label=EXCLUDED.world_time_label,
+       chronology_order=EXCLUDED.chronology_order,
+       visibility=EXCLUDED.visibility, knowledge_status=EXCLUDED.knowledge_status,
+       evidence=EXCLUDED.evidence`,
+    [randomUUID(), worldId, editionId, campaign.id, savedSourceId, params.playerId,
+      `setup-${params.setupId}-opening`, `Opening: ${plan.locationName}`,
+      plan.publicOpening, String(campaign.current_time_label ?? "The beginning"),
+      evidence("The accepted opening scene."), params.stateVersion],
+  );
+}
+
+export async function backfillAdventureSetupFoundationInTransaction(params: {
+  db: SetupDb;
+  campaignId: string;
+}): Promise<{ projected: boolean }> {
+  const setup = (await params.db.query<Row>(
+    `SELECT * FROM storyhold.campaign_adventure_setups
+      WHERE campaign_id = $1 AND status = 'ready' FOR UPDATE`,
+    [params.campaignId],
+  )).rows[0];
+  if (!setup) fail("NOT_READY");
+  const campaign = (await params.db.query<Row>(
+    "SELECT * FROM storyhold.campaigns WHERE id = $1 FOR UPDATE",
+    [params.campaignId],
+  )).rows[0];
+  if (!campaign || setup.plan === null || setup.applied_state_version === null) {
+    fail("NOT_READY");
+  }
+  const frozen = record(setup.frozen_input);
+  const context = frozen.context as AdventureSetupContext;
+  const plan = validateAdventureSetupPlan(setup.plan, context);
+  if (manualStorytellerSha256(plan) !== setup.plan_sha256) fail("PLAN_CONFLICT");
+  await projectAdventureFoundationInTransaction({
+    db: params.db,
+    setupId: String(setup.id),
+    campaign,
+    playerId: String(setup.player_id),
+    plan,
+    stateVersion: integer(setup.applied_state_version),
+  });
+  return { projected: Boolean(plan.worldFoundation) };
+}
+
 /**
  * The caller MUST own a transaction encompassing this operation and any paid
  * settlement. This function never opens a transaction, calls a provider, spends
@@ -133,6 +351,10 @@ export async function applyAdventureSetupPlanInTransaction(params: {
     fail("STATE_CHANGED");
   }
   const nextVersion = expectedVersion + 1;
+  await projectAdventureFoundationInTransaction({
+    db, setupId: params.setupId, campaign, playerId: String(setup.player_id),
+    plan, stateVersion: nextVersion,
+  });
   const snapshot = await loadCampaignRpgSnapshot(db, routing.campaign_id);
   if (snapshot.seed.origin.kind !== "original") fail("ORIGIN_INVALID");
   const frozenRpg = record(frozenInput.rpgSnapshot);

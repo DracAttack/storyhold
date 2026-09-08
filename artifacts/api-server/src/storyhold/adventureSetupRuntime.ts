@@ -3,7 +3,11 @@ import type { PGlite } from "@electric-sql/pglite";
 import type { Express, Request, RequestHandler, Response } from "express";
 import { buildAdventureSetupPrompt, validateAdventureSetupPlan, type AdventureSetupContext } from "./adventureSetup";
 import { activeAdventureSetups, loadAdventureSetup, publicAdventureSetup, requiresAdventureSetup, type AdventureSetupRow } from "./adventureSetupAccess";
-import { applyAdventureSetupPlanInTransaction, refineAdventureSetupPlanInTransaction } from "./adventureSetupPersistence";
+import {
+  applyAdventureSetupPlanInTransaction,
+  backfillAdventureSetupFoundationInTransaction,
+  refineAdventureSetupPlanInTransaction,
+} from "./adventureSetupPersistence";
 import { loadCampaignContext, runOrResumeMeteredAiResult, markMeteredAiResultApplied, shouldPreserveMeteredResult } from "./campaignPlay";
 import { AiGatewayUnavailableError, combineAiUsage, generateAiText, quoteAiCostReservation, type AiTextResult, type GenerateAiTextInput } from "./aiGateway";
 import { CreditEconomyError, creditsForReservationQuote, reserveCredits, releaseCreditReservation, settleCreditReservationInTransaction, type CreditReservation } from "./creditEconomy";
@@ -235,6 +239,18 @@ export function registerAdventureSetupRoutes({app,db,requireUser}: {app:Express;
     try {
       const result = await prepareAdventureSetup({db,campaignId:id,playerId:req.localUser!.id,role:req.localUser!.role});
       res.status(result.adventureSetup.status === "awaiting_response" ? 202 : 200).json(result);
+    } catch(error) {publicError(res,error);}
+  });
+  app.post("/api/storyhold/campaigns/:campaignId/setup/foundation",requireUser,async(req:SetupRequest,res) => {
+    const id = String(req.params.campaignId ?? "");
+    if (!UUID.test(id)) {res.status(400).json({error:"Invalid campaign."});return;}
+    const campaign = await accessibleCampaign(db,id,req.localUser!.id);
+    if (!campaign) {res.status(404).json({error:"Campaign not found."});return;}
+    try {
+      const result = await db.transaction((tx) =>
+        backfillAdventureSetupFoundationInTransaction({db:tx,campaignId:id}),
+      );
+      res.json(result);
     } catch(error) {publicError(res,error);}
   });
   const operator: RequestHandler = (req:SetupRequest,res,next) => {
