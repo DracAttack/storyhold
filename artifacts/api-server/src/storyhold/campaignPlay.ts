@@ -1091,11 +1091,15 @@ export class MeteredAiUncertainOutcomeError extends Error {
 function meteredFailurePayload(params: {
   kind: "known_billable_failure" | "uncertain_outcome";
   attempts: AiBillableAttempt[];
+  failureDetail?: string[];
 }) {
   return json({
     version: 1,
     kind: params.kind,
     billableAttempts: params.attempts,
+    ...(params.failureDetail?.length
+      ? { failureDetail: params.failureDetail.slice(0, 8) }
+      : {}),
     ...(params.kind === "known_billable_failure"
       ? { combinedUsage: combineAiUsage(params.attempts.map((attempt) => attempt.usage)) }
       : {}),
@@ -1329,6 +1333,7 @@ export async function runOrResumeMeteredAiResult<T>(params: MeteredAiResultScope
         const responseText = meteredFailurePayload({
           kind: uncertain ? "uncertain_outcome" : "known_billable_failure",
           attempts: error.billableAttempts,
+          failureDetail: error.attempts.map((attempt) => text(attempt, 500)),
         });
         const responseSha256 = createHash("sha256")
           .update(responseText)
@@ -1345,7 +1350,7 @@ export async function runOrResumeMeteredAiResult<T>(params: MeteredAiResultScope
               status,
               responseText,
               responseSha256,
-              text(error.message, 1_000),
+              text(error.attempts.join("; ") || error.message, 1_000),
             ],
           );
           if (persisted.rows.length === 0) {
@@ -5290,49 +5295,9 @@ function prepareTurn(
     assertCampaignRpgResolution(context, resolution, engineEnvelope, action);
   };
   const directionFromResponse = (response: string): CampaignDirection => {
-    try {
-      const direction = parseCampaignDirection(response);
-      validateDirection(direction);
-      return direction;
-    } catch {
-      let sceneSummary = "";
-      try {
-        sceneSummary = parseCampaignDirection(response).sceneSummary;
-      } catch {
-        // Invalid JSON still receives a conservative server-owned resolution.
-      }
-      const direction: CampaignDirection = {
-        sceneSummary:
-          sceneSummary ||
-          `The player attempted ${text(action, 500)}. The immediate action was resolved without adding unverified canon.`,
-        outcome: engineEnvelope.resolution.outcome,
-        worldTimeLabel: text(context.campaign.current_time_label, 160),
-        timeAdvanceMinutes: engineEnvelope.resolution.timeAdvanceMinutes,
-        stateChanges: [],
-        rpgStateChange: null,
-        clockEvents: [],
-        memories: [],
-        propositions: [],
-        storyMoves: [],
-        progression: {
-          actionScope: engineEnvelope.progression.actionScope,
-          resolvedAction: text(action, 600),
-          objectiveImpact: "none",
-          objectiveTargetsAdvanced: [],
-          advancementSource: "none",
-          causalSteps: [
-            `The player attempted ${text(action, 500)}.`,
-            `The deterministic engine resolved the immediate action as ${engineEnvelope.resolution.outcome}.`,
-          ],
-        },
-        resolveClockEventIds: [],
-        acknowledgedMaturedClockEventIds: [
-          ...engineEnvelope.clockEligibility.acknowledgeMatured,
-        ],
-      };
-      validateDirection(direction);
-      return direction;
-    }
+    const direction = parseCampaignDirection(response);
+    validateDirection(direction);
+    return direction;
   };
   return {
     directorReasoning,
