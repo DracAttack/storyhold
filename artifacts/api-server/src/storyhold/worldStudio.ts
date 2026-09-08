@@ -7306,18 +7306,28 @@ function mergeEntityStrings(...groups: unknown[]): string[] {
   return output;
 }
 
-function mergeEntityEvidence(...groups: unknown[]): unknown[] {
+function mergeEntityEvidence(...groups: unknown[]): EvidenceReference[] {
   const seen = new Set<string>();
-  const output: unknown[] = [];
+  const output: EvidenceReference[] = [];
   for (const group of groups) {
     if (!Array.isArray(group)) continue;
     for (const value of group) {
       if (!value || typeof value !== "object" || Array.isArray(value)) continue;
       const row = value as Record<string, unknown>;
-      const key = `${textBody(row.chunkId, 80)}:${textBody(row.quote, 500)}`;
-      if (!key || seen.has(key)) continue;
+      const quote = textBody(row.quote, 500);
+      if (!quote) continue;
+      const chunkId = textBody(row.chunkId, 80);
+      const sourceId = textBody(row.sourceId, 80);
+      const key = `${chunkId}:${quote}`;
+      if (seen.has(key)) continue;
       seen.add(key);
-      output.push(value);
+      output.push({
+        chunkId,
+        sourceId,
+        quote,
+        sectionTitle: textBody(row.sectionTitle, 500) || null,
+        perspective: textBody(row.perspective, 500) || null,
+      });
       if (output.length >= 12) return output;
     }
   }
@@ -7437,7 +7447,7 @@ export function adjudicateGeneratedEntityHypotheses(params: {
   const name = textBody(first.finding.name, 240);
   const evidence = mergeEntityEvidence(
     ...params.hypotheses.map((hypothesis) => hypothesis.finding.evidence),
-  ) as EvidenceReference[];
+  );
   const scores = new Map<EntityType, number>();
   const resolved = params.hypotheses.map((hypothesis) => {
     const entityType = localEntityCategoryFromEvidence(

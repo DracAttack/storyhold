@@ -9429,10 +9429,20 @@ export function localEvidenceBehavesLikeCharacter(
   return localCharacterEvidenceWitnessCount(name, evidence) >= 2;
 }
 
+function evidenceReferencesWithQuotes(evidence: EvidenceReference[]): EvidenceReference[] {
+  return evidence.flatMap((entry) => {
+    if (!entry || typeof entry !== "object") return [];
+    const quote = typeof entry.quote === "string" ? entry.quote : "";
+    if (!quote.trim()) return [];
+    return [{ ...entry, quote }];
+  });
+}
+
 export function localCharacterEvidenceWitnessCount(
   name: string,
   evidence: EvidenceReference[],
 ): number {
+  evidence = evidenceReferencesWithQuotes(evidence);
   const personName = escapedRegExp(name);
   const personVerb = "said|asked|answered|replied|whispered|shouted|exclaimed|warned|told|thought|laughed|cried|sobbed|nodded|smiled|sneered|smirked|scowled|grimaced|continued|straightened|felt|wanted|decided|recognized|realized|reacted|wriggled|watched|watching|listened|walked|walking|jogged|ran|turned|looked|stared|reached|grabbed|gave|clapped|ripped|sniffed|knelt|kneeling|made|ordered|announced|demanded|intervened|chimed|threatened|blurted|surveyed|addressed|emerged|appeared|winced|paused|lurched|shook|burst|loaded|loading|barred|checked|checking|opened|closed|built|caught|emptied|carried|held|stood|sat|stepped|shuffled|inquired|spoke|began\\s+speaking|moved|leaned|waved|hopped|clung|beelined|pleaded|fired|aimed|drew|pulled|pushed|kicked|struck|helped|saved|killed|died|returned|left|arrived|followed|led|fought|attacked|defended|hugged|kissed|read|reading|worked|working";
   const personBehavior = new RegExp(
@@ -9456,6 +9466,7 @@ function localStrongCharacterEvidenceWitnessCount(
   name: string,
   evidence: EvidenceReference[],
 ): number {
+  evidence = evidenceReferencesWithQuotes(evidence);
   const personName = escapedRegExp(name);
   const humanRole = "(?:person|man|woman|boy|girl|child|kid|survivor|mechanic|butcher|teacher|soldier|guard|doctor|nurse|wife|husband|mate|host|daughter|son|sister|brother|mother|father|mom|dad|friend|buddy|partner|captain|leader)";
   const directCommand = new RegExp(
@@ -9688,6 +9699,7 @@ export function localEntityCategoryFromEvidence(
   evidence: EvidenceReference[],
   proposed: LocalEntityCategory,
 ): LocalEntityCategory {
+  evidence = evidenceReferencesWithQuotes(evidence);
   const normalizedName = name.normalize("NFKC").replace(/\s+/gu, " ").trim();
   const namePattern = escapedRegExp(normalizedName);
   const characterWitnesses = localCharacterEvidenceWitnessCount(normalizedName, evidence);

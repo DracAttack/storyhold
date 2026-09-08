@@ -871,6 +871,20 @@ test("entity hypotheses are adjudicated once instead of overwriting a character 
     }],
   });
   assert.equal(dad?.entityType, "term");
+
+  assert.doesNotThrow(() => adjudicateGeneratedEntityHypotheses({
+    hypotheses: [{
+      entityType: "character",
+      finding: {
+        name: "Legacy Record",
+        summary: "Historical evidence without a quote must not break startup.",
+        evidence: [{
+          sourceId: "00000000-0000-4000-8000-000000000201",
+          chunkId: "00000000-0000-4000-8000-000000000399",
+        } as never],
+      },
+    }],
+  }));
 });
 
 test("explicit manuscript categories overrule stale generated dossiers during startup adjudication", () => {
