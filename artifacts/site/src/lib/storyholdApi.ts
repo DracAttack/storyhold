@@ -71,6 +71,11 @@ export type ResolutionMode =
   | "tactical"
   | "custom";
 
+export type NarrativePerson =
+  | "first_person"
+  | "second_person"
+  | "third_person";
+
 export type WorldContract = {
   identity: string;
   premise: string;
@@ -80,6 +85,7 @@ export type WorldContract = {
   exclusions: string[];
   worldRules: string[];
   playerPriorities: string[];
+  narrativePerson?: NarrativePerson;
 };
 
 export type ContentSettings = {

@@ -170,6 +170,9 @@ export function ManuscriptImporter({
   const [genre, setGenre] = useState("");
   const [atmosphere, setAtmosphere] = useState("");
   const [premise, setPremise] = useState("");
+  const [narrativePerson, setNarrativePerson] = useState<
+    "first_person" | "second_person" | "third_person"
+  >("third_person");
   const [letAiDecide, setLetAiDecide] = useState(false);
   const [chronologySummary, setChronologySummary] = useState("");
   const [busy, setBusy] = useState(false);
@@ -372,6 +375,7 @@ export function ManuscriptImporter({
           worldContract: {
             premise: letAiDecide ? "" : premise,
             tone: letAiDecide ? "" : atmosphere || genre,
+            narrativePerson,
           },
         });
         worldId = world.id;
@@ -749,6 +753,32 @@ export function ManuscriptImporter({
                 maxLength={6_000}
                 className="min-h-24 rounded-xl"
               />
+            </div>
+          ) : null}
+
+          {mode === "new" ? (
+            <div className="space-y-2">
+              <Label htmlFor="world-narrative-person">Narrative Point of View</Label>
+              <select
+                id="world-narrative-person"
+                value={narrativePerson}
+                onChange={(event) =>
+                  setNarrativePerson(
+                    event.target.value as
+                      | "first_person"
+                      | "second_person"
+                      | "third_person",
+                  )
+                }
+                className="h-10 w-full rounded-xl border border-input bg-background px-3 text-sm"
+              >
+                <option value="first_person">First person — I / me</option>
+                <option value="second_person">Second person — you / your</option>
+                <option value="third_person">Third person — they / character name</option>
+              </select>
+              <p className="text-xs leading-5 text-muted-foreground">
+                Choose how Storyhold writes scenes created from this manuscript. RPG adventures default to second person.
+              </p>
             </div>
           ) : null}
 

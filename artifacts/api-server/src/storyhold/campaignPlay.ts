@@ -4896,6 +4896,8 @@ Reality, knowledge, belief, and claim are separate layers. A character can since
 
 When LOCKED RPG STATE is present, rpgStateChange may propose only consequences that actually follow from this resolution. Its non-null shape is {"causalBasis":["exact accepted cause"],"location":{"entityId":null,"name":"place","zone":null},"characterChanges":[{"characterId":"existing id","vitalityChange":-1,"stressChange":1,"addHarms":[],"addConditions":[],"resourceChanges":[],"inventoryChanges":[],"capabilityChanges":[]}],"sharedResourceChanges":[],"companionChanges":[],"reputationChanges":[],"objectiveChanges":[]}; omit unchanged fields rather than filling them with zero or empty arrays. Use existing IDs for characters, capabilities, items, companions, reputations, and objectives. Copy every rpgStateChange.causalBasis string exactly from progression.causalSteps or stateChanges.causalBasis. Never set a state version, roll, outcome, modifier, base stat, maximum pool, active character, or turnAccepted marker; those are fixed outside your response. CURRENT TURN OBJECTIVE ALLOWANCE is the complete positive-change authority: only its exact objective ID may receive a positive progress amount, never more than its stated maximum, and only when this resolved action actually earns that progress. Never set an objective's status to completed; reaching its target handles that automatically. When the allowance says none, propose no positive tracked change. Never propose healing, stress relief, removing harm or conditions, adding items/resources/capabilities/companions, or increasing quantities/ranks/loyalty/reputation unless a future allowance explicitly names that exact change. A location update is allowed only when the player explicitly moves to a named, already-known place. A small, directly caused cost or injury is allowed only on a mixed or failed outcome; never punish a successful action. Otherwise use null, including when LOCKED RPG STATE is absent.
 
+Keep the response compact—normally under 1,800 output tokens. Use empty arrays for categories with no directly caused change. Do not restate the supplied context, explain your reasoning, or add fields outside this schema. Copy every immutable outcome, time, progression limit, and eligible ID exactly as supplied.
+
 Return exactly one JSON object and no markdown:
 {
   "sceneSummary":"compact factual memory of what actually happened",
@@ -5011,6 +5013,24 @@ function narrationLength(
   if (value === "expansive")
     return "Write roughly 450-800 words when the scene supports it.";
   return "Write roughly 220-420 words.";
+}
+
+function narrativePersonInstruction(context: CampaignContext): string {
+  const startContract = record(context.campaign.start_contract);
+  const lockedPreferences = record(startContract.storyPreferences);
+  const worldContract = record(startContract.worldContract);
+  const value = String(
+    lockedPreferences.narrativePerson ??
+      worldContract.narrativePerson ??
+      "second_person",
+  );
+  if (value === "first_person") {
+    return "NARRATIVE PERSON: Write the player character's viewpoint in first person (I/me/my).";
+  }
+  if (value === "third_person") {
+    return "NARRATIVE PERSON: Write the player character's viewpoint in third person, using the character's name and appropriate pronouns.";
+  }
+  return "NARRATIVE PERSON: Write RPG narration in second person (you/your). Never switch to third person merely because the player writes their action in first person.";
 }
 
 function activeHiddenEvents(context: CampaignContext) {
@@ -5225,7 +5245,7 @@ function prepareTurn(
     messages: [
       {
         role: "user",
-        content: `${content.directive}\n${narrationLength(context, intent, narrationPolicy)}\nINPUT KIND: ${intent}\nPLAYER-VISIBLE CONTEXT: ${compactNarratorContext(context)}\nPUBLIC DIRECTOR RESOLUTION: ${json(publicDirectionForNarrator(direction))}\n<PLAYER_INPUT kind="${intent}">${action}</PLAYER_INPUT>`,
+        content: `${content.directive}\n${narrativePersonInstruction(context)}\n${narrationLength(context, intent, narrationPolicy)}\nINPUT KIND: ${intent}\nPLAYER-VISIBLE CONTEXT: ${compactNarratorContext(context)}\nPUBLIC DIRECTOR RESOLUTION: ${json(publicDirectionForNarrator(direction))}\n<PLAYER_INPUT kind="${intent}">${action}</PLAYER_INPUT>`,
       },
     ],
   });

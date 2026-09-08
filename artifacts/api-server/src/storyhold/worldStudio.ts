@@ -1641,6 +1641,13 @@ function stringList(value: unknown, maximumItems = 20, maximumLength = 400) {
 
 function cleanWorldContract(value: unknown) {
   const input = recordBody(value);
+  const narrativePerson = [
+    "first_person",
+    "second_person",
+    "third_person",
+  ].includes(String(input.narrativePerson))
+    ? String(input.narrativePerson)
+    : "";
   return {
     identity: textBody(input.identity, 2_000),
     premise: textBody(input.premise, 6_000),
@@ -1650,6 +1657,7 @@ function cleanWorldContract(value: unknown) {
     exclusions: stringList(input.exclusions),
     worldRules: stringList(input.worldRules),
     playerPriorities: stringList(input.playerPriorities),
+    narrativePerson,
   };
 }
 
@@ -18388,6 +18396,15 @@ export function registerWorldStudioRoutes(params: {
             : null,
         });
         const rpgSeedReference = campaignRpgSeedLineage(rpgSeed);
+        const lockedNarrativePerson = [
+          "first_person",
+          "second_person",
+          "third_person",
+        ].includes(String(recordBody(lockedWorldContract).narrativePerson))
+          ? String(recordBody(lockedWorldContract).narrativePerson)
+          : world.creation_mode === "quickstart"
+            ? "second_person"
+            : "third_person";
         startContract = {
           version: frozenCanonScope ? 8 : 7,
           worldId,
@@ -18408,6 +18425,7 @@ export function registerWorldStudioRoutes(params: {
               storyPreferences.rows[0]?.violence_level ?? "standard",
             narrativeLength:
               storyPreferences.rows[0]?.narrative_length ?? "balanced",
+            narrativePerson: lockedNarrativePerson,
           },
           character: {
             id: characterId,

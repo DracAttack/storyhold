@@ -7,6 +7,14 @@ const source = readFileSync(
   "utf8",
 );
 const api = readFileSync(new URL("./storyholdApi.ts", import.meta.url), "utf8");
+const manuscriptImporter = readFileSync(
+  new URL("../components/customer/manuscript-importer.tsx", import.meta.url),
+  "utf8",
+);
+const campaignPlay = readFileSync(
+  new URL("../../../api-server/src/storyhold/campaignPlay.ts", import.meta.url),
+  "utf8",
+);
 
 test("new adventures keep reusable world canon separate from the player role", () => {
   assert.match(source, /identity:\s*worldPremise\.trim\(\)/u);
@@ -57,4 +65,20 @@ test("quickstart copy stays player-facing", () => {
   assert.doesNotMatch(source, /source snapshot|RPG seed|GLiNER|Qwen|backend/iu);
   assert.match(source, /The world, your role, and the opening situation are locked/u);
   assert.match(source, /<details[\s\S]*Optional Boundaries and Fixed Facts[\s\S]*<\/details>/u);
+});
+
+test("RPG narration defaults to second person and manuscript intake offers all persons", () => {
+  assert.match(source, /narrativePerson: "second_person"/u);
+  assert.match(manuscriptImporter, /Narrative Point of View/u);
+  assert.match(manuscriptImporter, /value="first_person"/u);
+  assert.match(manuscriptImporter, /value="second_person"/u);
+  assert.match(manuscriptImporter, /value="third_person"/u);
+  assert.match(campaignPlay, /NARRATIVE PERSON: Write RPG narration in second person/u);
+  assert.match(campaignPlay, /Never switch to third person merely because the player writes their action in first person/u);
+});
+
+test("the Director is instructed to return compact structural JSON", () => {
+  assert.match(campaignPlay, /normally under 1,800 output tokens/u);
+  assert.match(campaignPlay, /Use empty arrays for categories with no directly caused change/u);
+  assert.match(campaignPlay, /Do not restate the supplied context/u);
 });

@@ -66,6 +66,7 @@ export function QuickstartCreator({ scenario }: { scenario?: StoryholdScenario }
     exclusions: lines(exclusions),
     worldRules: [],
     playerPriorities: ["Let unusual actions receive fair, committed rulings before resolution."],
+    narrativePerson: "second_person",
   }), [constraints, exclusions, startingPoint, tone, worldPremise]);
 
   // A prepared preview represents one exact set of inputs. Changing any part
