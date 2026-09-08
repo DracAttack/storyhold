@@ -5,7 +5,7 @@ import { run as runNodeTests } from "node:test";
 import { spec } from "node:test/reporters";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { build as esbuild, transform as transformWithEsbuild } from "esbuild";
-import { copyFile, readFile, rm, readdir } from "node:fs/promises";
+import { copyFile, mkdir, readFile, rm, readdir, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 
 // The repo has no test framework installed (vitest/jest). This runner executes
@@ -17,6 +17,7 @@ import { spawn } from "node:child_process";
 const localRequire = createRequire(import.meta.url);
 globalThis.require = localRequire;
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
+const PGLITE_RUNTIME_ASSETS = ["pglite.data", "pglite.wasm", "initdb.wasm"];
 
 async function findFilesBySuffix(dir, suffix) {
   const out = [];
@@ -204,9 +205,119 @@ function guessPackageName(absPath) {
   return parts[0] ?? path.basename(absPath);
 }
 
+async function copyPgliteRuntimeAssets(bundleDirs) {
+  const pgliteEntry = localRequire.resolve("@electric-sql/pglite");
+  const pgliteDistDir = path.dirname(pgliteEntry);
+  const failures = [];
+
+  for (const bundleDir of bundleDirs) {
+    await mkdir(bundleDir, { recursive: true });
+    for (const asset of PGLITE_RUNTIME_ASSETS) {
+      try {
+        await copyFile(path.join(pgliteDistDir, asset), path.join(bundleDir, asset));
+      } catch (error) {
+        failures.push(`${asset} for ${path.relative(artifactDir, bundleDir)}: ${error.message}`);
+      }
+    }
+  }
+
+  if (failures.length > 0) {
+    throw new Error(
+      `PGlite runtime check failed. The bundled runner requires ${PGLITE_RUNTIME_ASSETS.join(", ")} beside every emitted test bundle.\n` +
+      failures.map((failure) => `  - ${failure}`).join("\n"),
+    );
+  }
+}
+
+async function runPgliteRuntimeCheck() {
+  const checkDir = path.resolve(artifactDir, "dist-test-pglite-check");
+  const sourceDir = path.join(checkDir, "source");
+  const outDir = path.join(checkDir, "bundles");
+  const entryNames = ["first/smoke", "second/nested/smoke"];
+
+  await rm(checkDir, { recursive: true, force: true });
+  try {
+    const entryPoints = {};
+    for (const entryName of entryNames) {
+      const sourceFile = path.join(sourceDir, `${entryName}.mjs`);
+      await mkdir(path.dirname(sourceFile), { recursive: true });
+      await writeFile(
+        sourceFile,
+        `import { PGlite } from "@electric-sql/pglite";
+const db = new PGlite();
+await db.query("select 1 as ready");
+await db.close();
+`,
+      );
+      entryPoints[entryName] = sourceFile;
+    }
+
+    await esbuild({
+      entryPoints,
+      platform: "node",
+      bundle: true,
+      format: "esm",
+      outdir: outDir,
+      outExtension: { ".js": ".mjs" },
+      logLevel: "warning",
+      external: EXTERNALS,
+      plugins: [nativePkgGuard()],
+      banner: {
+        js: `import { createRequire as __cr } from 'node:module';
+globalThis.require = __cr(import.meta.url);`,
+      },
+    });
+
+    const bundles = await findFilesBySuffix(outDir, ".mjs");
+    const bundleDirs = new Set(bundles.map((file) => path.dirname(file)));
+    if (bundleDirs.size < 2) {
+      throw new Error(`expected bundles in at least two output directories, found ${bundleDirs.size}`);
+    }
+    await copyPgliteRuntimeAssets(bundleDirs);
+
+    const failures = [];
+    for (const bundle of bundles) {
+      const child = spawn(process.execPath, [bundle], {
+        stdio: ["ignore", "pipe", "pipe"],
+        env: { ...process.env, NODE_ENV: "test" },
+      });
+      let stderr = "";
+      child.stderr.on("data", (chunk) => {
+        stderr += chunk;
+      });
+      const [code] = await once(child, "exit");
+      if (code !== 0) {
+        failures.push(`${path.relative(outDir, bundle)} exited ${code}: ${stderr.trim()}`);
+      }
+    }
+
+    if (failures.length > 0) {
+      throw new Error(
+        `PGlite runtime check failed. Verify ${PGLITE_RUNTIME_ASSETS.join(", ")} are present beside every emitted test bundle.\n` +
+        failures.map((failure) => `  - ${failure}`).join("\n"),
+      );
+    }
+    console.log(`PGlite initialized from ${bundleDirs.size} emitted test directories.`);
+  } catch (error) {
+    if (error.message?.startsWith("PGlite runtime check failed.")) throw error;
+    throw new Error(
+      `PGlite runtime check failed. Verify ${PGLITE_RUNTIME_ASSETS.join(", ")} are present beside every emitted test bundle.\n  - ${error.message}`,
+      { cause: error },
+    );
+  } finally {
+    await rm(checkDir, { recursive: true, force: true });
+  }
+}
+
 async function run() {
   const srcDir = path.resolve(artifactDir, "src");
   const outDir = path.resolve(artifactDir, "dist-test");
+
+  if (process.argv.includes("--pglite-runtime-check")) {
+    process.env.NODE_ENV = "test";
+    await runPgliteRuntimeCheck();
+    return;
+  }
 
   const requestedEntryPoints = process.argv
     .slice(2)
@@ -235,6 +346,8 @@ async function run() {
 
   await rm(outDir, { recursive: true, force: true });
 
+  await runPgliteRuntimeCheck();
+
   await esbuild({
     entryPoints,
     platform: "node",
@@ -253,13 +366,7 @@ globalThis.require = __cr(import.meta.url);`,
 
   const bundled = await findFilesBySuffix(outDir, ".test.mjs");
   const bundleDirs = new Set(bundled.map((file) => path.dirname(file)));
-  const pgliteEntry = localRequire.resolve("@electric-sql/pglite");
-  const pgliteDistDir = path.dirname(pgliteEntry);
-  for (const bundleDir of bundleDirs) {
-    for (const asset of ["pglite.data", "pglite.wasm", "initdb.wasm"]) {
-      await copyFile(path.join(pgliteDistDir, asset), path.join(bundleDir, asset));
-    }
-  }
+  await copyPgliteRuntimeAssets(bundleDirs);
 
   // NODE_ENV=test keeps code-under-test in its non-production branch (every
   // NODE_ENV check in the app compares against "production") while signalling
