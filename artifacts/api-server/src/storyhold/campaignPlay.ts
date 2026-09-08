@@ -80,6 +80,7 @@ import {
 } from "./campaignBranches";
 import {
   assertDirectorAgainstImportedCanon,
+  ImportedCanonValidationError,
   loadStrictCampaignCanonClaims,
   loadStrictCampaignCanonEvidence,
   lockedCampaignCanonScope,
@@ -4565,7 +4566,10 @@ export async function loadCampaignContext(
     }),
     canonHistory,
     worldClaims: rankedWorldClaims,
-    importedCanonClaims: worldClaimResult.rows,
+    // Ordinary quickstart/world-model claims are live RPG context, not imported
+    // manuscript canon. Only a frozen edition-locked scope receives the strict
+    // imported-canon supersession validator.
+    importedCanonClaims: strictCanonContext ? worldClaimResult.rows : [],
     facts: factResult.rows,
     epistemicAssertions: epistemicResult.rows,
     noveltyMoves: noveltyResult.rows,
@@ -5326,6 +5330,7 @@ function prepareTurn(
     // inspector finds a high-confidence contradiction in otherwise valid prose.
     reservationRequests: [
       directorRequest,
+      directorRequest,
       reservationNarratorRequest,
       reservationNarratorRequest,
     ],
@@ -5421,15 +5426,70 @@ async function generateTurn(
   const completedAiResults: AiTextResult[] = [];
   try {
   let parsedDirection: CampaignDirection | null = null;
-  const directorAi = await generateAiText({
+  let directorAi = await generateAiText({
     ...prepared.directorRequest,
     validate: (response) => {
-      parsedDirection = prepared.directionFromResponse(response);
+      parsedDirection = parseCampaignDirection(response);
     },
   });
   completedAiResults.push(directorAi);
-  const direction =
-    parsedDirection ?? prepared.directionFromResponse(directorAi.text);
+  let direction = parsedDirection ?? parseCampaignDirection(directorAi.text);
+  try {
+    direction = prepared.directionFromResponse(directorAi.text);
+  } catch (error) {
+    if (!(error instanceof ImportedCanonValidationError)) throw error;
+    const repairRequest = prepared.directorRequest;
+    let repairedDirection: CampaignDirection | null = null;
+    const issueList = error.issues
+      .slice(0, 12)
+      .map((issue) =>
+        [
+          issue.code,
+          issue.message,
+          issue.propositionIndex === undefined
+            ? ""
+            : `propositionIndex=${issue.propositionIndex}`,
+          issue.stateChangeIndex === undefined
+            ? ""
+            : `stateChangeIndex=${issue.stateChangeIndex}`,
+          issue.factIndex === undefined ? "" : `factIndex=${issue.factIndex}`,
+        ]
+          .filter(Boolean)
+          .join(" | "),
+      )
+      .join("\n");
+    const repairAi = await generateAiText({
+      ...repairRequest,
+      temperature: Math.min(0.35, repairRequest.temperature ?? 0.35),
+      messages: [
+        ...repairRequest.messages,
+        {
+          role: "user",
+          content: `Your prior Director JSON violated imported canon validation. Repair the reasoning instead of deleting unrelated consequences. Return the complete corrected Director JSON and nothing else.
+
+VALIDATION ISSUES:
+${issueList}
+
+Requirements:
+- Correct every listed canon issue.
+- Preserve the deterministic outcome, time advance, action scope, and eligible IDs exactly.
+- Keep every non-conflicting consequence that remains causally supported.
+- A durable state-change fact must have a matching reality proposition.
+- Do not contradict an active imported claim unless the same-subject, same-predicate proposition explicitly supersedes it with a causal basis.
+
+PRIOR DIRECTOR JSON:
+${directorAi.text}`,
+        },
+      ],
+      validate: (response) => {
+        repairedDirection = prepared.directionFromResponse(response);
+      },
+    });
+    completedAiResults.push(repairAi);
+    directorAi = repairAi;
+    direction =
+      repairedDirection ?? prepared.directionFromResponse(repairAi.text);
+  }
   const directorResolution = combineDirectionAndNarration(direction, {
     narration: DIRECTOR_PLACEHOLDER_NARRATION,
   });

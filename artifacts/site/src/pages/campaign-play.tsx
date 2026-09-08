@@ -83,6 +83,7 @@ import {
   regenerateCampaignTurnProposal,
   rerollCampaignTurnProposal,
   submitCampaignBrowserNarration,
+  submitCampaignTurn,
   updateCampaignBranch,
   updateCampaignTurnFeedback,
   type CampaignPlaySession,
@@ -415,7 +416,9 @@ export default function CampaignPlay() {
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     const nextAction = action.trim();
-    if (!nextAction || !session || !auth.userId || sending || setupBlocksPlay || setupBusy || session.pendingProposal || manualTurnIsPending(session.pendingManualTurn)) return;
+    const rpgAutoCommit =
+      session?.campaign.experienceMode === "solo" && Boolean(session.rpgState);
+    if (!nextAction || !session || !auth.userId || sending || setupBlocksPlay || setupBusy || (!rpgAutoCommit && session.pendingProposal) || manualTurnIsPending(session.pendingManualTurn)) return;
     const playerId = auth.userId;
     const campaignId = session.campaign.id;
     const submittedInputMode = safeCampaignInputMode(
@@ -439,12 +442,19 @@ export default function CampaignPlay() {
       pendingTurnRequestRef.current = pendingRequest;
       // Live choices go directly to the campaign's AI-and-rules path. Browser
       // intelligence preferences apply to other workflows, not this send.
-      const initialResponse = await createCampaignTurnProposal({
-        campaignId,
-        action: nextAction,
-        inputMode: submittedInputMode,
-        requestId: pendingRequest.requestId,
-      });
+      const initialResponse = rpgAutoCommit
+        ? await submitCampaignTurn({
+            campaignId,
+            action: nextAction,
+            inputMode: submittedInputMode,
+            requestId: pendingRequest.requestId,
+          })
+        : await createCampaignTurnProposal({
+            campaignId,
+            action: nextAction,
+            inputMode: submittedInputMode,
+            requestId: pendingRequest.requestId,
+          });
       if (isManualQueuedResponse(initialResponse)) {
         clearPendingCampaignTurnRequest({ playerId, campaignId, requestId: pendingRequest.requestId });
         pendingTurnRequestRef.current = null;
@@ -459,6 +469,47 @@ export default function CampaignPlay() {
           } : current);
         }
         return;
+      }
+      if (rpgAutoCommit && "turn" in initialResponse) {
+        const response = initialResponse;
+        clearPendingCampaignTurnRequest({
+          playerId,
+          campaignId,
+          requestId: pendingRequest.requestId,
+        });
+        pendingTurnRequestRef.current = null;
+        setLastCreditsUsed(response.creditsUsed ?? null);
+        setSession((current) => {
+          if (!current) return current;
+          const exists = current.turns.some((turn) => turn.id === response.turn.id);
+          return {
+            ...current,
+            turns: exists ? current.turns : [...current.turns, response.turn],
+            pendingProposal: null,
+            pendingTurnRequest: null,
+            campaign: {
+              ...current.campaign,
+              currentTimeLabel:
+                response.currentTimeLabel || current.campaign.currentTimeLabel,
+              worldTimeMinutes:
+                response.worldTimeMinutes ?? current.campaign.worldTimeMinutes,
+              stateVersion:
+                response.stateVersion ?? current.campaign.stateVersion,
+            },
+            clockEvents: response.clockEvents ?? current.clockEvents,
+            knownState: response.knownState ?? current.knownState,
+            rpgState: response.rpgState ?? current.rpgState,
+            credits: response.creditsRemaining ?? current.credits,
+            unlimitedCredits:
+              response.unlimitedCredits ?? current.unlimitedCredits,
+            runtime: response.runtime ?? current.runtime,
+          };
+        });
+        void auth.refresh();
+        return;
+      }
+      if (!("proposal" in initialResponse)) {
+        throw new Error("Storyhold returned an unexpected turn response.");
       }
       const response = initialResponse;
       clearPendingCampaignTurnRequest({
@@ -1200,7 +1251,8 @@ export default function CampaignPlay() {
                     </div>
                   </div>
                 ) : null}
-                {session.pendingProposal ? (
+                {session.pendingProposal &&
+                !(session.campaign.experienceMode === "solo" && session.rpgState) ? (
                   <div className="space-y-4">
                     <div className="ml-auto max-w-[86%] rounded-2xl rounded-br-md bg-primary px-4 py-3 text-sm leading-6 text-primary-foreground shadow-lg">
                       <span className="mb-1 block text-[10px] font-bold uppercase tracking-[0.14em] opacity-70">
@@ -1340,7 +1392,8 @@ export default function CampaignPlay() {
                   Manual Test Mode: sending saves the turn for review. No premium API calls or credits are used.
                 </p>
               ) : null}
-              {session.pendingProposal ? (
+              {session.pendingProposal &&
+              !(session.campaign.experienceMode === "solo" && session.rpgState) ? (
                 <p className="mb-3 rounded-xl border border-amber-300/20 bg-amber-300/[0.05] px-3 py-2 text-sm text-amber-100">
                   Accept, rewrite, or discard the pending draft before entering another choice.
                 </p>
@@ -1359,7 +1412,7 @@ export default function CampaignPlay() {
                         key={option.id}
                         type="button"
                         aria-pressed={selected}
-                        disabled={setupBlocksPlay || setupBusy || sending || Boolean(session.pendingProposal) || manualTurnIsPending(session.pendingManualTurn) || (!session.runtime.configured && !session.manualStorytellerEnabled)}
+                        disabled={setupBlocksPlay || setupBusy || sending || (Boolean(session.pendingProposal) && !(session.campaign.experienceMode === "solo" && session.rpgState)) || manualTurnIsPending(session.pendingManualTurn) || (!session.runtime.configured && !session.manualStorytellerEnabled)}
                         onClick={() => setInputMode(option.id)}
                         className={`flex items-center justify-center rounded-lg px-2 py-2 text-xs font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                           selected
@@ -1388,13 +1441,13 @@ export default function CampaignPlay() {
                   }}
                   placeholder={CAMPAIGN_INPUT_MODES.find((option) => option.id === inputMode)?.placeholder}
                   maxLength={4_000}
-                  disabled={setupBlocksPlay || setupBusy || sending || Boolean(session.pendingProposal) || manualTurnIsPending(session.pendingManualTurn) || (!session.runtime.configured && !session.manualStorytellerEnabled)}
+                  disabled={setupBlocksPlay || setupBusy || sending || (Boolean(session.pendingProposal) && !(session.campaign.experienceMode === "solo" && session.rpgState)) || manualTurnIsPending(session.pendingManualTurn) || (!session.runtime.configured && !session.manualStorytellerEnabled)}
                   className="min-h-20 resize-y rounded-2xl bg-[#0e0d10]"
                 />
                 <Button
                   type="submit"
                   size="icon"
-                  disabled={setupBlocksPlay || setupBusy || sending || Boolean(session.pendingProposal) || manualTurnIsPending(session.pendingManualTurn) || !action.trim() || (!session.runtime.configured && !session.manualStorytellerEnabled)}
+                  disabled={setupBlocksPlay || setupBusy || sending || (Boolean(session.pendingProposal) && !(session.campaign.experienceMode === "solo" && session.rpgState)) || manualTurnIsPending(session.pendingManualTurn) || !action.trim() || (!session.runtime.configured && !session.manualStorytellerEnabled)}
                   className="h-12 w-12 shrink-0 rounded-xl"
                   aria-label={`Send ${inputMode}`}
                 >
@@ -1407,7 +1460,13 @@ export default function CampaignPlay() {
               </div>
               <div className="mt-2 flex flex-wrap items-center justify-between gap-2 px-1 text-[11px] text-muted-foreground">
                 <span>Enter sends · Shift+Enter adds a line</span>
-                <span>{session.manualStorytellerEnabled ? "The reviewed response appears after refresh." : "Only a turn you accept becomes part of the story."}</span>
+                <span>
+                  {session.manualStorytellerEnabled
+                    ? "The reviewed response appears after refresh."
+                    : session.campaign.experienceMode === "solo" && session.rpgState
+                      ? "RPG turns become part of the adventure automatically."
+                      : "Only a turn you accept becomes part of the story."}
+                </span>
               </div>
             </form>
           </section>
