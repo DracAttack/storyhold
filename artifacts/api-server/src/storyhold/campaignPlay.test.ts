@@ -3,6 +3,7 @@ import { createHash } from "node:crypto";
 import { createServer } from "node:http";
 import test from "node:test";
 import { PGlite } from "@electric-sql/pglite";
+import express from "express";
 import { AiGatewayUnavailableError, chooseReasoningLevel } from "./aiGateway";
 import {
   clockTriggerIsSatisfied,
@@ -46,6 +47,7 @@ import {
   normalizeCampaignNarration,
   publicDirectionForNarrator,
   propositionKey,
+  registerCampaignPlayRoutes,
   releaseAbandonedTurnReservations,
   runOrResumeMeteredAiResult,
   scheduledClockEventIsDue,
@@ -121,6 +123,149 @@ const journalTestIds = {
   worldId: "00000000-0000-4000-8000-000000000222",
   campaignId: "00000000-0000-4000-8000-000000000223",
 };
+
+test("credit usage route keeps settled credits independent from mixed provider costs", async (t) => {
+  const db = new PGlite();
+  t.after(() => db.close());
+  await db.exec(`
+    CREATE SCHEMA storyhold;
+    CREATE TABLE storyhold.players (
+      id uuid PRIMARY KEY,
+      role text NOT NULL,
+      credits integer NOT NULL CHECK (credits >= 0),
+      updated_at timestamptz NOT NULL DEFAULT now()
+    );
+    CREATE TABLE storyhold.worlds (id uuid PRIMARY KEY);
+    CREATE TABLE storyhold.campaigns (id uuid PRIMARY KEY);
+    CREATE TABLE storyhold.ai_usage_ledger (
+      id uuid PRIMARY KEY,
+      player_id uuid NOT NULL,
+      world_id uuid,
+      campaign_id uuid,
+      operation text NOT NULL,
+      request_id text NOT NULL,
+      provider text NOT NULL,
+      model text NOT NULL,
+      cost_micros bigint NOT NULL,
+      credits_charged integer NOT NULL,
+      created_at timestamptz NOT NULL DEFAULT now()
+    );
+  `);
+  await db.exec(creditEconomySchemaSql);
+  await db.exec(meteredAiResultJournalSchemaSql);
+
+  const ids = {
+    player: "00000000-0000-4000-8000-000000000231",
+    world: "00000000-0000-4000-8000-000000000232",
+    campaign: "00000000-0000-4000-8000-000000000233",
+    settled: "00000000-0000-4000-8000-000000000234",
+    active: "00000000-0000-4000-8000-000000000235",
+    released: "00000000-0000-4000-8000-000000000236",
+  };
+  await db.query("INSERT INTO storyhold.players (id, role, credits) VALUES ($1, 'admin', 100)", [ids.player]);
+  await db.query("INSERT INTO storyhold.worlds (id) VALUES ($1)", [ids.world]);
+  await db.query("INSERT INTO storyhold.campaigns (id) VALUES ($1)", [ids.campaign]);
+  await db.query(
+    `INSERT INTO storyhold.credit_reservations
+       (id, player_id, world_id, campaign_id, operation, request_id, reserved_credits,
+        actual_credits, status, provider, model, cost_micros, expires_at, settled_at, released_at)
+     VALUES
+       ($1, $4, $5, $6, 'campaign_turn', 'normal-usage', 10, 7, 'settled',
+        'anthropic', 'normal-model', 110, now() + interval '1 hour', now(), NULL),
+       ($2, $4, $5, $6, 'campaign_turn', 'known-failure', 12, NULL, 'reserved',
+        NULL, NULL, NULL, now() + interval '1 hour', NULL, NULL),
+       ($3, $4, $5, $6, 'campaign_turn', 'released-request', 5, NULL, 'released',
+        NULL, NULL, NULL, now() + interval '1 hour', NULL, now())`,
+    [ids.settled, ids.active, ids.released, ids.player, ids.world, ids.campaign],
+  );
+  await db.query(
+    `INSERT INTO storyhold.ai_usage_ledger
+       (id, player_id, world_id, campaign_id, operation, request_id, provider, model,
+        cost_micros, credits_charged)
+     VALUES ('00000000-0000-4000-8000-000000000237', $1, $2, $3,
+       'campaign_turn', 'normal-usage', 'anthropic', 'normal-model', 110, 7)`,
+    [ids.player, ids.world, ids.campaign],
+  );
+  const failurePayload = JSON.stringify({
+    kind: "known_billable_failure",
+    billableAttempts: [{ provider: "openrouter", model: "failed-model" }],
+    combinedUsage: { estimatedCostMicros: 220 },
+  });
+  await db.query(
+    `INSERT INTO storyhold.metered_ai_result_journal
+       (id, player_id, world_id, campaign_id, reservation_id, operation, request_id,
+        input_sha256, status, response_text, completed_at)
+     VALUES ('00000000-0000-4000-8000-000000000238', $1, $2, $3, $4,
+       'campaign_turn', 'known-failure', $5, 'billable_failed', $6, now())`,
+    [ids.player, ids.world, ids.campaign, ids.active, "a".repeat(64), failurePayload],
+  );
+
+  const app = express();
+  registerCampaignPlayRoutes({
+    app,
+    db: db as never,
+    requireUser: (req, _res, next) => {
+      (req as typeof req & { localUser: { id: string; email: string; role: string } }).localUser = {
+        id: ids.player,
+        email: "admin@example.test",
+        role: "admin",
+      };
+      next();
+    },
+  });
+  const server = app.listen(0, "127.0.0.1");
+  await new Promise<void>((resolve) => server.once("listening", resolve));
+  t.after(async () => {
+    server.closeAllConnections();
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  });
+  const address = server.address();
+  assert.ok(address && typeof address === "object");
+  const response = await fetch(`http://127.0.0.1:${address.port}/api/storyhold/admin/credit-usage`);
+  assert.equal(response.status, 200);
+  const report = await response.json() as {
+    summary: { allTimeCredits: number; settledRequests: number };
+    recent: Array<{ credits: number }>;
+    provider: {
+      summary: {
+        allTimeCostMicros: number;
+        unchargedCostMicros: number;
+        requests: number;
+      };
+      recent: Array<{
+        provider: string;
+        costMicros: number;
+        creditsCharged: number;
+        failed: boolean;
+      }>;
+    };
+  };
+
+  assert.deepEqual(
+    { allTimeCredits: report.summary.allTimeCredits, settledRequests: report.summary.settledRequests },
+    { allTimeCredits: 7, settledRequests: 1 },
+  );
+  assert.deepEqual(report.recent.map((entry) => entry.credits), [7]);
+  assert.deepEqual(
+    {
+      allTimeCostMicros: report.provider.summary.allTimeCostMicros,
+      unchargedCostMicros: report.provider.summary.unchargedCostMicros,
+      requests: report.provider.summary.requests,
+    },
+    { allTimeCostMicros: 330, unchargedCostMicros: 220, requests: 2 },
+  );
+  assert.deepEqual(
+    report.provider.recent
+      .map(({ provider, costMicros, creditsCharged, failed }) => ({
+        provider, costMicros, creditsCharged, failed,
+      }))
+      .sort((left, right) => left.provider.localeCompare(right.provider)),
+    [
+      { provider: "anthropic", costMicros: 110, creditsCharged: 7, failed: false },
+      { provider: "openrouter", costMicros: 220, creditsCharged: 0, failed: true },
+    ],
+  );
+});
 
 test("unfinished campaign choices expose only the player's resumable input", () => {
   assert.deepEqual(
