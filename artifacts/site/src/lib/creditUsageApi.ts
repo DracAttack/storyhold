@@ -18,6 +18,12 @@ export type CreditUsageReport = {
   summary: CreditUsageSummary;
   recent: CreditUsageEntry[];
   provider: {
+    filters: {
+      from: string | null;
+      to: string | null;
+      operation: string | null;
+      operations: string[];
+    };
     summary: {
       allTimeCostMicros: number;
       sevenDayCostMicros: number;
@@ -25,6 +31,16 @@ export type CreditUsageReport = {
       unchargedCostMicros: number;
       requests: number;
     };
+    groups: Array<{
+      provider: string;
+      model: string;
+      costMicros: number;
+      completedCostMicros: number;
+      failedCostMicros: number;
+      requests: number;
+      completedRequests: number;
+      failedRequests: number;
+    }>;
     recent: Array<{
       operation: string;
       provider: string | null;
@@ -37,12 +53,23 @@ export type CreditUsageReport = {
   };
 };
 
+export type CreditUsageFilters = {
+  from?: string;
+  to?: string;
+  operation?: string;
+};
+
 function apiBase() {
   return `${(import.meta.env?.BASE_URL ?? "/").replace(/\/$/, "")}/api/storyhold`;
 }
 
-export async function getCreditUsage(signal?: AbortSignal): Promise<CreditUsageReport> {
-  const response = await fetch(`${apiBase()}/admin/credit-usage`, {
+export async function getCreditUsage(filters: CreditUsageFilters = {}, signal?: AbortSignal): Promise<CreditUsageReport> {
+  const query = new URLSearchParams();
+  if (filters.from) query.set("from", filters.from);
+  if (filters.to) query.set("to", filters.to);
+  if (filters.operation) query.set("operation", filters.operation);
+  const suffix = query.size ? `?${query.toString()}` : "";
+  const response = await fetch(`${apiBase()}/admin/credit-usage${suffix}`, {
     credentials: "include",
     headers: { Accept: "application/json" },
     signal,

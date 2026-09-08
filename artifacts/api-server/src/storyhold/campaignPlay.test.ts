@@ -221,7 +221,7 @@ test("credit usage route keeps settled credits independent from mixed provider c
   });
   const address = server.address();
   assert.ok(address && typeof address === "object");
-  const response = await fetch(`http://127.0.0.1:${address.port}/api/storyhold/admin/credit-usage`);
+  const response = await fetch(`http://127.0.0.1:${address.port}/api/storyhold/admin/credit-usage?operation=campaign_turn`);
   assert.equal(response.status, 200);
   const report = await response.json() as {
     summary: { allTimeCredits: number; settledRequests: number };
@@ -232,6 +232,16 @@ test("credit usage route keeps settled credits independent from mixed provider c
         unchargedCostMicros: number;
         requests: number;
       };
+      filters: { operation: string | null; operations: string[] };
+      groups: Array<{
+        provider: string;
+        model: string;
+        costMicros: number;
+        completedCostMicros: number;
+        failedCostMicros: number;
+        completedRequests: number;
+        failedRequests: number;
+      }>;
       recent: Array<{
         provider: string;
         costMicros: number;
@@ -244,6 +254,29 @@ test("credit usage route keeps settled credits independent from mixed provider c
   assert.deepEqual(
     { allTimeCredits: report.summary.allTimeCredits, settledRequests: report.summary.settledRequests },
     { allTimeCredits: 7, settledRequests: 1 },
+  );
+  assert.equal(report.provider.filters.operation, "campaign_turn");
+  assert.deepEqual(report.provider.filters.operations, ["campaign_turn"]);
+  assert.deepEqual(
+    report.provider.groups.map((group) => ({
+      provider: group.provider,
+      model: group.model,
+      costMicros: group.costMicros,
+      completedCostMicros: group.completedCostMicros,
+      failedCostMicros: group.failedCostMicros,
+      completedRequests: group.completedRequests,
+      failedRequests: group.failedRequests,
+    })),
+    [
+      {
+        provider: "openrouter", model: "failed-model", costMicros: 220,
+        completedCostMicros: 0, failedCostMicros: 220, completedRequests: 0, failedRequests: 1,
+      },
+      {
+        provider: "anthropic", model: "normal-model", costMicros: 110,
+        completedCostMicros: 110, failedCostMicros: 0, completedRequests: 1, failedRequests: 0,
+      },
+    ],
   );
   assert.deepEqual(report.recent.map((entry) => entry.credits), [7]);
   assert.deepEqual(

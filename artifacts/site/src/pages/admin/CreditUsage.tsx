@@ -1,8 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { Coins, DollarSign, Loader2, RefreshCw } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Coins, DollarSign, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getCreditUsage, type CreditUsageReport } from "@/lib/creditUsageApi";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { getCreditUsage, type CreditUsageFilters, type CreditUsageReport } from "@/lib/creditUsageApi";
 import { toArticleTitleCase } from "@/lib/utils";
 
 const dollars = (micros: number) => new Intl.NumberFormat(undefined, {
@@ -18,19 +20,20 @@ export default function CreditUsage() {
   const [report, setReport] = useState<CreditUsageReport | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [filters, setFilters] = useState<CreditUsageFilters>({});
 
   const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
     setError(null);
     try {
-      setReport(await getCreditUsage(signal));
+      setReport(await getCreditUsage(filters, signal));
     } catch (reason) {
       if (signal?.aborted) return;
       setError(reason instanceof Error ? reason.message : "Credit usage could not be loaded.");
     } finally {
       if (!signal?.aborted) setLoading(false);
     }
-  }, []);
+  }, [filters]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -86,6 +89,54 @@ export default function CreditUsage() {
             </div>
           </section>
 
+          <Card className="p-4">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.3fr_auto] lg:items-end">
+              <label className="space-y-1.5 text-sm font-medium">
+                <span>From</span>
+                <Input type="date" value={filters.from ?? ""} max={filters.to} onChange={(event) => setFilters((current) => ({ ...current, from: event.target.value || undefined }))} />
+              </label>
+              <label className="space-y-1.5 text-sm font-medium">
+                <span>Through</span>
+                <Input type="date" value={filters.to ?? ""} min={filters.from} onChange={(event) => setFilters((current) => ({ ...current, to: event.target.value || undefined }))} />
+              </label>
+              <label className="space-y-1.5 text-sm font-medium">
+                <span>Operation</span>
+                <Select value={filters.operation ?? "all"} onValueChange={(value) => setFilters((current) => ({ ...current, operation: value === "all" ? undefined : value }))}>
+                  <SelectTrigger><SelectValue placeholder="All operations" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Operations</SelectItem>
+                    {report.provider.filters.operations.map((value) => <SelectItem key={value} value={value}>{operationLabel(value)}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </label>
+              <Button variant="outline" onClick={() => setFilters({})} disabled={!filters.from && !filters.to && !filters.operation}>Clear</Button>
+            </div>
+            <p className="mt-3 text-xs text-muted-foreground">Provider totals, breakdown, and recent provider usage reflect these filters.</p>
+          </Card>
+
+          <Card className="overflow-hidden">
+            <div className="border-b p-4">
+              <h2 className="font-serif text-xl font-semibold">Cost by Provider and Model</h2>
+              <p className="mt-1 text-xs text-muted-foreground">Completed requests and billable failures are shown separately within each total.</p>
+            </div>
+            {report.provider.groups.length ? <div className="overflow-x-auto">
+              <table className="w-full min-w-[760px] text-left text-sm">
+                <thead className="bg-muted/50 text-xs uppercase tracking-[0.1em] text-muted-foreground">
+                  <tr><th className="px-4 py-3">Provider / Model</th><th className="px-4 py-3">Total Cost</th><th className="px-4 py-3">Completed</th><th className="px-4 py-3">Billable Failures</th><th className="px-4 py-3">Requests</th></tr>
+                </thead>
+                <tbody className="divide-y">
+                  {report.provider.groups.map((group) => <tr key={`${group.provider}-${group.model}`}>
+                    <td className="px-4 py-3 font-medium">{group.provider} / <span className="text-muted-foreground">{group.model}</span></td>
+                    <td className="px-4 py-3 font-mono text-xs">{dollars(group.costMicros)}</td>
+                    <td className="px-4 py-3"><span className="flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-emerald-500" /> {dollars(group.completedCostMicros)} <span className="text-muted-foreground">({group.completedRequests})</span></span></td>
+                    <td className="px-4 py-3"><span className="flex items-center gap-1.5"><AlertTriangle className="h-4 w-4 text-amber-500" /> {dollars(group.failedCostMicros)} <span className="text-muted-foreground">({group.failedRequests})</span></span></td>
+                    <td className="px-4 py-3 tabular-nums">{group.requests.toLocaleString()}</td>
+                  </tr>)}
+                </tbody>
+              </table>
+            </div> : <p className="p-6 text-sm text-muted-foreground">No provider-billable usage matches these filters.</p>}
+          </Card>
+
           <Card className="overflow-hidden">
             <div className="border-b p-4">
               <h2 className="font-serif text-xl font-semibold">Recent Provider Usage</h2>
@@ -100,7 +151,9 @@ export default function CreditUsage() {
                   {report.provider.recent.map((entry, index) => <tr key={`${entry.occurredAt}-${entry.operation}-${index}`}>
                     <td className="px-4 py-3 font-medium">{operationLabel(entry.operation)}</td>
                     <td className="px-4 py-3 text-muted-foreground">{entry.provider || "Unknown"}{entry.model ? ` / ${entry.model}` : ""}</td>
-                    <td className="px-4 py-3">{entry.failed ? "Billable failure" : "Completed"}</td>
+                    <td className="px-4 py-3">{entry.failed
+                      ? <span className="inline-flex items-center gap-1.5 font-medium text-amber-500"><AlertTriangle className="h-4 w-4" /> Billable failure</span>
+                      : <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-4 w-4 text-emerald-500" /> Completed</span>}</td>
                     <td className="px-4 py-3 font-mono text-xs">{dollars(entry.costMicros)}</td>
                     <td className="px-4 py-3 tabular-nums">{entry.creditsCharged > 0 ? `${entry.creditsCharged.toLocaleString()} credits` : "None"}</td>
                     <td className="px-4 py-3 text-muted-foreground">{new Date(entry.occurredAt).toLocaleString()}</td>

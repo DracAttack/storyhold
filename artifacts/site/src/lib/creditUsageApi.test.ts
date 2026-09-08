@@ -10,7 +10,9 @@ test("admin credit usage reads settled accounting through the private route", as
     summary: { allTimeCredits: 42, sevenDayCredits: 10, todayCredits: 3, settledRequests: 2 },
     recent: [],
     provider: {
+      filters: { from: null, to: null, operation: null, operations: ["campaign_turn"] },
       summary: { allTimeCostMicros: 1234, sevenDayCostMicros: 1234, todayCostMicros: 500, unchargedCostMicros: 300, requests: 2 },
+      groups: [],
       recent: [],
     },
   };
@@ -27,6 +29,21 @@ test("admin credit usage reads settled accounting through the private route", as
   }
 });
 
+test("admin credit usage sends provider cost filters", async () => {
+  const originalFetch = globalThis.fetch;
+  let calledUrl = "";
+  globalThis.fetch = async (url) => {
+    calledUrl = String(url);
+    return new Response(JSON.stringify({}));
+  };
+  try {
+    await getCreditUsage({ from: "2026-09-01", to: "2026-09-08", operation: "campaign_turn" });
+    assert.equal(calledUrl, "/api/storyhold/admin/credit-usage?from=2026-09-01&to=2026-09-08&operation=campaign_turn");
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test("credit usage remains inside operator-only admin navigation", () => {
   const app = readFileSync(new URL("../App.tsx", import.meta.url), "utf8");
   const nav = readFileSync(new URL("../pages/admin/StoryholdAdminLayout.tsx", import.meta.url), "utf8");
@@ -36,5 +53,5 @@ test("credit usage remains inside operator-only admin navigation", () => {
   assert.match(server, /\/api\/storyhold\/admin\/credit-usage[\s\S]*?Operator access is required/u);
   assert.match(server, /player_id = \$1 AND status = 'settled'/u);
   assert.match(server, /known_billable_failure/u);
-  assert.match(server, /NOT became_credit_charge/u);
+  assert.match(server, /credits_charged <= 0/u);
 });

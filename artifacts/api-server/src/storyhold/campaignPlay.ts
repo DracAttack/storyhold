@@ -9751,7 +9751,69 @@ export function registerCampaignPlayRoutes(params: {
       if (user.role !== "owner" && user.role !== "admin") {
         res.status(403).json({ error: "Operator access is required." }); return;
       }
-      const [summaryResult, recentResult, providerSummaryResult, providerRecentResult] = await Promise.all([
+      const queryValue = (value: unknown) => typeof value === "string" ? value.trim() : "";
+      const from = queryValue(req.query.from);
+      const to = queryValue(req.query.to);
+      const operation = queryValue(req.query.operation);
+      const datePattern = /^\d{4}-\d{2}-\d{2}$/u;
+      const validDate = (value: string) => {
+        if (!datePattern.test(value)) return false;
+        const [year, month, day] = value.split("-").map(Number);
+        const parsed = new Date(Date.UTC(year, month - 1, day));
+        return parsed.getUTCFullYear() === year
+          && parsed.getUTCMonth() === month - 1
+          && parsed.getUTCDate() === day;
+      };
+      if ((from && !validDate(from)) || (to && !validDate(to)) || (from && to && from > to)) {
+        res.status(400).json({ error: "Use valid YYYY-MM-DD dates with the start date on or before the end date." });
+        return;
+      }
+      if (operation.length > 120) {
+        res.status(400).json({ error: "Operation filter is too long." });
+        return;
+      }
+      const providerParams = [user.id, from || null, to || null, operation || null];
+      const providerEventsCte = `WITH provider_events AS (
+        SELECT usage.operation, usage.provider, usage.model,
+               usage.cost_micros, usage.credits_charged,
+               usage.created_at, false AS failed
+          FROM storyhold.ai_usage_ledger usage
+         WHERE usage.player_id = $1
+        UNION ALL
+        SELECT journal.operation,
+               COALESCE((
+                 SELECT CASE WHEN COUNT(DISTINCT attempt->>'provider') = 1
+                   THEN MIN(attempt->>'provider') ELSE 'mixed' END
+                   FROM jsonb_array_elements(saved.payload->'billableAttempts') attempt
+               ), 'unknown'),
+               COALESCE((
+                 SELECT CASE WHEN COUNT(DISTINCT attempt->>'model') = 1
+                   THEN MIN(attempt->>'model') ELSE 'mixed' END
+                   FROM jsonb_array_elements(saved.payload->'billableAttempts') attempt
+               ), 'unknown'),
+               COALESCE((saved.payload->'combinedUsage'->>'estimatedCostMicros')::bigint, 0),
+               CASE WHEN reservation.status = 'settled'
+                 THEN COALESCE(reservation.actual_credits, 0) ELSE 0 END,
+               COALESCE(journal.completed_at, journal.created_at), true
+          FROM storyhold.metered_ai_result_journal journal
+          LEFT JOIN storyhold.credit_reservations reservation
+            ON reservation.id = journal.reservation_id
+          CROSS JOIN LATERAL (SELECT journal.response_text::jsonb AS payload) saved
+         WHERE journal.player_id = $1
+           AND journal.status IN ('billable_failed', 'applied')
+           AND saved.payload->>'kind' = 'known_billable_failure'
+           AND NOT EXISTS (
+             SELECT 1 FROM storyhold.ai_usage_ledger usage
+              WHERE usage.player_id = journal.player_id
+                AND usage.operation = journal.operation
+                AND usage.request_id = journal.request_id
+           )
+      )`;
+      const providerFilter = `($2::text IS NULL OR created_at >= $2::date)
+        AND ($3::text IS NULL OR created_at < $3::date + interval '1 day')
+        AND ($4::text IS NULL OR operation = $4)`;
+      const [summaryResult, recentResult, providerSummaryResult, providerRecentResult,
+        providerGroupsResult, providerOperationsResult] = await Promise.all([
         db.query<Record<string, unknown>>(
           `SELECT
              COALESCE(SUM(actual_credits), 0)::bigint AS all_time_credits,
@@ -9771,82 +9833,49 @@ export function registerCampaignPlayRoutes(params: {
           [user.id],
         ),
         db.query<Record<string, unknown>>(
-          `WITH provider_events AS (
-             SELECT usage.cost_micros, usage.created_at,
-                    (usage.credits_charged > 0) AS became_credit_charge
-               FROM storyhold.ai_usage_ledger usage
-              WHERE usage.player_id = $1
-             UNION ALL
-             SELECT
-               COALESCE((payload->'combinedUsage'->>'estimatedCostMicros')::bigint, 0),
-               COALESCE(journal.completed_at, journal.created_at),
-               COALESCE(reservation.status = 'settled'
-                 AND reservation.actual_credits > 0, false)
-               FROM storyhold.metered_ai_result_journal journal
-               LEFT JOIN storyhold.credit_reservations reservation
-                 ON reservation.id = journal.reservation_id
-               CROSS JOIN LATERAL (SELECT journal.response_text::jsonb AS payload) saved
-              WHERE journal.player_id = $1
-                AND journal.status IN ('billable_failed', 'applied')
-                AND saved.payload->>'kind' = 'known_billable_failure'
-                AND NOT EXISTS (
-                  SELECT 1 FROM storyhold.ai_usage_ledger usage
-                   WHERE usage.player_id = journal.player_id
-                     AND usage.operation = journal.operation
-                     AND usage.request_id = journal.request_id
-                )
-           )
+          `${providerEventsCte}
            SELECT
              COALESCE(SUM(cost_micros), 0)::bigint AS all_time_provider_cost_micros,
              COALESCE(SUM(cost_micros) FILTER (WHERE created_at >= now() - interval '7 days'), 0)::bigint AS seven_day_provider_cost_micros,
              COALESCE(SUM(cost_micros) FILTER (WHERE created_at >= date_trunc('day', now())), 0)::bigint AS today_provider_cost_micros,
-             COALESCE(SUM(cost_micros) FILTER (WHERE NOT became_credit_charge), 0)::bigint AS uncharged_provider_cost_micros,
+              COALESCE(SUM(cost_micros) FILTER (WHERE credits_charged <= 0), 0)::bigint AS uncharged_provider_cost_micros,
              COUNT(*)::integer AS provider_requests
-            FROM provider_events`,
-          [user.id],
+             FROM provider_events
+            WHERE ${providerFilter}`,
+          providerParams,
         ),
         db.query<Record<string, unknown>>(
-          `WITH provider_events AS (
-             SELECT usage.operation, usage.provider, usage.model,
-                    usage.cost_micros, usage.credits_charged,
-                    usage.created_at, false AS failed
-               FROM storyhold.ai_usage_ledger usage
-              WHERE usage.player_id = $1
-             UNION ALL
-             SELECT journal.operation,
-                    COALESCE((
-                      SELECT CASE WHEN COUNT(DISTINCT attempt->>'provider') = 1
-                        THEN MIN(attempt->>'provider') ELSE 'mixed' END
-                        FROM jsonb_array_elements(saved.payload->'billableAttempts') attempt
-                    ), 'unknown'),
-                    COALESCE((
-                      SELECT CASE WHEN COUNT(DISTINCT attempt->>'model') = 1
-                        THEN MIN(attempt->>'model') ELSE 'mixed' END
-                        FROM jsonb_array_elements(saved.payload->'billableAttempts') attempt
-                    ), 'unknown'),
-                    COALESCE((saved.payload->'combinedUsage'->>'estimatedCostMicros')::bigint, 0),
-                    CASE WHEN reservation.status = 'settled'
-                      THEN COALESCE(reservation.actual_credits, 0) ELSE 0 END,
-                    COALESCE(journal.completed_at, journal.created_at), true
-               FROM storyhold.metered_ai_result_journal journal
-               LEFT JOIN storyhold.credit_reservations reservation
-                 ON reservation.id = journal.reservation_id
-               CROSS JOIN LATERAL (SELECT journal.response_text::jsonb AS payload) saved
-              WHERE journal.player_id = $1
-                AND journal.status IN ('billable_failed', 'applied')
-                AND saved.payload->>'kind' = 'known_billable_failure'
-                AND NOT EXISTS (
-                  SELECT 1 FROM storyhold.ai_usage_ledger usage
-                   WHERE usage.player_id = journal.player_id
-                     AND usage.operation = journal.operation
-                     AND usage.request_id = journal.request_id
-                )
-           )
+          `${providerEventsCte}
            SELECT operation, provider, model, cost_micros, credits_charged,
                   created_at, failed
              FROM provider_events
+             WHERE ${providerFilter}
             ORDER BY created_at DESC
             LIMIT 25`,
+          providerParams,
+        ),
+        db.query<Record<string, unknown>>(
+          `${providerEventsCte}
+           SELECT COALESCE(provider, 'unknown') AS provider,
+                  COALESCE(model, 'unknown') AS model,
+                  COALESCE(SUM(cost_micros), 0)::bigint AS cost_micros,
+                  COALESCE(SUM(cost_micros) FILTER (WHERE NOT failed), 0)::bigint AS completed_cost_micros,
+                  COALESCE(SUM(cost_micros) FILTER (WHERE failed), 0)::bigint AS failed_cost_micros,
+                  COUNT(*)::integer AS requests,
+                  COUNT(*) FILTER (WHERE NOT failed)::integer AS completed_requests,
+                  COUNT(*) FILTER (WHERE failed)::integer AS failed_requests
+             FROM provider_events
+            WHERE ${providerFilter}
+            GROUP BY COALESCE(provider, 'unknown'), COALESCE(model, 'unknown')
+            ORDER BY cost_micros DESC, provider, model`,
+          providerParams,
+        ),
+        db.query<Record<string, unknown>>(
+          `${providerEventsCte}
+           SELECT DISTINCT operation
+             FROM provider_events
+            WHERE operation IS NOT NULL AND operation <> ''
+            ORDER BY operation`,
           [user.id],
         ),
       ]);
@@ -9868,6 +9897,12 @@ export function registerCampaignPlayRoutes(params: {
           settledAt: row.settled_at,
         })),
         provider: {
+          filters: {
+            from: from || null,
+            to: to || null,
+            operation: operation || null,
+            operations: providerOperationsResult.rows.map((row) => String(row.operation)),
+          },
           summary: {
             allTimeCostMicros: Number(providerSummary.all_time_provider_cost_micros ?? 0),
             sevenDayCostMicros: Number(providerSummary.seven_day_provider_cost_micros ?? 0),
@@ -9875,6 +9910,16 @@ export function registerCampaignPlayRoutes(params: {
             unchargedCostMicros: Number(providerSummary.uncharged_provider_cost_micros ?? 0),
             requests: Number(providerSummary.provider_requests ?? 0),
           },
+          groups: providerGroupsResult.rows.map((row) => ({
+            provider: String(row.provider),
+            model: String(row.model),
+            costMicros: Number(row.cost_micros ?? 0),
+            completedCostMicros: Number(row.completed_cost_micros ?? 0),
+            failedCostMicros: Number(row.failed_cost_micros ?? 0),
+            requests: Number(row.requests ?? 0),
+            completedRequests: Number(row.completed_requests ?? 0),
+            failedRequests: Number(row.failed_requests ?? 0),
+          })),
           recent: providerRecentResult.rows.map((row) => ({
             operation: String(row.operation ?? ""),
             provider: row.provider ? String(row.provider) : null,
