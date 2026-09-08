@@ -233,6 +233,21 @@ export default function CampaignPlay() {
             setError(
               "Storyhold restored your unfinished choice. Send it again to continue the same saved attempt.",
             );
+          } else if (
+            pendingTurn &&
+            !response.pendingTurnRequest &&
+            !response.pendingProposal &&
+            !manualTurnIsPending(response.pendingManualTurn)
+          ) {
+            // The server has finalized or explicitly abandoned this request.
+            // Do not let a browser-side identity from a lost 502 response keep
+            // replaying a dead attempt forever.
+            clearPendingCampaignTurnRequest({
+              playerId: auth.userId,
+              campaignId: response.campaign.id,
+              requestId: pendingTurn.requestId,
+            });
+            pendingTurnRequestRef.current = null;
           } else {
             pendingTurnRequestRef.current = pendingTurn;
           }
