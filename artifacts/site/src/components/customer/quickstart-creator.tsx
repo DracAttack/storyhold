@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Check, Dice5, LockKeyhole, Sparkles, WandSparkles } from "lucide-react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { Check, Dice5, Loader2, LockKeyhole, Sparkles, WandSparkles } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -52,6 +52,7 @@ export function QuickstartCreator({ scenario }: { scenario?: StoryholdScenario }
   const [resolutionMode, setResolutionMode] = useState<ResolutionMode>("story_first");
   const [prepared, setPrepared] = useState(false);
   const [busy, setBusy] = useState(false);
+  const launchLockedRef = useRef(false);
   const [created, setCreated] = useState<{ worldId: string; worldName: string; campaignId: string } | null>(null);
 
   const contract = useMemo<WorldContract>(() => ({
@@ -100,11 +101,12 @@ export function QuickstartCreator({ scenario }: { scenario?: StoryholdScenario }
   };
 
   const begin = async () => {
-    if (busy) return;
+    if (launchLockedRef.current || busy) return;
     if (created) {
       navigate(`/profile/campaigns/${created.campaignId}/play`);
       return;
     }
+    launchLockedRef.current = true;
     setBusy(true);
     try {
       const name = worldName.trim() || suggestedName(worldPremise);
@@ -134,9 +136,29 @@ export function QuickstartCreator({ scenario }: { scenario?: StoryholdScenario }
     } catch (reason) {
       toast.error(reason instanceof Error ? reason.message : "Storyhold could not create this world.");
     } finally {
+      launchLockedRef.current = false;
       setBusy(false);
     }
   };
+
+  if (busy) {
+    return (
+      <Card aria-label="Adventure Preparation" aria-busy="true" className="mx-auto max-w-2xl rounded-3xl border-primary/25 bg-[linear-gradient(145deg,rgba(56,189,248,0.09),rgba(18,17,21,0.98)_48%)] p-6 sm:p-8">
+        <div className="flex items-center gap-3 text-primary">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <p className="text-xs font-semibold uppercase tracking-[0.18em]">Preparing Your Adventure</p>
+        </div>
+        <h2 className="mt-4 font-serif text-3xl font-bold">Locking Your Starting State</h2>
+        <p role="status" className="mt-3 text-sm leading-6 text-muted-foreground">
+          Storyhold is saving your world, character, and opening exactly once. You will enter the adventure as soon as its saved campaign is ready.
+        </p>
+        <div className="mt-6 overflow-hidden rounded-full bg-white/10" aria-label="Adventure creation in progress">
+          <div className="h-2 w-2/3 animate-pulse rounded-full bg-primary" />
+        </div>
+        <p className="mt-3 text-xs text-muted-foreground">The start control is locked while this request is active, so repeated clicks cannot create duplicate adventures.</p>
+      </Card>
+    );
+  }
 
   return (
     <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">

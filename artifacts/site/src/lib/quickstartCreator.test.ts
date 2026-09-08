@@ -46,6 +46,13 @@ test("campaign creation does not wait for Premium preparation before navigation"
   assert.match(source, /navigate\(`\/profile\/campaigns\/\$\{campaign\.campaign\.id\}\/play`\)/u);
 });
 
+test("starting an adventure immediately replaces the form with a locked loading screen", () => {
+  assert.match(source, /launchLockedRef\.current \|\| busy/u);
+  assert.match(source, /launchLockedRef\.current = true;\s*setBusy\(true\)/u);
+  assert.match(source, /if \(busy\) \{[\s\S]*?aria-label="Adventure Preparation"[\s\S]*?Adventure creation in progress/u);
+  assert.match(source, /repeated clicks cannot create duplicate adventures/u);
+});
+
 test("quickstart copy stays player-facing", () => {
   assert.doesNotMatch(source, /source snapshot|RPG seed|GLiNER|Qwen|backend/iu);
   assert.match(source, /The world, your role, and the opening situation are locked/u);
