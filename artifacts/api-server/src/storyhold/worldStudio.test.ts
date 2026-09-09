@@ -21,6 +21,9 @@ import {
   authorModeIsEligible,
   breadthFirstAnalysisChunks,
   campaignCharacterNormalizedName,
+  assertCompleteCharacterWorkspaceReorder,
+  CharacterWorkspaceReorderConflictError,
+  characterWorkspaceReorderSql,
   canonIntakePreflight,
   customerAiRuntimeStatus,
   customerSafeIntakeActivityRows,
@@ -110,6 +113,86 @@ test("paid entity persistence cannot accept a verified flag without graph decisi
     findings: { entityRelations: [{ reviewStatus: "verified" }], entityRules: [] } as never,
   }), /requires its exact reviewed findings and decision receipts/);
   assert.equal(databaseCalls, 0);
+});
+
+test("workspace reorder updates the requested dossier atomically and returns final order", async () => {
+  const db = new PGlite();
+  const worldId = "10000000-0000-4000-8000-000000000001";
+  const editionId = "10000000-0000-4000-8000-000000000002";
+  const dossierId = "10000000-0000-4000-8000-000000000003";
+  const ids = [
+    "10000000-0000-4000-8000-000000000011",
+    "10000000-0000-4000-8000-000000000012",
+    "10000000-0000-4000-8000-000000000013",
+  ];
+  try {
+    await db.exec(`CREATE SCHEMA storyhold;
+      CREATE TABLE storyhold.character_workspace_items (
+        id uuid PRIMARY KEY, world_id uuid NOT NULL, canon_edition_id uuid NOT NULL,
+        dossier_id uuid NOT NULL, sort_order integer NOT NULL, updated_at timestamptz NOT NULL DEFAULT now()
+      );`);
+    for (const [sortOrder, id] of ids.entries()) await db.query(
+      `INSERT INTO storyhold.character_workspace_items
+        (id,world_id,canon_edition_id,dossier_id,sort_order) VALUES ($1,$2,$3,$4,$5)`,
+      [id, worldId, editionId, dossierId, sortOrder],
+    );
+    const reordered = await db.query<{ id: string; sort_order: number }>(
+      characterWorkspaceReorderSql, [worldId, editionId, dossierId, [ids[2], ids[0], ids[1]]],
+    );
+    assert.deepEqual(reordered.rows.map((row) => row.id), [ids[2], ids[0], ids[1]]);
+    assert.deepEqual(reordered.rows.map((row) => row.sort_order), [0, 1, 2]);
+  } finally {
+    await db.close();
+  }
+});
+
+test("workspace reorder guard rejects a partial atomic update before transaction commit", () => {
+  assert.throws(
+    () => assertCompleteCharacterWorkspaceReorder(
+      [{ id: "10000000-0000-4000-8000-000000000011" }],
+      ["10000000-0000-4000-8000-000000000011", "10000000-0000-4000-8000-000000000012"],
+    ),
+    CharacterWorkspaceReorderConflictError,
+  );
+  assert.throws(
+    () => assertCompleteCharacterWorkspaceReorder(
+      [{ id: "10000000-0000-4000-8000-000000000012" }, { id: "10000000-0000-4000-8000-000000000011" }],
+      ["10000000-0000-4000-8000-000000000011", "10000000-0000-4000-8000-000000000012"],
+    ),
+    CharacterWorkspaceReorderConflictError,
+  );
+});
+
+test("workspace polymorphic link foreign keys cascade when their target is removed", async () => {
+  const db = new PGlite();
+  const sourceId = "10000000-0000-4000-8000-000000000021";
+  const sceneId = "10000000-0000-4000-8000-000000000022";
+  try {
+    await db.exec(`CREATE SCHEMA storyhold;
+      CREATE TABLE storyhold.world_sources (id uuid PRIMARY KEY);
+      CREATE TABLE storyhold.world_chapter_summaries (id uuid PRIMARY KEY);
+      CREATE TABLE storyhold.character_workspace_items (
+        id uuid PRIMARY KEY, kind text NOT NULL, reference_id uuid,
+        source_reference_id uuid REFERENCES storyhold.world_sources(id) ON DELETE CASCADE,
+        scene_reference_id uuid REFERENCES storyhold.world_chapter_summaries(id) ON DELETE CASCADE,
+        CHECK ((kind = 'source' AND source_reference_id IS NOT NULL AND scene_reference_id IS NULL AND reference_id = source_reference_id)
+          OR (kind = 'scene' AND scene_reference_id IS NOT NULL AND source_reference_id IS NULL AND reference_id = scene_reference_id))
+      );
+      INSERT INTO storyhold.world_sources VALUES ('${sourceId}');
+      INSERT INTO storyhold.world_chapter_summaries VALUES ('${sceneId}');`);
+    await db.query(
+      `INSERT INTO storyhold.character_workspace_items
+        VALUES ('10000000-0000-4000-8000-000000000023','source',$1,$1,NULL),
+               ('10000000-0000-4000-8000-000000000024','scene',$2,NULL,$2)`,
+      [sourceId, sceneId],
+    );
+    await db.query("DELETE FROM storyhold.world_sources WHERE id = $1", [sourceId]);
+    await db.query("DELETE FROM storyhold.world_chapter_summaries WHERE id = $1", [sceneId]);
+    const remaining = await db.query("SELECT id FROM storyhold.character_workspace_items");
+    assert.equal(remaining.rows.length, 0);
+  } finally {
+    await db.close();
+  }
 });
 
 test("premium clock admission never truncates active owner corrections", async () => {

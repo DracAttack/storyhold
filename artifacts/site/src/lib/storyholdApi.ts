@@ -387,6 +387,27 @@ export type CharacterDossier = {
   updatedAt: string;
 };
 
+export type CharacterWorkspaceItem = {
+  id: string;
+  kind: "note" | "file" | "source" | "scene";
+  title: string;
+  body?: string;
+  objectPath?: string;
+  referenceId?: string;
+  file?: { name: string; size: number; type: string };
+  provenance: string;
+  sortOrder: number;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type CharacterWorkspaceReference = {
+  id: string;
+  kind: "source" | "scene";
+  title: string;
+  metadata?: string;
+};
+
 export type CharacterAliasAttribution = {
   alias: string;
   kind:
@@ -1613,6 +1634,57 @@ export async function getCharacterDossier(
       },
     ),
   );
+}
+
+export async function listCharacterWorkspace(worldId: string, characterId: string): Promise<{
+  items: CharacterWorkspaceItem[];
+  references?: CharacterWorkspaceReference[];
+}> {
+  return responseJson(await fetch(
+    `${apiBase}/worlds/${encodeURIComponent(worldId)}/characters/${encodeURIComponent(characterId)}/workspace`,
+    { credentials: "include", headers: { Accept: "application/json" } },
+  ));
+}
+
+export async function createCharacterWorkspaceItem(input: {
+  worldId: string; characterId: string; kind: "note" | "source" | "scene"; title: string; body?: string; referenceId?: string;
+}): Promise<{ item: CharacterWorkspaceItem }> {
+  return responseJson(await fetch(
+    `${apiBase}/worlds/${encodeURIComponent(input.worldId)}/characters/${encodeURIComponent(input.characterId)}/workspace`,
+    { method: "POST", credentials: "include", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(input) },
+  ));
+}
+
+export async function updateCharacterWorkspaceItem(input: {
+  worldId: string; characterId: string; itemId: string; title?: string; body?: string;
+}): Promise<{ item: CharacterWorkspaceItem }> {
+  return responseJson(await fetch(
+    `${apiBase}/worlds/${encodeURIComponent(input.worldId)}/characters/${encodeURIComponent(input.characterId)}/workspace/${encodeURIComponent(input.itemId)}`,
+    { method: "PATCH", credentials: "include", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify(input) },
+  ));
+}
+
+export async function deleteCharacterWorkspaceItem(input: { worldId: string; characterId: string; itemId: string }): Promise<void> {
+  const response = await fetch(`${apiBase}/worlds/${encodeURIComponent(input.worldId)}/characters/${encodeURIComponent(input.characterId)}/workspace/${encodeURIComponent(input.itemId)}`, { method: "DELETE", credentials: "include", headers: { Accept: "application/json" } });
+  if (!response.ok) await responseJson(response);
+}
+
+export async function reorderCharacterWorkspaceItems(input: { worldId: string; characterId: string; itemIds: string[] }): Promise<{ items: CharacterWorkspaceItem[] }> {
+  return responseJson(await fetch(
+    `${apiBase}/worlds/${encodeURIComponent(input.worldId)}/characters/${encodeURIComponent(input.characterId)}/workspace/reorder`,
+    { method: "PUT", credentials: "include", headers: { "Content-Type": "application/json", Accept: "application/json" }, body: JSON.stringify({ itemIds: input.itemIds }) },
+  ));
+}
+
+export async function uploadCharacterWorkspaceFile(input: { worldId: string; characterId: string; file: File }): Promise<{ item: CharacterWorkspaceItem }> {
+  return responseJson(await fetch(
+    `${apiBase}/worlds/${encodeURIComponent(input.worldId)}/characters/${encodeURIComponent(input.characterId)}/workspace/files`,
+    { method: "POST", credentials: "include", headers: { "Content-Type": input.file.type || "application/octet-stream", Accept: "application/json", "X-Storyhold-Filename": encodeURIComponent(input.file.name) }, body: input.file },
+  ));
+}
+
+export function getCharacterWorkspaceDownloadUrl(input: { worldId: string; characterId: string; itemId: string }): string {
+  return `${apiBase}/worlds/${encodeURIComponent(input.worldId)}/characters/${encodeURIComponent(input.characterId)}/workspace/${encodeURIComponent(input.itemId)}/download`;
 }
 
 export async function updateCharacterDossier(input: {

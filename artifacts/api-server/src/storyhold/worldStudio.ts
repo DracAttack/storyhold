@@ -1457,6 +1457,89 @@ export const worldStudioSchemaSql = String.raw`
   CREATE INDEX IF NOT EXISTS world_chapter_summary_source_order
     ON storyhold.world_chapter_summaries (world_id, source_id, source_order);
 
+  CREATE TABLE IF NOT EXISTS storyhold.character_workspace_items (
+    id uuid PRIMARY KEY,
+    world_id uuid NOT NULL REFERENCES storyhold.worlds(id) ON DELETE CASCADE,
+    canon_edition_id uuid NOT NULL REFERENCES storyhold.canon_editions(id) ON DELETE CASCADE,
+    dossier_id uuid NOT NULL REFERENCES storyhold.character_dossiers(id) ON DELETE CASCADE,
+    kind text NOT NULL CHECK (kind IN ('note', 'file', 'source', 'scene')),
+    title text NOT NULL DEFAULT '',
+    body text NOT NULL DEFAULT '',
+    file_object_key text,
+    file_name text,
+    file_size bigint,
+    file_content_type text,
+    reference_id uuid,
+    source_reference_id uuid REFERENCES storyhold.world_sources(id) ON DELETE CASCADE,
+    scene_reference_id uuid REFERENCES storyhold.world_chapter_summaries(id) ON DELETE CASCADE,
+    provenance text NOT NULL DEFAULT 'manual' CHECK (provenance IN ('manual')),
+    provenance_metadata jsonb NOT NULL DEFAULT '{}'::jsonb,
+    sort_order integer NOT NULL DEFAULT 0,
+    created_at timestamptz NOT NULL DEFAULT now(),
+    updated_at timestamptz NOT NULL DEFAULT now(),
+    created_by_player_id uuid NOT NULL REFERENCES storyhold.players(id) ON DELETE RESTRICT,
+    CHECK (
+      (kind = 'file' AND file_object_key IS NOT NULL AND file_name IS NOT NULL
+        AND file_size IS NOT NULL AND file_size >= 0 AND file_content_type IS NOT NULL)
+      OR (kind <> 'file' AND file_object_key IS NULL AND file_name IS NULL
+        AND file_size IS NULL AND file_content_type IS NULL)
+    ),
+    CHECK (
+      (kind = 'source' AND source_reference_id IS NOT NULL AND scene_reference_id IS NULL
+        AND reference_id = source_reference_id)
+      OR (kind = 'scene' AND scene_reference_id IS NOT NULL AND source_reference_id IS NULL
+        AND reference_id = scene_reference_id)
+      OR (kind NOT IN ('source', 'scene') AND reference_id IS NULL
+        AND source_reference_id IS NULL AND scene_reference_id IS NULL)
+    )
+  );
+
+  -- reference_id was present in the first workspace deployment. Keep it as a
+  -- compatibility projection, while replacing its unsafe polymorphic meaning
+  -- with target-specific foreign keys.
+  ALTER TABLE storyhold.character_workspace_items
+    ADD COLUMN IF NOT EXISTS source_reference_id uuid
+      REFERENCES storyhold.world_sources(id) ON DELETE CASCADE;
+  ALTER TABLE storyhold.character_workspace_items
+    ADD COLUMN IF NOT EXISTS scene_reference_id uuid
+      REFERENCES storyhold.world_chapter_summaries(id) ON DELETE CASCADE;
+  UPDATE storyhold.character_workspace_items item
+     SET source_reference_id = source.id
+    FROM storyhold.world_sources source
+   WHERE item.kind = 'source' AND item.reference_id = source.id
+     AND item.world_id = source.world_id AND item.canon_edition_id = source.canon_edition_id
+     AND item.source_reference_id IS NULL;
+  UPDATE storyhold.character_workspace_items item
+     SET scene_reference_id = scene.id
+    FROM storyhold.world_chapter_summaries scene
+   WHERE item.kind = 'scene' AND item.reference_id = scene.id
+     AND item.world_id = scene.world_id AND item.canon_edition_id = scene.canon_edition_id
+     AND item.scene_reference_id IS NULL;
+  DELETE FROM storyhold.character_workspace_items
+   WHERE (kind = 'source' AND source_reference_id IS NULL)
+      OR (kind = 'scene' AND scene_reference_id IS NULL);
+  DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'character_workspace_item_matching_reference') THEN
+      ALTER TABLE storyhold.character_workspace_items
+        ADD CONSTRAINT character_workspace_item_matching_reference CHECK (
+          (kind = 'source' AND source_reference_id IS NOT NULL AND scene_reference_id IS NULL
+            AND reference_id = source_reference_id)
+          OR (kind = 'scene' AND scene_reference_id IS NOT NULL AND source_reference_id IS NULL
+            AND reference_id = scene_reference_id)
+          OR (kind NOT IN ('source', 'scene') AND reference_id IS NULL
+            AND source_reference_id IS NULL AND scene_reference_id IS NULL)
+        );
+    END IF;
+  END $$;
+
+  CREATE INDEX IF NOT EXISTS character_workspace_items_scope
+    ON storyhold.character_workspace_items
+      (world_id, canon_edition_id, dossier_id, sort_order, created_at);
+  CREATE INDEX IF NOT EXISTS character_workspace_items_source_reference
+    ON storyhold.character_workspace_items (source_reference_id);
+  CREATE INDEX IF NOT EXISTS character_workspace_items_scene_reference
+    ON storyhold.character_workspace_items (scene_reference_id);
+
   CREATE TABLE IF NOT EXISTS storyhold.world_clock_events (
     id uuid PRIMARY KEY,
     world_id uuid NOT NULL REFERENCES storyhold.worlds(id) ON DELETE CASCADE,
@@ -15279,6 +15362,113 @@ async function refreshCanonicalMentionCounts(params: {
   await syncWorldConceptGraph(params);
 }
 
+const CHARACTER_WORKSPACE_UPLOAD_BYTES = 25 * 1024 * 1024;
+const CHARACTER_WORKSPACE_IMAGE_TYPES = new Set([
+  "image/jpeg", "image/png", "image/gif", "image/webp",
+]);
+export const characterWorkspaceReorderSql = `WITH requested AS (
+  SELECT id, ordinality::integer - 1 AS sort_order
+    FROM unnest($4::uuid[]) WITH ORDINALITY AS request(id, ordinality)
+), updated AS (
+  UPDATE storyhold.character_workspace_items item
+     SET sort_order = requested.sort_order, updated_at = now()
+    FROM requested
+   WHERE item.id = requested.id AND item.world_id = $1
+     AND item.canon_edition_id = $2 AND item.dossier_id = $3
+  RETURNING item.*
+)
+SELECT * FROM updated ORDER BY sort_order, id`;
+
+export class CharacterWorkspaceReorderConflictError extends Error {
+  constructor() {
+    super("Workspace items changed while their order was being saved.");
+    this.name = "CharacterWorkspaceReorderConflictError";
+  }
+}
+
+export function assertCompleteCharacterWorkspaceReorder(
+  rows: ReadonlyArray<Record<string, unknown>>, requestedIds: readonly string[],
+) {
+  if (
+    rows.length !== requestedIds.length ||
+    rows.some((row, index) => String(row.id) !== requestedIds[index])
+  ) {
+    throw new CharacterWorkspaceReorderConflictError();
+  }
+}
+
+function serializeCharacterWorkspaceItem(row: Record<string, unknown>) {
+  return {
+    id: String(row.id),
+    kind: String(row.kind),
+    title: String(row.title ?? ""),
+    body: String(row.body ?? ""),
+    file: row.file_object_key ? {
+      name: String(row.file_name ?? ""),
+      size: Number(row.file_size ?? 0),
+      type: String(row.file_content_type ?? "application/octet-stream"),
+    } : null,
+    referenceId: row.reference_id ? String(row.reference_id) : null,
+    provenance: String(row.provenance),
+    provenanceMetadata: recordBody(row.provenance_metadata),
+    sortOrder: Number(row.sort_order ?? 0),
+    createdAt: String(row.created_at),
+    updatedAt: String(row.updated_at),
+  };
+}
+
+async function activeWorkspaceDossier(
+  db: StudioDb, worldId: string, editionId: string, dossierId: string,
+) {
+  const result = await db.query<Record<string, unknown>>(
+    `SELECT id FROM storyhold.character_dossiers
+      WHERE id = $1 AND world_id = $2 AND canon_edition_id = $3
+        AND dossier_status = 'active' LIMIT 1`,
+    [dossierId, worldId, editionId],
+  );
+  return result.rows[0] ?? null;
+}
+
+async function lockActiveWorkspaceDossier(
+  db: StudioDb, worldId: string, editionId: string, dossierId: string,
+) {
+  const result = await db.query<Record<string, unknown>>(
+    `SELECT id FROM storyhold.character_dossiers
+      WHERE id = $1 AND world_id = $2 AND canon_edition_id = $3
+        AND dossier_status = 'active' FOR UPDATE`,
+    [dossierId, worldId, editionId],
+  );
+  return result.rows[0] ?? null;
+}
+
+async function validWorkspaceReference(
+  db: StudioDb, kind: string, referenceId: string, worldId: string, editionId: string,
+) {
+  const table = kind === "source"
+    ? "storyhold.world_sources"
+    : "storyhold.world_chapter_summaries";
+  const result = await db.query(
+    `SELECT id FROM ${table} WHERE id = $1 AND world_id = $2 AND canon_edition_id = $3 LIMIT 1`,
+    [referenceId, worldId, editionId],
+  );
+  return Boolean(result.rows[0]);
+}
+
+function workspaceFileExtension(filename: string, contentType: string, bytes: Buffer): string | null {
+  if (CHARACTER_WORKSPACE_IMAGE_TYPES.has(contentType)) {
+    const validImage = (
+      (contentType === "image/jpeg" && bytes.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]))) ||
+      (contentType === "image/png" && bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) ||
+      (contentType === "image/gif" && (bytes.subarray(0, 6).equals(Buffer.from("GIF87a")) || bytes.subarray(0, 6).equals(Buffer.from("GIF89a")))) ||
+      (contentType === "image/webp" && bytes.subarray(0, 4).equals(Buffer.from("RIFF")) && bytes.subarray(8, 12).equals(Buffer.from("WEBP")))
+    );
+    if (!validImage) return null;
+    return { "image/jpeg": ".jpg", "image/png": ".png", "image/gif": ".gif", "image/webp": ".webp" }[contentType]!;
+  }
+  const documentType = detectDocumentType({ contentType, url: filename, bytes });
+  return documentType ? extensionFor(filename, documentType) : null;
+}
+
 export function registerWorldStudioRoutes(params: {
   app: Express;
   db: StudioRootDb;
@@ -15307,6 +15497,270 @@ export function registerWorldStudioRoutes(params: {
   setTimeout(() => void backfillMissingConceptGraphs(db).catch((error) => {
     console.error("Storyhold concept graph backfill failed:", error);
   }), 2_500);
+
+  async function workspaceScope(req: StudioRequest, res: Response) {
+    const worldId = routeParam(req, "worldId");
+    const characterId = routeParam(req, "characterId");
+    if (!assertUuid(worldId, res) || !assertUuid(characterId, res)) return null;
+    const user = currentUser(req);
+    if (!(await ownedWorld(db, worldId, user.id))) {
+      res.status(404).json({ error: "World not found." });
+      return null;
+    }
+    const edition = await defaultEdition(db, worldId);
+    if (!edition) {
+      res.status(409).json({ error: "This world does not have a canon edition." });
+      return null;
+    }
+    if (!(await activeWorkspaceDossier(db, worldId, edition.id, characterId))) {
+      res.status(404).json({ error: "Character not found in this Storyhold." });
+      return null;
+    }
+    return { worldId, characterId, editionId: edition.id, user };
+  }
+
+  app.get("/api/storyhold/worlds/:worldId/characters/:characterId/workspace", requireUser,
+    async (req: StudioRequest, res) => {
+      const scope = await workspaceScope(req, res);
+      if (!scope) return;
+      const [result, sources, scenes] = await Promise.all([
+        db.query<Record<string, unknown>>(
+        `SELECT * FROM storyhold.character_workspace_items
+          WHERE world_id = $1 AND canon_edition_id = $2 AND dossier_id = $3
+          ORDER BY sort_order, created_at, id`,
+        [scope.worldId, scope.editionId, scope.characterId],
+        ),
+        db.query<Record<string, unknown>>(
+          `SELECT id, title, original_filename, document_type, byte_size
+             FROM storyhold.world_sources
+            WHERE world_id = $1 AND canon_edition_id = $2
+            ORDER BY sort_order, created_at, id`,
+          [scope.worldId, scope.editionId],
+        ),
+        db.query<Record<string, unknown>>(
+          `SELECT id, chapter_title, perspective, source_order
+             FROM storyhold.world_chapter_summaries
+            WHERE world_id = $1 AND canon_edition_id = $2
+            ORDER BY source_order, created_at, id`,
+          [scope.worldId, scope.editionId],
+        ),
+      ]);
+      const references = [
+        ...sources.rows.map((source) => ({
+          id: String(source.id), kind: "source" as const, title: String(source.title),
+          metadata: `${String(source.document_type ?? "document").toUpperCase()} · ${String(source.original_filename ?? "")}`,
+        })),
+        ...scenes.rows.map((scene) => ({
+          id: String(scene.id), kind: "scene" as const, title: String(scene.chapter_title),
+          metadata: [String(scene.perspective ?? ""), `Scene ${Number(scene.source_order ?? 0) + 1}`].filter(Boolean).join(" · "),
+        })),
+      ];
+      res.json({ items: result.rows.map(serializeCharacterWorkspaceItem), references });
+    });
+
+  app.post("/api/storyhold/worlds/:worldId/characters/:characterId/workspace", requireUser,
+    async (req: StudioRequest, res) => {
+      const scope = await workspaceScope(req, res);
+      if (!scope) return;
+      const body = recordBody(req.body);
+      const kind = textBody(body.kind, 16);
+      const title = textBody(body.title, 260);
+      const itemBody = textBody(body.body, 20_000);
+      const referenceId = textBody(body.referenceId, 64);
+      if (!["note", "source", "scene"].includes(kind) || !title) {
+        res.status(400).json({ error: "A title and a note, source, or scene kind are required." }); return;
+      }
+      if ((kind === "source" || kind === "scene") &&
+          (!assertUuid(referenceId, res) || !(await validWorkspaceReference(db, kind, referenceId, scope.worldId, scope.editionId)))) {
+        if (!res.headersSent) res.status(400).json({ error: "That linked item is not in this world edition." });
+        return;
+      }
+      const created = await db.transaction(async (tx) => {
+        if (!(await lockActiveWorkspaceDossier(tx, scope.worldId, scope.editionId, scope.characterId))) {
+          throw new Error("Character workspace is no longer active.");
+        }
+        const next = await tx.query<{ next_order: number }>(
+          `SELECT COALESCE(max(sort_order), -1)::int + 1 AS next_order
+             FROM storyhold.character_workspace_items WHERE dossier_id = $1`, [scope.characterId]);
+        return tx.query<Record<string, unknown>>(
+        `INSERT INTO storyhold.character_workspace_items
+          (id, world_id, canon_edition_id, dossier_id, kind, title, body, reference_id, source_reference_id, scene_reference_id,
+           provenance, provenance_metadata, sort_order, created_by_player_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'manual',$11::jsonb,$12,$13) RETURNING *`,
+        [randomUUID(), scope.worldId, scope.editionId, scope.characterId, kind, title, itemBody,
+          kind === "source" || kind === "scene" ? referenceId : null,
+          kind === "source" ? referenceId : null, kind === "scene" ? referenceId : null,
+          json(recordBody(body.provenanceMetadata)), Number(next.rows[0]?.next_order ?? 0), scope.user.id],
+        );
+      });
+      res.status(201).json({ item: serializeCharacterWorkspaceItem(created.rows[0]!) });
+    });
+
+  app.patch("/api/storyhold/worlds/:worldId/characters/:characterId/workspace/:itemId", requireUser,
+    async (req: StudioRequest, res) => {
+      const scope = await workspaceScope(req, res); const itemId = routeParam(req, "itemId");
+      if (!scope || !assertUuid(itemId, res)) return;
+      const existing = await db.query<Record<string, unknown>>(
+        `SELECT * FROM storyhold.character_workspace_items WHERE id=$1 AND world_id=$2
+          AND canon_edition_id=$3 AND dossier_id=$4 LIMIT 1`,
+        [itemId, scope.worldId, scope.editionId, scope.characterId]);
+      const current = existing.rows[0];
+      if (!current) { res.status(404).json({ error: "Workspace item not found." }); return; }
+      const body = recordBody(req.body);
+      const title = Object.hasOwn(body, "title") ? textBody(body.title, 260) : String(current.title);
+      const itemBody = Object.hasOwn(body, "body") ? textBody(body.body, 20_000) : String(current.body);
+      if (!title) { res.status(400).json({ error: "A workspace item needs a title." }); return; }
+      const kind = String(current.kind);
+      const referenceId = Object.hasOwn(body, "referenceId")
+        ? textBody(body.referenceId, 64)
+        : String(current.reference_id ?? "");
+      if ((kind === "source" || kind === "scene") &&
+          (!UUID_PATTERN.test(referenceId) || !(await validWorkspaceReference(db, kind, referenceId, scope.worldId, scope.editionId)))) {
+        res.status(400).json({ error: "That linked item is not in this world edition." }); return;
+      }
+      const updated = await db.query<Record<string, unknown>>(
+        `UPDATE storyhold.character_workspace_items SET title=$5, body=$6,
+          reference_id=$7, source_reference_id=$8, scene_reference_id=$9,
+          provenance_metadata=$10::jsonb, updated_at=now()
+          WHERE id=$1 AND world_id=$2 AND canon_edition_id=$3 AND dossier_id=$4 RETURNING *`,
+        [itemId, scope.worldId, scope.editionId, scope.characterId, title, itemBody,
+          kind === "source" || kind === "scene" ? referenceId : null,
+          kind === "source" ? referenceId : null, kind === "scene" ? referenceId : null,
+          Object.hasOwn(body, "provenanceMetadata") ? json(recordBody(body.provenanceMetadata)) : json(recordBody(current.provenance_metadata))]);
+      res.json({ item: serializeCharacterWorkspaceItem(updated.rows[0]!) });
+    });
+
+  app.delete("/api/storyhold/worlds/:worldId/characters/:characterId/workspace/:itemId", requireUser,
+    async (req: StudioRequest, res) => {
+      const scope = await workspaceScope(req, res); const itemId = routeParam(req, "itemId");
+      if (!scope || !assertUuid(itemId, res)) return;
+      const deleted = await db.transaction(async (tx) => {
+        if (!(await lockActiveWorkspaceDossier(tx, scope.worldId, scope.editionId, scope.characterId))) {
+          throw new Error("Character workspace is no longer active.");
+        }
+        return tx.query<Record<string, unknown>>(
+        `DELETE FROM storyhold.character_workspace_items WHERE id=$1 AND world_id=$2
+          AND canon_edition_id=$3 AND dossier_id=$4 RETURNING file_object_key`,
+        [itemId, scope.worldId, scope.editionId, scope.characterId]);
+      });
+      const item = deleted.rows[0];
+      if (!item) { res.status(404).json({ error: "Workspace item not found." }); return; }
+      let fileRemoved = true;
+      if (item.file_object_key) {
+        try {
+          await sourceVaultStorage.deleteSource(String(item.file_object_key));
+        } catch (error) {
+          fileRemoved = false;
+          process.stderr.write(`Storyhold could not remove workspace file ${itemId}: ${error instanceof Error ? error.message : String(error)}\n`);
+        }
+      }
+      res.json({ deleted: true, itemId, fileRemoved });
+    });
+
+  app.put("/api/storyhold/worlds/:worldId/characters/:characterId/workspace/reorder", requireUser,
+    async (req: StudioRequest, res) => {
+      const scope = await workspaceScope(req, res); if (!scope) return;
+      const requestedItemIds = recordBody(req.body).itemIds;
+      const itemIds: string[] = Array.isArray(requestedItemIds)
+        ? requestedItemIds.map((id: unknown) => textBody(id, 64)) : [];
+      if (!itemIds.length || new Set(itemIds).size !== itemIds.length || itemIds.some((id) => !UUID_PATTERN.test(id))) {
+        res.status(400).json({ error: "itemIds must be a non-empty unique list of workspace item IDs." }); return;
+      }
+      let reordered: { rows: Record<string, unknown>[] } | null;
+      try {
+        reordered = await db.transaction(async (tx) => {
+          if (!(await lockActiveWorkspaceDossier(tx, scope.worldId, scope.editionId, scope.characterId))) {
+            throw new Error("Character workspace is no longer active.");
+          }
+          const current = await tx.query<{ id: string }>(
+            `SELECT id FROM storyhold.character_workspace_items WHERE world_id=$1 AND canon_edition_id=$2 AND dossier_id=$3`,
+            [scope.worldId, scope.editionId, scope.characterId]);
+          if (current.rows.length !== itemIds.length || current.rows.some((row) => !itemIds.includes(row.id))) {
+            return null;
+          }
+          const updated = await tx.query<Record<string, unknown>>(characterWorkspaceReorderSql,
+            [scope.worldId, scope.editionId, scope.characterId, itemIds]);
+          assertCompleteCharacterWorkspaceReorder(updated.rows, itemIds);
+          return updated;
+        });
+      } catch (error) {
+        if (error instanceof CharacterWorkspaceReorderConflictError) {
+          res.status(409).json({ error: error.message }); return;
+        }
+        throw error;
+      }
+      if (!reordered) {
+        res.status(400).json({ error: "itemIds must contain every workspace item exactly once." }); return;
+      }
+      res.json({ items: reordered.rows.map(serializeCharacterWorkspaceItem) });
+    });
+
+  app.post("/api/storyhold/worlds/:worldId/characters/:characterId/workspace/files", requireUser,
+    express.raw({ type: () => true, limit: CHARACTER_WORKSPACE_UPLOAD_BYTES }),
+    async (req: StudioRequest, res) => {
+      const scope = await workspaceScope(req, res); if (!scope) return;
+      const bytes = Buffer.isBuffer(req.body) ? req.body : Buffer.from(req.body ?? []);
+      const filename = headerText(req, "x-storyhold-filename", 260);
+      const title = headerText(req, "x-storyhold-title", 260) || filename;
+      const contentType = (req.header("content-type") || "application/octet-stream").split(";")[0]!.trim().toLowerCase();
+      if (!bytes.length || !filename || !title) {
+        res.status(400).json({ error: "A non-empty file, filename, and title are required." }); return;
+      }
+      const extension = workspaceFileExtension(filename, contentType, bytes);
+      if (!extension) {
+        res.status(415).json({ error: "Unsupported file. Use a supported document type or JPEG, PNG, GIF, or WebP image." }); return;
+      }
+      const itemId = randomUUID();
+      const objectKey = storyholdSourceObjectKey(scope.worldId, itemId, extension);
+      await sourceVaultStorage.uploadSource({
+        worldId: scope.worldId, sourceId: itemId, extension, bytes, contentType,
+        documentType: CHARACTER_WORKSPACE_IMAGE_TYPES.has(contentType) ? "image" : "document",
+      });
+      try {
+        const created = await db.transaction(async (tx) => {
+          if (!(await lockActiveWorkspaceDossier(tx, scope.worldId, scope.editionId, scope.characterId))) {
+            throw new Error("Character workspace is no longer active.");
+          }
+          const next = await tx.query<{ next_order: number }>(
+            `SELECT COALESCE(max(sort_order), -1)::int + 1 AS next_order
+               FROM storyhold.character_workspace_items WHERE dossier_id=$1`, [scope.characterId]);
+          return tx.query<Record<string, unknown>>(
+          `INSERT INTO storyhold.character_workspace_items
+            (id,world_id,canon_edition_id,dossier_id,kind,title,body,file_object_key,file_name,
+             file_size,file_content_type,provenance,provenance_metadata,sort_order,created_by_player_id)
+           VALUES ($1,$2,$3,$4,'file',$5,'',$6,$7,$8,$9,'manual','{}'::jsonb,$10,$11) RETURNING *`,
+          [itemId, scope.worldId, scope.editionId, scope.characterId, title, objectKey, filename,
+            bytes.length, contentType, Number(next.rows[0]?.next_order ?? 0), scope.user.id]);
+        });
+        res.status(201).json({ item: serializeCharacterWorkspaceItem(created.rows[0]!) });
+      } catch (error) {
+        try { await sourceVaultStorage.deleteSource(objectKey); } catch { /* preserve DB error */ }
+        throw error;
+      }
+    });
+
+  app.get("/api/storyhold/worlds/:worldId/characters/:characterId/workspace/:itemId/download", requireUser,
+    async (req: StudioRequest, res) => {
+      const scope = await workspaceScope(req, res); const itemId = routeParam(req, "itemId");
+      if (!scope || !assertUuid(itemId, res)) return;
+      const result = await db.query<Record<string, unknown>>(
+        `SELECT file_object_key,file_name,file_content_type FROM storyhold.character_workspace_items
+          WHERE id=$1 AND world_id=$2 AND canon_edition_id=$3 AND dossier_id=$4 AND kind='file' LIMIT 1`,
+        [itemId, scope.worldId, scope.editionId, scope.characterId]);
+      const file = result.rows[0];
+      if (!file?.file_object_key) { res.status(404).json({ error: "Workspace file not found." }); return; }
+      try {
+        const stream = await sourceVaultStorage.downloadSource(String(file.file_object_key));
+        const safeName = String(file.file_name ?? "download").replace(/[\r\n"\\]/gu, "_").slice(0, 180) || "download";
+        res.setHeader("Content-Type", String(file.file_content_type ?? "application/octet-stream"));
+        res.setHeader("Content-Disposition", `attachment; filename="${safeName}"`);
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        stream.on("error", () => { if (!res.headersSent) res.status(404).end(); else res.destroy(); });
+        stream.pipe(res);
+      } catch {
+        res.status(404).json({ error: "Workspace file is unavailable." });
+      }
+    });
 
   app.get("/api/storyhold/ai/status", requireUser, (req: StudioRequest, res) => {
     const user = currentUser(req);

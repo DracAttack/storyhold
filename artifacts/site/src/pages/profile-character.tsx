@@ -27,6 +27,7 @@ import { ProfileFrame } from "@/components/customer/profile-frame";
 import { EntityAiReviewCard } from "@/components/customer/entity-ai-review-card";
 import { DossierEvidence } from "@/components/customer/dossier-evidence";
 import { EntityConnectionEditor } from "@/components/customer/world-entity-panel";
+import { CharacterWorkspace, type CharacterWorkspaceItem, type CharacterWorkspaceReference } from "@/components/customer/character-workspace";
 import { useAuth } from "@/lib/auth";
 import { useSeo } from "@/lib/seo";
 import { worldEntityDossierHref, worldNeedsSortingHref } from "@/lib/worldEntityNavigation";
@@ -39,6 +40,13 @@ import {
   getCharacterDossier,
   updateCharacterDossier,
   updateCharacterSocioPoliticalAxis,
+  listCharacterWorkspace,
+  createCharacterWorkspaceItem,
+  uploadCharacterWorkspaceFile,
+  updateCharacterWorkspaceItem,
+  deleteCharacterWorkspaceItem,
+  reorderCharacterWorkspaceItems,
+  getCharacterWorkspaceDownloadUrl,
   type CharacterDossier,
   type DossierProseReview,
   type DossierCompassReview,
@@ -343,6 +351,8 @@ export default function ProfileCharacter() {
   const [manualRole, setManualRole] = useState("");
   const [manualSummary, setManualSummary] = useState("");
   const [manualFields, setManualFields] = useState<Record<EditableProfileKey, string>>(emptyManualFields);
+  const [workspaceItems, setWorkspaceItems] = useState<CharacterWorkspaceItem[]>([]);
+  const [workspaceReferences, setWorkspaceReferences] = useState<CharacterWorkspaceReference[]>([]);
   const [hold, setHold] = useState<{
     entityId: string;
     entities: WorldEntity[];
@@ -366,8 +376,8 @@ export default function ProfileCharacter() {
     setError(null);
     setProseReview(null);
     setCompassReview(null);
-    void getCharacterDossier(worldId, characterId)
-      .then((result) => {
+    void Promise.all([getCharacterDossier(worldId, characterId), listCharacterWorkspace(worldId, characterId)])
+      .then(([result, workspace]) => {
         if (!active) return;
         const holdEntity = result.hold?.entities.find((entity) => entity.id === result.hold?.entityId);
         if (holdEntity?.entityType === "ambiguous") {
@@ -388,6 +398,8 @@ export default function ProfileCharacter() {
         setManualRole(result.character.role);
         setManualSummary(result.character.summary);
         setManualFields(Object.fromEntries(editableProfileFields.map(({ key }) => [key, result.character.profile[key].join("\n")])) as Record<EditableProfileKey, string>);
+        setWorkspaceItems(workspace.items);
+        setWorkspaceReferences(workspace.references ?? []);
       })
       .catch((reason) => {
         if (active) setError(reason instanceof Error ? reason.message : "We could not open this character.");
@@ -647,6 +659,41 @@ export default function ProfileCharacter() {
     });
   }
 
+  const handleAddNote = async (title: string, body: string) => {
+    const { item } = await createCharacterWorkspaceItem({ worldId, characterId, kind: "note", title: title.trim(), body });
+    setWorkspaceItems((previous) => [...previous.filter((current) => current.id !== item.id), item]);
+  };
+
+  const handleAddFile = async (file: File) => {
+    const { item } = await uploadCharacterWorkspaceFile({ worldId, characterId, file });
+    setWorkspaceItems((previous) => [...previous.filter((current) => current.id !== item.id), item]);
+  };
+
+  const handleLinkReference = async (kind: "source" | "scene", referenceId: string, title: string) => {
+    const { item } = await createCharacterWorkspaceItem({ worldId, characterId, kind, referenceId, title });
+    setWorkspaceItems((previous) => [...previous.filter((current) => current.id !== item.id), item]);
+  };
+
+  const handleUpdateWorkspaceItem = async (id: string, updates: Partial<CharacterWorkspaceItem>) => {
+    const { item } = await updateCharacterWorkspaceItem({ worldId, characterId, itemId: id, title: updates.title, body: updates.body });
+    setWorkspaceItems((previous) => previous.map((current) => current.id === item.id ? item : current));
+  };
+
+  const handleRemoveWorkspaceItem = async (id: string) => {
+    await deleteCharacterWorkspaceItem({ worldId, characterId, itemId: id });
+    setWorkspaceItems((previous) => previous.filter((item) => item.id !== id));
+  };
+
+  const handleReorderWorkspaceItems = async (itemIds: string[]) => {
+    const { items } = await reorderCharacterWorkspaceItems({ worldId, characterId, itemIds });
+    setWorkspaceItems(items);
+  };
+
+  const handleOpenWorkspaceFile = async (id: string) => {
+    const url = getCharacterWorkspaceDownloadUrl({ worldId, characterId, itemId: id });
+    window.open(url, "_blank", "noopener,noreferrer");
+  };
+
   if (loading || redirectingToSorting) {
     return <ProfileFrame><div className="grid min-h-96 place-items-center"><span className="inline-flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-6 w-6 animate-spin text-primary" />{redirectingToSorting ? "Opening Needs Sorting…" : null}</span></div></ProfileFrame>;
   }
@@ -854,6 +901,24 @@ export default function ProfileCharacter() {
             })}<p className="px-1 pt-1 text-[11px] leading-5 text-muted-foreground"><Brain className="mr-1 inline h-3 w-3 text-primary" />Estimates retain confidence and do not become immutable canon merely because an AI proposed them.</p></div> : <p className="border-t border-white/8 px-4 py-3 text-sm leading-6 text-muted-foreground">Storyhold has identified this character, but the current record has no cited passage yet. Premium Deep Reading can strengthen the dossier.</p>}
           </details>
         </div>
+      </div>
+
+      <div className="mt-6">
+        <Card className="rounded-3xl border-white/5 bg-black/10 p-6 shadow-sm">
+          <CharacterWorkspace
+            worldId={worldId}
+            characterId={characterId}
+            items={workspaceItems}
+            references={workspaceReferences}
+            onAddNote={handleAddNote}
+            onAddFile={handleAddFile}
+            onLinkReference={handleLinkReference}
+            onUpdateItem={handleUpdateWorkspaceItem}
+            onRemoveItem={handleRemoveWorkspaceItem}
+            onReorderItems={handleReorderWorkspaceItems}
+            onOpenFile={handleOpenWorkspaceFile}
+          />
+        </Card>
       </div>
     </ProfileFrame>
   );

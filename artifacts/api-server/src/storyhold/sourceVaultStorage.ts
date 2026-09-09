@@ -1,6 +1,8 @@
 import { Storage } from "@google-cloud/storage";
 import { mkdir, rm, unlink, writeFile } from "node:fs/promises";
+import { createReadStream } from "node:fs";
 import path from "node:path";
+import type { Readable } from "node:stream";
 
 const REPLIT_SIDECAR_ENDPOINT = "http://127.0.0.1:1106";
 const UUID_PATTERN =
@@ -13,6 +15,7 @@ type StorageFile = {
     metadata: { contentType: string; metadata: Record<string, string> };
   }): Promise<unknown>;
   delete(): Promise<unknown>;
+  createReadStream?: () => Readable;
 };
 
 type StorageBucket = {
@@ -31,6 +34,7 @@ export type StoryholdSourceVaultStorage = {
   }): Promise<string>;
   deleteSource(key: string): Promise<void>;
   deleteWorldSources(worldId: string): Promise<void>;
+  downloadSource(key: string): Promise<Readable>;
 };
 
 export function storyholdSourceObjectKey(
@@ -145,6 +149,14 @@ export class GcsStoryholdSourceVaultStorage implements StoryholdSourceVaultStora
       }
     }));
   }
+
+  async downloadSource(key: string): Promise<Readable> {
+    sourceKeyParts(key);
+    const file = this.bucket.file(`${this.privatePrefix}${key}`);
+    const stream = file.createReadStream;
+    if (!stream) throw new Error("Private storage does not support downloads.");
+    return stream.call(file);
+  }
 }
 
 class LocalStoryholdSourceVaultStorage
@@ -198,6 +210,10 @@ class LocalStoryholdSourceVaultStorage
       prefix.split("/")[2]!,
     );
     await rm(directory, { recursive: true, force: true });
+  }
+
+  async downloadSource(key: string): Promise<Readable> {
+    return createReadStream(this.sourcePath(key));
   }
 }
 

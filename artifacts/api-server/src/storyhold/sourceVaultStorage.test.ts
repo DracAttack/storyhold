@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
+import { Readable } from "node:stream";
 import {
   GcsStoryholdSourceVaultStorage,
   storyholdSourceObjectKey,
@@ -115,4 +116,23 @@ test("source deletion is idempotent and world deletion uses an exact prefix", as
     "first",
     "second",
   ]);
+});
+
+test("source downloads only resolve validated private keys", async () => {
+  const vault = new GcsStoryholdSourceVaultStorage({
+    file() {
+      return {
+        async save() {},
+        async delete() {},
+        createReadStream() { return Readable.from([Buffer.from("private")]); },
+      };
+    },
+    async getFiles() { return [[]]; },
+  }, "/private-bucket/app");
+  const key = "storyhold/worlds/5fd1d7c4-1bb0-4fc4-a36d-b4d4909a6098/sources/a4d1d7c4-1bb0-4fc4-a36d-b4d4909a6098.txt";
+  const stream = await vault.downloadSource(key);
+  const chunks: Buffer[] = [];
+  for await (const chunk of stream) chunks.push(Buffer.from(chunk));
+  assert.equal(Buffer.concat(chunks).toString(), "private");
+  await assert.rejects(vault.downloadSource("../private"), /Invalid Storyhold source object key/);
 });
