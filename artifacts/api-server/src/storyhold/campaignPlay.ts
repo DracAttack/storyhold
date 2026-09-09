@@ -99,6 +99,7 @@ import {
   projectCampaignRpgStateForPlayer,
   type CampaignRpgStateViewModel,
 } from "./campaignRpgPresentation";
+import { projectAcceptedCampaignSceneDossiers } from "./campaignSceneDossierProjection";
 import {
   buildCampaignRpgRewardBudget,
   normalizeCampaignRpgProposalAgainstRewardBudget,
@@ -8795,6 +8796,16 @@ async function commitTurn(params: {
         json(generated.ai.usage),
       ],
     );
+    await projectAcceptedCampaignSceneDossiers({
+      db: tx,
+      worldId,
+      canonEditionId: String(campaign.canon_edition_id),
+      campaignId: id,
+      turnId,
+      stateVersion,
+      narration: resolution.narration,
+      sceneSummary: resolution.sceneSummary,
+    });
     const beforeSnapshot = {
       version: 1,
       campaign: {
