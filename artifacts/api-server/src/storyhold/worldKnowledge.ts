@@ -540,6 +540,7 @@ export async function loadWorldEntityNameResolution(params: {
   worldId: string;
   editionId: string;
   targetEntityTypes?: string[];
+  mentionedInText?: string;
 }): Promise<WorldEntityNameResolution> {
   const result = await params.db.query<{
     id: string;
@@ -550,12 +551,50 @@ export async function loadWorldEntityNameResolution(params: {
     scanner_present: boolean;
     merged_into_entity_id: string | null;
   }>(
-    `SELECT id, name, aliases, entity_type, pull_status, scanner_present,
-            merged_into_entity_id
-       FROM storyhold.world_entities
-      WHERE world_id = $1 AND canon_edition_id = $2
-        AND pull_status IN ('active', 'merged')`,
-    [params.worldId, params.editionId],
+    params.mentionedInText
+      ? `WITH RECURSIVE edition_entities AS (
+           SELECT id, name, aliases, entity_type, pull_status, scanner_present,
+                  merged_into_entity_id
+             FROM storyhold.world_entities
+            WHERE world_id = $1 AND canon_edition_id = $2
+              AND pull_status IN ('active', 'merged')
+         ),
+         matched_labels AS (
+           SELECT DISTINCT lower(regexp_replace(labels.label, '\\s+', ' ', 'g')) AS label
+             FROM edition_entities entity
+             CROSS JOIN LATERAL jsonb_array_elements_text(
+               to_jsonb(ARRAY[entity.name]) || entity.aliases
+             ) AS labels(label)
+            WHERE position(
+              lower(regexp_replace(labels.label, '\\s+', ' ', 'g'))
+              IN lower(regexp_replace($3, '\\s+', ' ', 'g'))
+            ) > 0
+         ),
+         seeds AS (
+           SELECT DISTINCT entity.*
+             FROM edition_entities entity
+             CROSS JOIN LATERAL jsonb_array_elements_text(
+               to_jsonb(ARRAY[entity.name]) || entity.aliases
+             ) AS labels(label)
+             JOIN matched_labels matched
+               ON matched.label = lower(regexp_replace(labels.label, '\\s+', ' ', 'g'))
+         ),
+         relevant AS (
+           SELECT * FROM seeds
+           UNION
+           SELECT target.*
+             FROM edition_entities target
+             JOIN relevant source ON target.id = source.merged_into_entity_id
+         )
+         SELECT DISTINCT * FROM relevant`
+      : `SELECT id, name, aliases, entity_type, pull_status, scanner_present,
+                merged_into_entity_id
+           FROM storyhold.world_entities
+          WHERE world_id = $1 AND canon_edition_id = $2
+            AND pull_status IN ('active', 'merged')`,
+    params.mentionedInText
+      ? [params.worldId, params.editionId, params.mentionedInText]
+      : [params.worldId, params.editionId],
   );
   const rowsById = new Map(result.rows.map((row) => [row.id, row]));
   const permittedTypes = params.targetEntityTypes?.length

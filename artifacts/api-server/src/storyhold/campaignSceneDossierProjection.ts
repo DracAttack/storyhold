@@ -123,6 +123,7 @@ export async function projectAcceptedCampaignSceneDossiers(params: {
     worldId: params.worldId,
     editionId: params.canonEditionId,
     targetEntityTypes: ["character"],
+    mentionedInText: narration,
   });
   // Resolve the complete accepted passage against established labels before
   // applying conservative unknown-name heuristics. This preserves valid names
@@ -158,10 +159,24 @@ export async function projectAcceptedCampaignSceneDossiers(params: {
     let entity = existingResult.rows[0];
     // Dossier aliases are fallback repair evidence only when canonical entity
     // resolution found nothing. They cannot poison or redirect an active card.
+    const candidateNormalizedName = normalizedName(candidate.name);
     const dossierRows = !entity ? await params.db.query<Record<string, unknown>>(
       `SELECT * FROM storyhold.character_dossiers
-        WHERE world_id=$1 AND canon_edition_id=$2 AND dossier_status='active' FOR UPDATE`,
-      [params.worldId, params.canonEditionId],
+        WHERE world_id=$1 AND canon_edition_id=$2 AND dossier_status='active'
+          AND (
+            normalized_name=$3 OR EXISTS (
+              SELECT 1 FROM jsonb_array_elements_text(aliases) AS alias(value)
+               WHERE regexp_replace(
+                 trim(regexp_replace(
+                   lower(normalize(alias.value, NFKC)),
+                   '[^[:alnum:]]+', ' ', 'g'
+                 )),
+                 '^(a|an|the)\\s+', '', 'g'
+               )=$3
+            )
+          )
+        FOR UPDATE`,
+      [params.worldId, params.canonEditionId, candidateNormalizedName],
     ) : { rows: [] as Record<string, unknown>[] };
     const matchingDossiers = dossierRows.rows.filter((row) => sameIdentity(row, candidate.name));
     let dossierOnly = matchingDossiers.length === 1 ? matchingDossiers[0] : undefined;
@@ -179,9 +194,28 @@ export async function projectAcceptedCampaignSceneDossiers(params: {
       // to an active canonical character; hidden/deleted/non-scanner owners do
       // not permit campaign projection.
       if (owner.length) {
-        const canonicalId = typeof owner[0]?.id === "string"
+        let canonicalId = typeof owner[0]?.id === "string"
           ? nameResolution.canonicalIdByEntityId.get(owner[0].id)
           : undefined;
+        if (!canonicalId && typeof owner[0]?.id === "string") {
+          canonicalId = (await params.db.query<{ id: string }>(
+            `WITH RECURSIVE owner_chain AS (
+               SELECT id, entity_type, pull_status, scanner_present, merged_into_entity_id
+                 FROM storyhold.world_entities
+                WHERE id=$1 AND world_id=$2 AND canon_edition_id=$3
+               UNION ALL
+               SELECT target.id, target.entity_type, target.pull_status,
+                      target.scanner_present, target.merged_into_entity_id
+                 FROM storyhold.world_entities target
+                 JOIN owner_chain source ON target.id=source.merged_into_entity_id
+                WHERE target.world_id=$2 AND target.canon_edition_id=$3
+             )
+             SELECT id FROM owner_chain
+              WHERE pull_status='active' AND scanner_present=true AND entity_type='character'
+              LIMIT 1`,
+            [owner[0].id, params.worldId, params.canonEditionId],
+          )).rows[0]?.id;
+        }
         if (!canonicalId) continue;
         entity = (await params.db.query<Record<string, unknown>>(
           `SELECT entity.*, dossier.profile AS dossier_profile, dossier.summary AS dossier_summary,
@@ -235,6 +269,7 @@ export async function projectAcceptedCampaignSceneDossiers(params: {
       nameResolution = await loadWorldEntityNameResolution({
         db: params.db, worldId: params.worldId, editionId: params.canonEditionId,
         targetEntityTypes: ["character"],
+        mentionedInText: narration,
       });
       const winnerId = nameResolution.idsByName.get(resolutionKey(candidate.name));
       if (typeof winnerId === "string") {

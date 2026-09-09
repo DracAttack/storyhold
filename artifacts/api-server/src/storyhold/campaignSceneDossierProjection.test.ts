@@ -161,6 +161,22 @@ test("accepted scenes project named characters once, preserve edits, and never p
     "SELECT dossier_id FROM storyhold.world_entities WHERE normalized_name='orla'",
   )).rows[0]!.dossier_id, uuid(11));
   await db.query(
+    `INSERT INTO storyhold.character_dossiers
+      (id,world_id,canon_edition_id,canonical_key,normalized_name,name,aliases)
+     VALUES ($1,$3,$4,'apostrophe-d','keeper','Keeper','["O’Neil"]'),
+            ($2,$3,$4,'article-d','sentinel','Sentinel','["The Warden"]')`,
+    [uuid(26), uuid(27), ids.world, ids.edition],
+  );
+  await project(uuid(28), "O’Neil said the beacon was lit. O’Neil turned toward it.");
+  await project(uuid(29), "The Warden said the road was clear. The Warden walked onward.");
+  assert.equal((await db.query<{ count: number }>(
+    "SELECT count(*)::int AS count FROM storyhold.world_entities WHERE dossier_id IN ($1,$2)",
+    [uuid(26), uuid(27)],
+  )).rows[0]!.count, 2);
+  assert.equal((await db.query<{ count: number }>(
+    "SELECT count(*)::int AS count FROM storyhold.character_dossiers WHERE normalized_name IN ('o neil','warden')",
+  )).rows[0]!.count, 0);
+  await db.query(
     `INSERT INTO storyhold.world_entities
       (id,world_id,canon_edition_id,canonical_key,normalized_name,name,entity_type)
      VALUES ($1,$2,$3,'tavi-e','tavi','Tavi','character')`,
