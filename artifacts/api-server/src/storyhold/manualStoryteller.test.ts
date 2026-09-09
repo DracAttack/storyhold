@@ -59,7 +59,7 @@ async function fixture() {
     CREATE TABLE storyhold.worlds (id uuid PRIMARY KEY, name text);
     CREATE TABLE storyhold.characters (id uuid PRIMARY KEY, name text);
     CREATE TABLE storyhold.canon_editions (id uuid PRIMARY KEY);
-    CREATE TABLE storyhold.campaigns (id uuid PRIMARY KEY, world_id uuid, owner_player_id uuid,
+    CREATE TABLE storyhold.campaigns (id uuid PRIMARY KEY, world_id uuid, canon_edition_id uuid, owner_player_id uuid,
       name text, state_version bigint DEFAULT 0, status text DEFAULT 'active',
       world_time_minutes bigint DEFAULT 0, current_time_label text DEFAULT 'Dawn', start_contract jsonb DEFAULT '{}', created_at timestamptz DEFAULT now());
     CREATE TABLE storyhold.campaign_members (campaign_id uuid, player_id uuid);
@@ -77,12 +77,36 @@ async function fixture() {
     CREATE TABLE storyhold.campaign_runtime_rules (id uuid PRIMARY KEY, campaign_id uuid, status text, created_at timestamptz DEFAULT now());
     CREATE TABLE storyhold.credit_reservations (id uuid PRIMARY KEY);
     CREATE TABLE storyhold.ai_usage_ledger (id uuid PRIMARY KEY);
+    CREATE TABLE storyhold.character_dossiers (
+      id uuid PRIMARY KEY, world_id uuid NOT NULL, canon_edition_id uuid NOT NULL,
+      canonical_key text NOT NULL, normalized_name text NOT NULL, name text NOT NULL,
+      aliases jsonb NOT NULL DEFAULT '[]'::jsonb, summary text NOT NULL DEFAULT '',
+      profile jsonb NOT NULL DEFAULT '{}'::jsonb, evidence jsonb NOT NULL DEFAULT '[]'::jsonb,
+      confidence real NOT NULL DEFAULT 0, mention_count integer NOT NULL DEFAULT 0,
+      mention_source_count integer NOT NULL DEFAULT 0, dossier_status text NOT NULL DEFAULT 'active',
+      user_edited_at timestamptz, updated_at timestamptz NOT NULL DEFAULT now(),
+      UNIQUE (world_id, canon_edition_id, normalized_name), UNIQUE (world_id, canonical_key)
+    );
+    CREATE TABLE storyhold.world_entities (
+      id uuid PRIMARY KEY, world_id uuid NOT NULL, canon_edition_id uuid NOT NULL,
+      dossier_id uuid REFERENCES storyhold.character_dossiers(id) ON DELETE SET NULL,
+      canonical_key text NOT NULL, normalized_name text NOT NULL, name text NOT NULL,
+      aliases jsonb NOT NULL DEFAULT '[]'::jsonb, entity_type text NOT NULL,
+      summary text NOT NULL DEFAULT '', details jsonb NOT NULL DEFAULT '[]'::jsonb,
+      evidence jsonb NOT NULL DEFAULT '[]'::jsonb, mention_count integer NOT NULL DEFAULT 0,
+      mention_source_count integer NOT NULL DEFAULT 0, confidence real NOT NULL DEFAULT 0,
+      classification_source text NOT NULL DEFAULT 'local', review_status text NOT NULL DEFAULT 'candidate',
+      pull_status text NOT NULL DEFAULT 'active', scanner_present boolean NOT NULL DEFAULT true,
+      merged_into_entity_id uuid REFERENCES storyhold.world_entities(id) ON DELETE SET NULL,
+      updated_at timestamptz NOT NULL DEFAULT now(),
+      UNIQUE (world_id, canon_edition_id, normalized_name), UNIQUE (world_id, canonical_key), UNIQUE (dossier_id)
+    );
   `);
   try { await db.exec(campaignPlaySchemaSql); } catch (error) { await db.close(); throw error; }
   await db.query("INSERT INTO storyhold.players VALUES ($1, 'owner', 500, 'Operator')", [PLAYER]);
   await db.query("INSERT INTO storyhold.worlds VALUES ($1, 'Harbor')", [WORLD]);
   await db.query("INSERT INTO storyhold.canon_editions VALUES ($1)", [EDITION]);
-  await db.query("INSERT INTO storyhold.campaigns(id, world_id, owner_player_id, name) VALUES ($1,$2,$3,'Harbor Test')", [CAMPAIGN,WORLD,PLAYER]);
+  await db.query("INSERT INTO storyhold.campaigns(id, world_id, canon_edition_id, owner_player_id, name) VALUES ($1,$2,$3,$4,'Harbor Test')", [CAMPAIGN,WORLD,EDITION,PLAYER]);
   return db;
 }
 
@@ -93,8 +117,8 @@ async function saved(db: PGlite, id: string) {
 async function isolatedCampaignContext(db: PGlite, options: Parameters<typeof context>[0] = {}) {
   const isolated = context(options);
   isolated.campaign.id = randomUUID();
-  await db.query("INSERT INTO storyhold.campaigns(id, world_id, owner_player_id, name) VALUES ($1,$2,$3,'Isolated Prompt Test')",
-    [isolated.campaign.id, WORLD, PLAYER]);
+  await db.query("INSERT INTO storyhold.campaigns(id, world_id, canon_edition_id, owner_player_id, name) VALUES ($1,$2,$3,$4,'Isolated Prompt Test')",
+    [isolated.campaign.id, WORLD, EDITION, PLAYER]);
   return isolated;
 }
 

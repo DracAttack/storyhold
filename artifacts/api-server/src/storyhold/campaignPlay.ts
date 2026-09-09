@@ -6366,33 +6366,53 @@ async function visibleClockEvents(
   return result.rows.map(serializeVisibleClockEvent);
 }
 
-async function duplicateTurn(
-  db: CampaignDb,
+export async function duplicateTurn(
+  db: CampaignRootDb,
   id: string,
   requestId: string,
   playerId: string,
 ) {
   if (!requestId) return null;
-  const result = await db.query<Record<string, unknown>>(
-    `SELECT turn_row.*, player.display_name AS player_name,
-            character.name AS acting_character_name,
-            campaign.start_contract AS campaign_start_contract,
-            campaign.state_version AS campaign_state_version
-       FROM storyhold.campaign_turns turn_row
-       JOIN storyhold.campaigns campaign ON campaign.id = turn_row.campaign_id
-       LEFT JOIN storyhold.players player ON player.id = turn_row.player_id
-       LEFT JOIN storyhold.characters character ON character.id = turn_row.character_id
-      WHERE turn_row.campaign_id = $1 AND turn_row.request_id = $2
-        AND (
-          campaign.owner_player_id = $3 OR EXISTS (
-            SELECT 1 FROM storyhold.campaign_members member
-             WHERE member.campaign_id = campaign.id AND member.player_id = $3
+  return db.transaction(async (tx) => {
+    const result = await tx.query<Record<string, unknown>>(
+      `SELECT turn_row.*, player.display_name AS player_name,
+              character.name AS acting_character_name,
+              campaign.start_contract AS campaign_start_contract,
+              campaign.state_version AS campaign_state_version,
+              campaign.world_id AS campaign_world_id,
+              campaign.canon_edition_id AS campaign_canon_edition_id
+         FROM storyhold.campaign_turns turn_row
+         JOIN storyhold.campaigns campaign ON campaign.id = turn_row.campaign_id
+         LEFT JOIN storyhold.players player ON player.id = turn_row.player_id
+         LEFT JOIN storyhold.characters character ON character.id = turn_row.character_id
+        WHERE turn_row.campaign_id = $1 AND turn_row.request_id = $2
+          AND (
+            campaign.owner_player_id = $3 OR EXISTS (
+              SELECT 1 FROM storyhold.campaign_members member
+               WHERE member.campaign_id = campaign.id AND member.player_id = $3
+            )
           )
-        )
-      LIMIT 1`,
-    [id, requestId, playerId],
-  );
-  return result.rows[0] ?? null;
+        LIMIT 1`,
+      [id, requestId, playerId],
+    );
+    const turn = result.rows[0];
+    if (!turn) return null;
+    // The accepted turn is the durable projection identity. A retry must also
+    // repair a one-sided entity/dossier write left by an older deployment or
+    // interrupted maintenance, while the projector's fingerprint prevents a
+    // second evidence count.
+    await projectAcceptedCampaignSceneDossiers({
+      db: tx,
+      worldId: String(turn.campaign_world_id),
+      canonEditionId: String(turn.campaign_canon_edition_id),
+      campaignId: id,
+      turnId: String(turn.id),
+      stateVersion: Number(turn.state_version),
+      narration: String(turn.narration),
+      sceneSummary: String(turn.scene_summary),
+    });
+    return turn;
+  });
 }
 
 type FrozenCampaignRpgMechanics = {

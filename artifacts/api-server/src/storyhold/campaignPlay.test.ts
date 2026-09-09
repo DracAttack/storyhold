@@ -19,6 +19,7 @@ import {
   combineDirectionAndNarration,
   campaignProductPricing,
   deterministicTimeAdvance,
+  duplicateTurn,
   campaignProposalJournalIdentity,
   campaignScenePacketQueryHash,
   assertTurnProgressionContract,
@@ -2501,4 +2502,80 @@ test("two-stage usage is charged as one combined provider cost", () => {
   assert.equal(combined.outputUnits, 100);
   assert.equal(combined.estimatedCostMicros, 210);
   assert.equal(combined.pricingKnown, true);
+});
+
+test("replaying an accepted turn repairs one-sided dossier evidence without duplicating the turn", async (t) => {
+  const db = new PGlite();
+  t.after(() => db.close());
+  const ids = {
+    player: "76000000-0000-4000-8000-000000000001",
+    world: "76000000-0000-4000-8000-000000000002",
+    edition: "76000000-0000-4000-8000-000000000003",
+    campaign: "76000000-0000-4000-8000-000000000004",
+    turn: "76000000-0000-4000-8000-000000000005",
+  };
+  await db.exec(`
+    CREATE SCHEMA storyhold;
+    CREATE TABLE storyhold.players (id uuid PRIMARY KEY, display_name text);
+    CREATE TABLE storyhold.characters (id uuid PRIMARY KEY, name text);
+    CREATE TABLE storyhold.campaign_members (campaign_id uuid, player_id uuid);
+    CREATE TABLE storyhold.campaigns (
+      id uuid PRIMARY KEY, world_id uuid NOT NULL, canon_edition_id uuid NOT NULL,
+      owner_player_id uuid NOT NULL, start_contract jsonb NOT NULL DEFAULT '{}',
+      state_version bigint NOT NULL DEFAULT 1
+    );
+    CREATE TABLE storyhold.campaign_turns (
+      id uuid PRIMARY KEY, campaign_id uuid NOT NULL, player_id uuid NOT NULL,
+      character_id uuid, request_id text NOT NULL, state_version bigint NOT NULL,
+      narration text NOT NULL, scene_summary text NOT NULL
+    );
+    CREATE TABLE storyhold.character_dossiers (
+      id uuid PRIMARY KEY, world_id uuid NOT NULL, canon_edition_id uuid NOT NULL,
+      canonical_key text NOT NULL, normalized_name text NOT NULL, name text NOT NULL,
+      aliases jsonb NOT NULL DEFAULT '[]', summary text NOT NULL DEFAULT '',
+      profile jsonb NOT NULL DEFAULT '{}', evidence jsonb NOT NULL DEFAULT '[]',
+      confidence real NOT NULL DEFAULT 0, mention_count integer NOT NULL DEFAULT 0,
+      mention_source_count integer NOT NULL DEFAULT 0, dossier_status text NOT NULL DEFAULT 'active',
+      user_edited_at timestamptz, updated_at timestamptz NOT NULL DEFAULT now(),
+      UNIQUE (world_id, canon_edition_id, normalized_name), UNIQUE (world_id, canonical_key)
+    );
+    CREATE TABLE storyhold.world_entities (
+      id uuid PRIMARY KEY, world_id uuid NOT NULL, canon_edition_id uuid NOT NULL,
+      dossier_id uuid REFERENCES storyhold.character_dossiers(id), canonical_key text NOT NULL,
+      normalized_name text NOT NULL, name text NOT NULL, aliases jsonb NOT NULL DEFAULT '[]',
+      entity_type text NOT NULL, summary text NOT NULL DEFAULT '', details jsonb NOT NULL DEFAULT '[]',
+      evidence jsonb NOT NULL DEFAULT '[]', mention_count integer NOT NULL DEFAULT 0,
+      mention_source_count integer NOT NULL DEFAULT 0, confidence real NOT NULL DEFAULT 0,
+      classification_source text NOT NULL DEFAULT 'local', review_status text NOT NULL DEFAULT 'candidate',
+      pull_status text NOT NULL DEFAULT 'active', scanner_present boolean NOT NULL DEFAULT true,
+      merged_into_entity_id uuid, updated_at timestamptz NOT NULL DEFAULT now(),
+      UNIQUE (world_id, canon_edition_id, normalized_name), UNIQUE (world_id, canonical_key), UNIQUE (dossier_id)
+    );
+  `);
+  await db.query("INSERT INTO storyhold.players VALUES ($1, 'Writer')", [ids.player]);
+  await db.query("INSERT INTO storyhold.campaigns VALUES ($1,$2,$3,$4,'{}',1)",
+    [ids.campaign, ids.world, ids.edition, ids.player]);
+  await db.query(
+    "INSERT INTO storyhold.campaign_turns VALUES ($1,$2,$3,NULL,'accepted-replay',1,$4,$5)",
+    [ids.turn, ids.campaign, ids.player,
+      "Tavi said the bridge held. Tavi walked onward.", "Tavi confirms the bridge is safe."],
+  );
+
+  const first = await duplicateTurn(db as never, ids.campaign, "accepted-replay", ids.player);
+  assert.equal(first?.id, ids.turn);
+  const entity = (await db.query<{ dossier_id: string; evidence: unknown[] }>(
+    "SELECT dossier_id, evidence FROM storyhold.world_entities WHERE normalized_name='tavi'",
+  )).rows[0]!;
+  await db.query("UPDATE storyhold.character_dossiers SET evidence='[]', mention_count=0 WHERE id=$1",
+    [entity.dossier_id]);
+
+  const replay = await duplicateTurn(db as never, ids.campaign, "accepted-replay", ids.player);
+  assert.equal(replay?.id, ids.turn);
+  assert.equal((await db.query("SELECT * FROM storyhold.campaign_turns")).rows.length, 1);
+  assert.equal((await db.query<{ evidence: unknown[] }>(
+    "SELECT evidence FROM storyhold.world_entities WHERE normalized_name='tavi'",
+  )).rows[0]!.evidence.length, 1);
+  assert.equal((await db.query<{ evidence: unknown[] }>(
+    "SELECT evidence FROM storyhold.character_dossiers WHERE id=$1", [entity.dossier_id],
+  )).rows[0]!.evidence.length, 1);
 });
