@@ -1,7 +1,10 @@
 import { createHash, createHmac, randomUUID } from "node:crypto";
+import { meteredAiResultJournalSchemaSql } from "./meteredAiResultJournalSchema";
+export { meteredAiResultJournalSchemaSql } from "./meteredAiResultJournalSchema";
 import type { PGlite } from "@electric-sql/pglite";
 import type { Express, Request, RequestHandler, Response } from "express";
 import { loadAdventureSetup, publicAdventureSetup, privateAdventureSetupContext, type AdventureSetupRow } from "./adventureSetupAccess";
+import { providerCostCsv } from "./providerCostCsv";
 import {
   AiGatewayUnavailableError,
   chooseReasoningLevel,
@@ -131,91 +134,6 @@ type CampaignRequest = Request & { localUser?: CampaignUser };
 const ACTUAL_UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-export const meteredAiResultJournalSchemaSql = String.raw`
-  CREATE TABLE IF NOT EXISTS storyhold.metered_ai_result_journal (
-    id uuid PRIMARY KEY,
-    player_id uuid NOT NULL REFERENCES storyhold.players(id) ON DELETE RESTRICT,
-    world_id uuid NOT NULL REFERENCES storyhold.worlds(id) ON DELETE CASCADE,
-    campaign_id uuid NOT NULL REFERENCES storyhold.campaigns(id) ON DELETE CASCADE,
-    reservation_id uuid,
-    operation text NOT NULL,
-    request_id text NOT NULL,
-    input_sha256 text NOT NULL,
-    settlement_mode text NOT NULL DEFAULT 'metered'
-      CHECK (settlement_mode IN ('metered', 'fixed')),
-    fixed_credits integer CHECK (fixed_credits IS NULL OR fixed_credits >= 0),
-    status text NOT NULL DEFAULT 'prepared'
-      CHECK (status IN (
-        'prepared', 'completed', 'billable_failed', 'uncertain', 'applied', 'failed'
-      )),
-    response_text text,
-    response_sha256 text,
-    last_error text NOT NULL DEFAULT '',
-    created_at timestamptz NOT NULL DEFAULT now(),
-    completed_at timestamptz,
-    applied_at timestamptz,
-    UNIQUE (player_id, operation, request_id)
-  );
-
-  ALTER TABLE storyhold.metered_ai_result_journal
-    ADD COLUMN IF NOT EXISTS settlement_mode text NOT NULL DEFAULT 'metered';
-  ALTER TABLE storyhold.metered_ai_result_journal
-    ADD COLUMN IF NOT EXISTS fixed_credits integer;
-  DO $metered_ai_result_journal_migration$
-  DECLARE
-    status_definition text;
-  BEGIN
-    SELECT pg_get_constraintdef(oid)
-      INTO status_definition
-      FROM pg_constraint
-     WHERE conrelid = 'storyhold.metered_ai_result_journal'::regclass
-       AND conname = 'metered_ai_result_journal_status_check';
-
-    IF status_definition IS NULL THEN
-      ALTER TABLE storyhold.metered_ai_result_journal
-        ADD CONSTRAINT metered_ai_result_journal_status_check
-        CHECK (status IN (
-          'prepared', 'completed', 'billable_failed', 'uncertain', 'applied', 'failed'
-        ));
-    ELSIF position('billable_failed' in status_definition) = 0
-       OR position('uncertain' in status_definition) = 0 THEN
-      -- Upgrade the one pre-release constraint shape once. Subsequent startup
-      -- schema checks are read-only and do not repeatedly lock/rewrite it.
-      ALTER TABLE storyhold.metered_ai_result_journal
-        DROP CONSTRAINT metered_ai_result_journal_status_check;
-      ALTER TABLE storyhold.metered_ai_result_journal
-        ADD CONSTRAINT metered_ai_result_journal_status_check
-        CHECK (status IN (
-          'prepared', 'completed', 'billable_failed', 'uncertain', 'applied', 'failed'
-        ));
-    END IF;
-
-    IF NOT EXISTS (
-      SELECT 1 FROM pg_constraint
-       WHERE conrelid = 'storyhold.metered_ai_result_journal'::regclass
-         AND conname = 'metered_ai_result_journal_settlement_mode_check'
-    ) THEN
-      ALTER TABLE storyhold.metered_ai_result_journal
-        ADD CONSTRAINT metered_ai_result_journal_settlement_mode_check
-        CHECK (settlement_mode IN ('metered', 'fixed'));
-    END IF;
-
-    IF NOT EXISTS (
-      SELECT 1 FROM pg_constraint
-       WHERE conrelid = 'storyhold.metered_ai_result_journal'::regclass
-         AND conname = 'metered_ai_result_journal_fixed_credits_check'
-    ) THEN
-      ALTER TABLE storyhold.metered_ai_result_journal
-        ADD CONSTRAINT metered_ai_result_journal_fixed_credits_check
-        CHECK (fixed_credits IS NULL OR fixed_credits >= 0);
-    END IF;
-  END
-  $metered_ai_result_journal_migration$;
-
-  CREATE INDEX IF NOT EXISTS metered_ai_result_journal_campaign
-    ON storyhold.metered_ai_result_journal
-      (campaign_id, status, created_at DESC);
-`;
 
 // Kept separate from the imported BrainHook tables: a turn is both an
 // inspectable transcript record and an append-only canonical state event.
@@ -5256,7 +5174,9 @@ function prepareTurn(
     messages: [
       {
         role: "user",
-        content: `${content.directive}\n${narrativePersonInstruction(context)}\n${narrationLength(context, intent, narrationPolicy)}\nINPUT KIND: ${intent}\nPLAYER-VISIBLE CONTEXT: ${compactNarratorContext(context)}\nPUBLIC DIRECTOR RESOLUTION: ${json(publicDirectionForNarrator(direction))}\n<PLAYER_INPUT kind="${intent}">${action}</PLAYER_INPUT>`,
+        // Pre-policy frozen packets must retain their original byte-for-byte
+        // request. New turns keep the explicit viewpoint instruction.
+        content: `${content.directive}\n${narrationPolicy === "legacy" ? "" : `${narrativePersonInstruction(context)}\n`}${narrationLength(context, intent, narrationPolicy)}\nINPUT KIND: ${intent}\nPLAYER-VISIBLE CONTEXT: ${compactNarratorContext(context)}\nPUBLIC DIRECTOR RESOLUTION: ${json(publicDirectionForNarrator(direction))}\n<PLAYER_INPUT kind="${intent}">${action}</PLAYER_INPUT>`,
       },
     ],
   });
@@ -9848,7 +9768,7 @@ export function registerCampaignPlayRoutes(params: {
         worldName: row.world_name, playerInput: row.player_input,
       })) });
     });
-  app.get("/api/storyhold/admin/credit-usage", requireUser,
+  app.get(["/api/storyhold/admin/credit-usage", "/api/storyhold/admin/credit-usage/export.csv"], requireUser,
     async (req: CampaignRequest, res) => {
       const user = currentUser(req);
       if (user.role !== "owner" && user.role !== "admin") {
@@ -9915,6 +9835,30 @@ export function registerCampaignPlayRoutes(params: {
       const providerFilter = `($2::text IS NULL OR created_at >= $2::date)
         AND ($3::text IS NULL OR created_at < $3::date + interval '1 day')
         AND ($4::text IS NULL OR operation = $4)`;
+      // JSON and CSV share aggregation, validation and account scope. Export
+      // is not restricted to the 25-row recent-usage preview.
+      const providerGroupsSql = `${providerEventsCte}
+           SELECT COALESCE(provider, 'unknown') AS provider,
+                  COALESCE(model, 'unknown') AS model,
+                  COALESCE(SUM(cost_micros), 0)::bigint AS cost_micros,
+                  COALESCE(SUM(cost_micros) FILTER (WHERE NOT failed), 0)::bigint AS completed_cost_micros,
+                  COALESCE(SUM(cost_micros) FILTER (WHERE failed), 0)::bigint AS failed_cost_micros,
+                  COUNT(*)::integer AS requests,
+                  COUNT(*) FILTER (WHERE NOT failed)::integer AS completed_requests,
+                  COUNT(*) FILTER (WHERE failed)::integer AS failed_requests
+             FROM provider_events
+            WHERE ${providerFilter}
+            GROUP BY COALESCE(provider, 'unknown'), COALESCE(model, 'unknown')
+            ORDER BY cost_micros DESC, provider, model`;
+      res.setHeader("Cache-Control", "private, no-store");
+      if (req.path.endsWith("/export.csv")) {
+        const groups = await db.query<Record<string, unknown>>(providerGroupsSql, providerParams);
+        res.setHeader("Content-Type", "text/csv; charset=utf-8");
+        res.setHeader("Content-Disposition", 'attachment; filename="storyhold-provider-costs.csv"');
+        res.setHeader("X-Content-Type-Options", "nosniff");
+        res.send(providerCostCsv(groups.rows));
+        return;
+      }
       const [summaryResult, recentResult, providerSummaryResult, providerRecentResult,
         providerGroupsResult, providerOperationsResult] = await Promise.all([
         db.query<Record<string, unknown>>(
@@ -9958,19 +9902,7 @@ export function registerCampaignPlayRoutes(params: {
           providerParams,
         ),
         db.query<Record<string, unknown>>(
-          `${providerEventsCte}
-           SELECT COALESCE(provider, 'unknown') AS provider,
-                  COALESCE(model, 'unknown') AS model,
-                  COALESCE(SUM(cost_micros), 0)::bigint AS cost_micros,
-                  COALESCE(SUM(cost_micros) FILTER (WHERE NOT failed), 0)::bigint AS completed_cost_micros,
-                  COALESCE(SUM(cost_micros) FILTER (WHERE failed), 0)::bigint AS failed_cost_micros,
-                  COUNT(*)::integer AS requests,
-                  COUNT(*) FILTER (WHERE NOT failed)::integer AS completed_requests,
-                  COUNT(*) FILTER (WHERE failed)::integer AS failed_requests
-             FROM provider_events
-            WHERE ${providerFilter}
-            GROUP BY COALESCE(provider, 'unknown'), COALESCE(model, 'unknown')
-            ORDER BY cost_micros DESC, provider, model`,
+          providerGroupsSql,
           providerParams,
         ),
         db.query<Record<string, unknown>>(

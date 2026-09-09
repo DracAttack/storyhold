@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
-import { AlertTriangle, CheckCircle2, Coins, DollarSign, Loader2, RefreshCw } from "lucide-react";
+import { AlertTriangle, CheckCircle2, Coins, DollarSign, Download, Loader2, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { getCreditUsage, type CreditUsageFilters, type CreditUsageReport } from "@/lib/creditUsageApi";
+import { getCreditUsage, getProviderCostCsv, type CreditUsageFilters, type CreditUsageReport } from "@/lib/creditUsageApi";
 import { toArticleTitleCase } from "@/lib/utils";
 
 const dollars = (micros: number) => new Intl.NumberFormat(undefined, {
@@ -21,6 +21,8 @@ export default function CreditUsage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState<CreditUsageFilters>({});
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
 
   const load = useCallback(async (signal?: AbortSignal) => {
     setLoading(true);
@@ -40,6 +42,36 @@ export default function CreditUsage() {
     void load(controller.signal);
     return () => controller.abort();
   }, [load]);
+
+  const exportCosts = async () => {
+    if (!report || loading || error || exporting) return;
+    setExporting(true);
+    setExportError(null);
+    try {
+      // Export the applied view, not a date edit whose request is still pending.
+      const applied = report.provider.filters;
+      const blob = await getProviderCostCsv({
+        from: applied.from ?? undefined,
+        to: applied.to ?? undefined,
+        operation: applied.operation ?? undefined,
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      try {
+        link.href = url;
+        link.download = "storyhold-provider-costs.csv";
+        document.body.appendChild(link);
+        link.click();
+      } finally {
+        link.remove();
+        window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+      }
+    } catch (reason) {
+      setExportError(reason instanceof Error ? reason.message : "Provider costs could not be exported.");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   return (
     <main className="min-w-0 flex-1 p-4 sm:p-6 lg:p-8">
@@ -115,9 +147,16 @@ export default function CreditUsage() {
           </Card>
 
           <Card className="overflow-hidden">
-            <div className="border-b p-4">
-              <h2 className="font-serif text-xl font-semibold">Cost by Provider and Model</h2>
-              <p className="mt-1 text-xs text-muted-foreground">Completed requests and billable failures are shown separately within each total.</p>
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b p-4">
+              <div>
+                <h2 className="font-serif text-xl font-semibold">Cost by Provider and Model</h2>
+                <p className="mt-1 text-xs text-muted-foreground">Completed requests and billable failures are shown separately within each total.</p>
+              </div>
+              <Button variant="outline" onClick={() => void exportCosts()} disabled={loading || Boolean(error) || exporting}>
+                {exporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                {exporting ? "Exporting…" : "Export CSV"}
+              </Button>
+              {exportError ? <p role="alert" className="w-full text-sm text-destructive">{exportError}</p> : null}
             </div>
             {report.provider.groups.length ? <div className="overflow-x-auto">
               <table className="w-full min-w-[760px] text-left text-sm">

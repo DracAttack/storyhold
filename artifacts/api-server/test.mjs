@@ -5,7 +5,7 @@ import { run as runNodeTests } from "node:test";
 import { spec } from "node:test/reporters";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { build as esbuild, transform as transformWithEsbuild } from "esbuild";
-import { copyFile, mkdir, readFile, rm, readdir, writeFile } from "node:fs/promises";
+import { copyFile, mkdir, mkdtemp, readFile, rm, readdir, writeFile } from "node:fs/promises";
 import { spawn } from "node:child_process";
 
 // The repo has no test framework installed (vitest/jest). This runner executes
@@ -17,7 +17,15 @@ import { spawn } from "node:child_process";
 const localRequire = createRequire(import.meta.url);
 globalThis.require = localRequire;
 const artifactDir = path.dirname(fileURLToPath(import.meta.url));
-const PGLITE_RUNTIME_ASSETS = ["pglite.data", "pglite.wasm", "initdb.wasm"];
+const PGLITE_RUNTIME_ASSETS = [
+  { name: "pglite.data", package: "@electric-sql/pglite" },
+  { name: "pglite.wasm", package: "@electric-sql/pglite" },
+  { name: "initdb.wasm", package: "@electric-sql/pglite" },
+  // pgvector resolves this archive relative to import.meta.url. Once its JS is
+  // bundled, it must live beside that emitted bundle, not just in node_modules.
+  { name: "vector.tar.gz", package: "@electric-sql/pglite-pgvector" },
+];
+const pgliteAssetNames = PGLITE_RUNTIME_ASSETS.map(({ name }) => name).join(", ");
 
 async function findFilesBySuffix(dir, suffix) {
   const out = [];
@@ -210,52 +218,75 @@ function guessPackageName(absPath) {
   return parts[0] ?? path.basename(absPath);
 }
 
-async function copyPgliteRuntimeAssets(bundleDirs) {
-  const pgliteEntry = localRequire.resolve("@electric-sql/pglite");
-  const pgliteDistDir = path.dirname(pgliteEntry);
+async function copyPgliteRuntimeAssets(bundleDirs, sourceDir) {
   const failures = [];
 
   for (const bundleDir of bundleDirs) {
     await mkdir(bundleDir, { recursive: true });
     for (const asset of PGLITE_RUNTIME_ASSETS) {
       try {
-        await copyFile(path.join(pgliteDistDir, asset), path.join(bundleDir, asset));
+        const assetDir = sourceDir ?? path.dirname(localRequire.resolve(asset.package));
+        await copyFile(path.join(assetDir, asset.name), path.join(bundleDir, asset.name));
       } catch (error) {
-        failures.push(`${asset} for ${path.relative(artifactDir, bundleDir)}: ${error.message}`);
+        failures.push(`${asset.name} (${asset.package}) for ${path.relative(artifactDir, bundleDir)}: ${error.message}`);
       }
     }
   }
 
   if (failures.length > 0) {
     throw new Error(
-      `PGlite runtime check failed. The bundled runner requires ${PGLITE_RUNTIME_ASSETS.join(", ")} beside every emitted test bundle.\n` +
+      `PGlite runtime check failed. The bundled runner requires ${pgliteAssetNames} beside every emitted test bundle.\n` +
       failures.map((failure) => `  - ${failure}`).join("\n"),
     );
   }
 }
 
-async function runPgliteRuntimeCheck() {
-  const checkDir = path.resolve(artifactDir, "dist-test-pglite-check");
+async function runPgliteRuntimeCheck(missingAsset) {
+  if (missingAsset && !PGLITE_RUNTIME_ASSETS.some(({ name }) => name === missingAsset)) {
+    throw new Error(`Unknown PGlite fault-injection asset: ${missingAsset}`);
+  }
+  const temporaryRoot = path.resolve(artifactDir, "tmp");
+  await mkdir(temporaryRoot, { recursive: true });
+  const checkDir = await mkdtemp(path.join(temporaryRoot, "pglite-check-"));
   const sourceDir = path.join(checkDir, "source");
   const outDir = path.join(checkDir, "bundles");
   const entryNames = ["first/smoke", "second/nested/smoke"];
 
-  await rm(checkDir, { recursive: true, force: true });
   try {
+    // Fault injection operates only on disposable copies. Installed dependencies
+    // are never renamed/deleted, even when the child exits unsuccessfully.
+    let assetSourceDir;
+    if (missingAsset) {
+      assetSourceDir = path.join(checkDir, "runtime-assets");
+      await copyPgliteRuntimeAssets([assetSourceDir]);
+      await rm(path.join(assetSourceDir, missingAsset));
+    }
     const entryPoints = {};
     for (const entryName of entryNames) {
       const sourceFile = path.join(sourceDir, `${entryName}.mjs`);
       await mkdir(path.dirname(sourceFile), { recursive: true });
       await writeFile(
         sourceFile,
-        `import { PGlite } from "@electric-sql/pglite";
-const db = new PGlite();
-await db.query("select 1 as ready");
-await db.close();
+        `import assert from "node:assert/strict";
+import { PGlite } from "@electric-sql/pglite";
+import { vector } from "@electric-sql/pglite-pgvector";
+const db = await PGlite.create({ extensions: { vector } });
+try {
+  await db.exec("CREATE EXTENSION vector; CREATE TABLE embeddings (id integer, embedding vector(3)); INSERT INTO embeddings VALUES (1, '[1,2,3]'), (2, '[4,5,6]');");
+  const result = await db.query("SELECT id, embedding <-> '[1,2,4]'::vector AS distance FROM embeddings ORDER BY distance LIMIT 1");
+  assert.deepEqual(result.rows, [{ id: 1, distance: 1 }]);
+} finally {
+  await db.close();
+}
 `,
       );
       entryPoints[entryName] = sourceFile;
     }
+
+    // Check/copy assets before invoking the bundler so a missing package asset
+    // gets the actionable diagnostic even if bundling itself cannot start.
+    const expectedBundleDirs = new Set(entryNames.map((name) => path.dirname(path.join(outDir, `${name}.mjs`))));
+    await copyPgliteRuntimeAssets(expectedBundleDirs, assetSourceDir);
 
     await esbuild({
       entryPoints,
@@ -278,19 +309,25 @@ globalThis.require = __cr(import.meta.url);`,
     if (bundleDirs.size < 2) {
       throw new Error(`expected bundles in at least two output directories, found ${bundleDirs.size}`);
     }
-    await copyPgliteRuntimeAssets(bundleDirs);
+    for (const bundleDir of bundleDirs) {
+      if (!expectedBundleDirs.has(bundleDir)) {
+        throw new Error(`unexpected emitted bundle directory: ${bundleDir}`);
+      }
+    }
 
     const failures = [];
     for (const bundle of bundles) {
       const child = spawn(process.execPath, [bundle], {
         stdio: ["ignore", "pipe", "pipe"],
         env: { ...process.env, NODE_ENV: "test" },
+        timeout: 60_000,
       });
       let stderr = "";
+      child.stdout.resume();
       child.stderr.on("data", (chunk) => {
         stderr += chunk;
       });
-      const [code] = await once(child, "exit");
+      const [code] = await once(child, "close");
       if (code !== 0) {
         failures.push(`${path.relative(outDir, bundle)} exited ${code}: ${stderr.trim()}`);
       }
@@ -298,15 +335,15 @@ globalThis.require = __cr(import.meta.url);`,
 
     if (failures.length > 0) {
       throw new Error(
-        `PGlite runtime check failed. Verify ${PGLITE_RUNTIME_ASSETS.join(", ")} are present beside every emitted test bundle.\n` +
+        `PGlite runtime check failed. Verify ${pgliteAssetNames} are present beside every emitted test bundle.\n` +
         failures.map((failure) => `  - ${failure}`).join("\n"),
       );
     }
-    console.log(`PGlite initialized from ${bundleDirs.size} emitted test directories.`);
+    console.log(`PGlite and vector queries passed from ${bundleDirs.size} emitted test directories.`);
   } catch (error) {
     if (error.message?.startsWith("PGlite runtime check failed.")) throw error;
     throw new Error(
-      `PGlite runtime check failed. Verify ${PGLITE_RUNTIME_ASSETS.join(", ")} are present beside every emitted test bundle.\n  - ${error.message}`,
+      `PGlite runtime check failed. Verify ${pgliteAssetNames} are present beside every emitted test bundle.\n  - ${error.message}`,
       { cause: error },
     );
   } finally {
@@ -322,13 +359,14 @@ async function run() {
 
   if (process.argv.includes("--pglite-runtime-check")) {
     process.env.NODE_ENV = "test";
-    await runPgliteRuntimeCheck();
+    const missingAsset = process.argv.find((arg) => arg.startsWith("--simulate-missing-pglite-asset="))?.split("=")[1];
+    await runPgliteRuntimeCheck(missingAsset);
     return;
   }
 
   const requestedEntryPoints = process.argv
     .slice(2)
-    .filter((arg) => arg !== "--" && arg !== "--discovery-check")
+    .filter((arg) => arg !== "--" && arg !== "--discovery-check" && arg !== "--bundle")
     .map((arg) => path.resolve(artifactDir, arg));
   const entryPoints = requestedEntryPoints.length > 0
     ? requestedEntryPoints
@@ -346,7 +384,8 @@ async function run() {
   }
 
   process.env.NODE_ENV = "test";
-  if (process.platform === "win32") {
+  // --bundle explicitly exercises production/Linux package layout on Windows.
+  if (process.platform === "win32" && !process.argv.includes("--bundle")) {
     await runWindowsTestsWithoutBundling(entryPoints);
     return;
   }

@@ -34,6 +34,7 @@ import { worldEntityDossierHref, worldNeedsSortingHref } from "@/lib/worldEntity
 import { DOSSIER_PREVIEW_ITEMS, dossierListWindow } from "@/lib/dossierListWindow";
 import { dossierListFromEditor } from "@/lib/dossierEdits";
 import { compassEvidenceLabel, dossierCompassView } from "@/lib/dossierCompass";
+import { mergeWorkspaceScanUpdates, workspaceFileAccess } from "@/lib/characterWorkspaceFiles";
 import {
   createWorldEntityRelations,
   deleteWorldEntityRelation,
@@ -353,6 +354,7 @@ export default function ProfileCharacter() {
   const [manualFields, setManualFields] = useState<Record<EditableProfileKey, string>>(emptyManualFields);
   const [workspaceItems, setWorkspaceItems] = useState<CharacterWorkspaceItem[]>([]);
   const [workspaceReferences, setWorkspaceReferences] = useState<CharacterWorkspaceReference[]>([]);
+  const [workspaceScanRefreshFailed, setWorkspaceScanRefreshFailed] = useState(false);
   const [hold, setHold] = useState<{
     entityId: string;
     entities: WorldEntity[];
@@ -411,6 +413,49 @@ export default function ProfileCharacter() {
       active = false;
     };
   }, [auth.email, characterId, setLocation, worldId]);
+
+  const pendingWorkspaceFiles = workspaceItems.filter((item) => workspaceFileAccess(item).pending).map((item) => item.id).sort().join("|");
+  useEffect(() => {
+    setWorkspaceScanRefreshFailed(false);
+    if (!auth.email || !worldId || !characterId || loading || !pendingWorkspaceFiles) return;
+    let active = true;
+    let running = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let request: AbortController | undefined;
+    const isVisible = () => document.visibilityState !== "hidden";
+    const poll = async () => {
+      if (!active || running || !isVisible()) return;
+      running = true;
+      const controller = new AbortController();
+      request = controller;
+      const timeout = setTimeout(() => controller.abort(), 15_000);
+      try {
+        const workspace = await listCharacterWorkspace(worldId, characterId, controller.signal);
+        if (!active || controller.signal.aborted) return;
+        setWorkspaceItems((current) => mergeWorkspaceScanUpdates(current, workspace.items));
+        setWorkspaceScanRefreshFailed(false);
+      } catch {
+        if (active && isVisible()) setWorkspaceScanRefreshFailed(true);
+      } finally {
+        clearTimeout(timeout);
+        running = false;
+        if (active && isVisible()) timer = setTimeout(() => void poll(), 5_000);
+      }
+    };
+    const onVisibility = () => {
+      clearTimeout(timer);
+      if (!isVisible()) request?.abort();
+      else void poll();
+    };
+    if (isVisible()) timer = setTimeout(() => void poll(), 5_000);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+      request?.abort();
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
+  }, [auth.email, characterId, worldId, loading, pendingWorkspaceFiles]);
 
   const relationshipRows = useMemo(() => {
     if (!character) return [];
@@ -917,6 +962,7 @@ export default function ProfileCharacter() {
             onRemoveItem={handleRemoveWorkspaceItem}
             onReorderItems={handleReorderWorkspaceItems}
             onOpenFile={handleOpenWorkspaceFile}
+            scanRefreshFailed={workspaceScanRefreshFailed}
           />
         </Card>
       </div>

@@ -6,6 +6,10 @@ import {
   storyholdSourceObjectKey,
   type StoryholdSourceVaultStorage,
 } from "./sourceVaultStorage";
+import {
+  privateFileSafetySchemaSql, workspaceFileScan, createPrivateFileWorker,
+  stagePrivateFileUpload, commitPrivateFileUpload, abandonPrivateFileUpload, privateFileJobReport,
+} from "./privateFileSafety";
 import express, {
   type Express,
   type Request,
@@ -1539,6 +1543,8 @@ export const worldStudioSchemaSql = String.raw`
     ON storyhold.character_workspace_items (source_reference_id);
   CREATE INDEX IF NOT EXISTS character_workspace_items_scene_reference
     ON storyhold.character_workspace_items (scene_reference_id);
+
+  ${privateFileSafetySchemaSql}
 
   CREATE TABLE IF NOT EXISTS storyhold.world_clock_events (
     id uuid PRIMARY KEY,
@@ -15407,6 +15413,7 @@ function serializeCharacterWorkspaceItem(row: Record<string, unknown>) {
       name: String(row.file_name ?? ""),
       size: Number(row.file_size ?? 0),
       type: String(row.file_content_type ?? "application/octet-stream"),
+      scan: workspaceFileScan(row),
     } : null,
     referenceId: row.reference_id ? String(row.reference_id) : null,
     provenance: String(row.provenance),
@@ -15481,6 +15488,16 @@ export function registerWorldStudioRoutes(params: {
     requireUser,
     sourceVaultStorage = new GcsStoryholdSourceVaultStorage(),
   } = params;
+
+  const privateFileWorker = createPrivateFileWorker(db, sourceVaultStorage);
+  if (process.env.NODE_ENV !== "test") privateFileWorker.start();
+  app.get("/api/storyhold/admin/private-file-jobs", requireUser, async (req: StudioRequest, res) => {
+    if (!["owner", "admin"].includes(currentUser(req).role)) {
+      res.status(403).json({ error: "Administrator access required." }); return;
+    }
+    res.setHeader("Cache-Control", "private, no-store");
+    res.json(await privateFileJobReport(db));
+  });
 
   registerAdventureSetupRoutes({ app, db, requireUser });
   registerCampaignPlayRoutes({ app, db, requireUser });
@@ -15645,16 +15662,10 @@ export function registerWorldStudioRoutes(params: {
       });
       const item = deleted.rows[0];
       if (!item) { res.status(404).json({ error: "Workspace item not found." }); return; }
-      let fileRemoved = true;
-      if (item.file_object_key) {
-        try {
-          await sourceVaultStorage.deleteSource(String(item.file_object_key));
-        } catch (error) {
-          fileRemoved = false;
-          process.stderr.write(`Storyhold could not remove workspace file ${itemId}: ${error instanceof Error ? error.message : String(error)}\n`);
-        }
-      }
-      res.json({ deleted: true, itemId, fileRemoved });
+      // The database trigger committed cleanup with deletion, including cascade
+      // deletions. Never restore the removed item when object storage is down.
+      void privateFileWorker.tick();
+      res.json({ deleted: true, itemId, fileRemoved: !item.file_object_key, cleanupPending: Boolean(item.file_object_key) });
     });
 
   app.put("/api/storyhold/worlds/:worldId/characters/:characterId/workspace/reorder", requireUser,
@@ -15712,12 +15723,14 @@ export function registerWorldStudioRoutes(params: {
       }
       const itemId = randomUUID();
       const objectKey = storyholdSourceObjectKey(scope.worldId, itemId, extension);
-      await sourceVaultStorage.uploadSource({
-        worldId: scope.worldId, sourceId: itemId, extension, bytes, contentType,
-        documentType: CHARACTER_WORKSPACE_IMAGE_TYPES.has(contentType) ? "image" : "document",
-      });
+      await stagePrivateFileUpload(db, objectKey, itemId);
       try {
+        await sourceVaultStorage.uploadSource({
+          worldId: scope.worldId, sourceId: itemId, extension, bytes, contentType,
+          documentType: CHARACTER_WORKSPACE_IMAGE_TYPES.has(contentType) ? "image" : "document",
+        });
         const created = await db.transaction(async (tx) => {
+          await commitPrivateFileUpload(tx, objectKey);
           if (!(await lockActiveWorkspaceDossier(tx, scope.worldId, scope.editionId, scope.characterId))) {
             throw new Error("Character workspace is no longer active.");
           }
@@ -15733,34 +15746,49 @@ export function registerWorldStudioRoutes(params: {
             bytes.length, contentType, Number(next.rows[0]?.next_order ?? 0), scope.user.id]);
         });
         res.status(201).json({ item: serializeCharacterWorkspaceItem(created.rows[0]!) });
+        void privateFileWorker.tick();
       } catch (error) {
-        try { await sourceVaultStorage.deleteSource(objectKey); } catch { /* preserve DB error */ }
+        // The already-durable orphan guard also covers DB/process failures.
+        await abandonPrivateFileUpload(db, objectKey).catch(() => undefined);
+        void privateFileWorker.tick();
         throw error;
       }
     });
 
-  app.get("/api/storyhold/worlds/:worldId/characters/:characterId/workspace/:itemId/download", requireUser,
-    async (req: StudioRequest, res) => {
+  const serveWorkspaceFile = (preview: boolean) => async (req: StudioRequest, res: Response) => {
       const scope = await workspaceScope(req, res); const itemId = routeParam(req, "itemId");
       if (!scope || !assertUuid(itemId, res)) return;
       const result = await db.query<Record<string, unknown>>(
-        `SELECT file_object_key,file_name,file_content_type FROM storyhold.character_workspace_items
+        `SELECT file_object_key,file_name,file_content_type,file_scan_state FROM storyhold.character_workspace_items
           WHERE id=$1 AND world_id=$2 AND canon_edition_id=$3 AND dossier_id=$4 AND kind='file' LIMIT 1`,
         [itemId, scope.worldId, scope.editionId, scope.characterId]);
       const file = result.rows[0];
+      res.setHeader("Cache-Control", "private, no-store");
+      res.setHeader("Vary", "Cookie");
       if (!file?.file_object_key) { res.status(404).json({ error: "Workspace file not found." }); return; }
+      if (file.file_scan_state !== "clean") {
+        res.status(423).json({ error: file.file_scan_state === "quarantined"
+          ? "This file is quarantined and cannot be opened." : "This file is waiting for its safety check." }); return;
+      }
+      if (preview && !CHARACTER_WORKSPACE_IMAGE_TYPES.has(String(file.file_content_type))) {
+        res.status(415).json({ error: "This file does not support image previews." }); return;
+      }
       try {
         const stream = await sourceVaultStorage.downloadSource(String(file.file_object_key));
-        const safeName = String(file.file_name ?? "download").replace(/[\r\n"\\]/gu, "_").slice(0, 180) || "download";
+        const safeName = String(file.file_name ?? "download").replace(/[^\x20-\x7e]|["\\]/gu, "_").slice(0, 180) || "download";
         res.setHeader("Content-Type", String(file.file_content_type ?? "application/octet-stream"));
-        res.setHeader("Content-Disposition", `attachment; filename="${safeName}"`);
+        res.setHeader("Content-Disposition", `${preview ? "inline" : "attachment"}; filename="${safeName}"`);
         res.setHeader("X-Content-Type-Options", "nosniff");
+        res.setHeader("Content-Security-Policy", "default-src 'none'; sandbox");
+        res.on("close", () => stream.destroy());
         stream.on("error", () => { if (!res.headersSent) res.status(404).end(); else res.destroy(); });
         stream.pipe(res);
       } catch {
         res.status(404).json({ error: "Workspace file is unavailable." });
       }
-    });
+    };
+  app.get("/api/storyhold/worlds/:worldId/characters/:characterId/workspace/:itemId/download", requireUser, serveWorkspaceFile(false));
+  app.get("/api/storyhold/worlds/:worldId/characters/:characterId/workspace/:itemId/preview", requireUser, serveWorkspaceFile(true));
 
   app.get("/api/storyhold/ai/status", requireUser, (req: StudioRequest, res) => {
     const user = currentUser(req);
@@ -20994,4 +21022,5 @@ export function registerWorldStudioRoutes(params: {
       });
     },
   );
+  return { stopPrivateFileWorker: () => privateFileWorker.stop() };
 }

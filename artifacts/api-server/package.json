@@ -10,6 +10,8 @@
     "start:local": "tsx ./src/local.ts",
     "schema:development": "STORYHOLD_APPLY_DEVELOPMENT_SCHEMA=1 STORYHOLD_DATABASE_ENVIRONMENT=development tsx ./src/local.ts",
     "test": "node ./test.mjs",
+    "test:runner": "node --test ./test-runner.test.mjs",
+    "antivirus:check": "tsx ./src/storyhold/privateFileScannerCheck.cli.ts",
     "benchmark:accepted-scene-projection": "tsx ./src/storyhold/campaignSceneDossierProjection.bench.ts",
     "typecheck:local": "tsc -p tsconfig.local.json --noEmit",
     "typecheck": "tsc -p tsconfig.json --noEmit"

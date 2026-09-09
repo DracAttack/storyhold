@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
-import { getCreditUsage } from "./creditUsageApi";
+import { getCreditUsage, getProviderCostCsv } from "./creditUsageApi";
 
 test("admin credit usage reads settled accounting through the private route", async () => {
   const originalFetch = globalThis.fetch;
@@ -54,4 +54,40 @@ test("credit usage remains inside operator-only admin navigation", () => {
   assert.match(server, /player_id = \$1 AND status = 'settled'/u);
   assert.match(server, /known_billable_failure/u);
   assert.match(server, /credits_charged <= 0/u);
+  assert.match(server, /\/api\/storyhold\/admin\/credit-usage\/export\.csv/u);
+  const page = readFileSync(new URL("../pages/admin/CreditUsage.tsx", import.meta.url), "utf8");
+  assert.match(page, /const applied = report\.provider\.filters/u);
+  assert.match(page, /disabled=\{loading \|\| Boolean\(error\) \|\| exporting\}/u);
+  assert.match(page, /URL\.revokeObjectURL\(url\)/u);
+});
+
+test("provider cost CSV sends the same encoded filters and authenticated request", async () => {
+  const originalFetch = globalThis.fetch;
+  const signal = new AbortController().signal;
+  let calledUrl = "";
+  let calledOptions: RequestInit | undefined;
+  globalThis.fetch = async (url, options) => {
+    calledUrl = String(url); calledOptions = options;
+    return new Response('"Provider","Model"\r\n', { headers: { "content-type": "text/csv; charset=utf-8" } });
+  };
+  try {
+    const blob = await getProviderCostCsv({ from: "2026-09-01", to: "2026-09-08", operation: "campaign_turn&other=value" }, signal);
+    assert.equal(calledUrl, "/api/storyhold/admin/credit-usage/export.csv?from=2026-09-01&to=2026-09-08&operation=campaign_turn%26other%3Dvalue");
+    assert.equal(calledOptions?.credentials, "include");
+    assert.equal(calledOptions?.signal, signal);
+    assert.deepEqual(calledOptions?.headers, { Accept: "text/csv" });
+    assert.equal(await blob.text(), '"Provider","Model"\r\n');
+  } finally { globalThis.fetch = originalFetch; }
+});
+
+test("provider CSV failures and sign-in HTML are not downloaded as finance data", async () => {
+  const originalFetch = globalThis.fetch;
+  try {
+    for (const status of [401, 403, 500]) {
+      globalThis.fetch = async () => new Response("unavailable", { status });
+      await assert.rejects(getProviderCostCsv(), status === 500 ? /could not be exported/u : /signed-in owner and administrators only/u);
+    }
+    globalThis.fetch = async () => new Response("<html>Sign in</html>", { headers: { "content-type": "text/html" } });
+    await assert.rejects(getProviderCostCsv(), /export was not returned/u);
+  } finally { globalThis.fetch = originalFetch; }
 });

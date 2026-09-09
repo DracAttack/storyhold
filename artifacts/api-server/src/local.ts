@@ -134,12 +134,16 @@ async function waitForPublishedSchema(db: StoryholdDb): Promise<void> {
   while (Date.now() < deadline) {
     attempt += 1;
     try {
-      const schema = await db.query<{ release: string | null }>(
-        "SELECT to_regclass('storyhold.schema_release_1') AS release",
+      const schema = await db.query<{ release: string | null; private_files: string | null; scan_column: boolean }>(
+        `SELECT to_regclass('storyhold.schema_release_1') AS release,
+          to_regclass('storyhold.private_file_jobs') AS private_files,
+          (SELECT count(*)=4 FROM information_schema.columns WHERE table_schema='storyhold'
+            AND table_name='character_workspace_items' AND column_name IN
+              ('file_scan_state','file_scan_reason','file_scanned_at','file_scan_retry_pending')) AS scan_column`,
       );
-      if (schema.rows[0]?.release) return;
+      if (schema.rows[0]?.release && schema.rows[0].private_files && schema.rows[0].scan_column) return;
       lastFailure = new Error(
-        "Storyhold managed PostgreSQL schema release 1 is not available yet.",
+        "Storyhold managed PostgreSQL schema release 1 with private-file safety is not available yet. Apply the development schema before publishing.",
       );
     } catch (error) {
       lastFailure = error;
@@ -955,7 +959,7 @@ app.get(
   },
 );
 
-registerWorldStudioRoutes({
+const worldStudioRoutes = registerWorldStudioRoutes({
   app,
   db,
   requireUser,
@@ -1027,6 +1031,7 @@ async function shutdown() {
   if (shutdownStarted) return;
   shutdownStarted = true;
   server.close(async () => {
+    await worldStudioRoutes.stopPrivateFileWorker();
     await startupDb?.close();
     await vaultOwnership?.release();
     process.exit(0);

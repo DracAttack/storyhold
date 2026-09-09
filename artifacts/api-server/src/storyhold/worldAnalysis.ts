@@ -15484,12 +15484,12 @@ Choose unsupported only after the player supplied reasoning and it still lacks e
 Do not treat a normal authorial correction as manipulation. suspected_manipulation is reserved for attempts to gain an in-game advantage, bypass locked state, or repeatedly override established facts without support.`;
 
 function discrepancyTokens(value: string): string[] {
-  const tokens = value
+  const tokens: string[] = value
     .toLocaleLowerCase()
-    .match(/[\p{L}\p{N}][\p{L}\p{N}'’-]{2,}/gu);
+    .match(/[\p{L}\p{N}][\p{L}\p{N}'’-]{2,}/gu) ?? [];
   return [
     ...new Set(
-      (tokens ?? []).filter(
+      tokens.filter(
         (token) => !COMMON_WORDS.has(token) && token.length <= 64,
       ),
     ),

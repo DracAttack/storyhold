@@ -394,7 +394,17 @@ export type CharacterWorkspaceItem = {
   body?: string;
   objectPath?: string;
   referenceId?: string;
-  file?: { name: string; size: number; type: string };
+  file?: {
+    name: string;
+    size: number;
+    type: string;
+    scan?: {
+      state: "pending" | "clean" | "quarantined";
+      reason?: "suspicious" | "scan_failed";
+      checkedAt?: string | null;
+      retryPending?: boolean;
+    };
+  };
   provenance: string;
   sortOrder: number;
   createdAt: string;
@@ -1636,13 +1646,13 @@ export async function getCharacterDossier(
   );
 }
 
-export async function listCharacterWorkspace(worldId: string, characterId: string): Promise<{
+export async function listCharacterWorkspace(worldId: string, characterId: string, signal?: AbortSignal): Promise<{
   items: CharacterWorkspaceItem[];
   references?: CharacterWorkspaceReference[];
 }> {
   return responseJson(await fetch(
     `${apiBase}/worlds/${encodeURIComponent(worldId)}/characters/${encodeURIComponent(characterId)}/workspace`,
-    { credentials: "include", headers: { Accept: "application/json" } },
+    { credentials: "include", headers: { Accept: "application/json" }, signal },
   ));
 }
 

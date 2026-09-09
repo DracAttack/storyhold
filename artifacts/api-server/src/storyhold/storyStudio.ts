@@ -1,4 +1,5 @@
 import { createHash, randomUUID } from "node:crypto";
+import { meteredAiResultJournalSchemaSql } from "./meteredAiResultJournalSchema";
 import type { PGlite } from "@electric-sql/pglite";
 import type {
   Express,
@@ -30,7 +31,6 @@ import {
 import {
   markMeteredAiResultApplied,
   meteredAiInputSha256,
-  meteredAiResultJournalSchemaSql,
   runOrResumeMeteredAiResult,
   shouldPreserveMeteredResult,
 } from "./campaignPlay";

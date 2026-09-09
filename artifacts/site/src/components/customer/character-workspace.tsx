@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import React, { useState, useRef } from "react";
 import {
   FileText,
   Paperclip,
@@ -19,8 +19,14 @@ import {
   Loader2,
   Save,
   Download,
+  ShieldAlert,
+  ShieldCheck,
+  Expand,
+  RotateCw,
 } from "lucide-react";
 import { toast } from "sonner";
+import type { CharacterWorkspaceItem, CharacterWorkspaceReference } from "@/lib/storyholdApi";
+import { getCharacterWorkspacePreviewUrl, workspaceFileAccess } from "@/lib/characterWorkspaceFiles";
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,6 +45,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import {
@@ -49,32 +56,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-export type WorkspaceItemKind = "note" | "file" | "source" | "scene";
-
-export interface CharacterWorkspaceItem {
-  id: string;
-  kind: WorkspaceItemKind;
-  title: string;
-  body?: string;
-  objectPath?: string;
-  referenceId?: string;
-  file?: {
-    name: string;
-    size: number;
-    type: string;
-  };
-  provenance: string;
-  sortOrder: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CharacterWorkspaceReference {
-  id: string;
-  kind: "source" | "scene";
-  title: string;
-  metadata?: string;
-}
+export type { CharacterWorkspaceItem, CharacterWorkspaceReference } from "@/lib/storyholdApi";
+export type WorkspaceItemKind = CharacterWorkspaceItem["kind"];
 
 export interface CharacterWorkspaceProps {
   worldId: string;
@@ -88,6 +71,35 @@ export interface CharacterWorkspaceProps {
   onRemoveItem: (id: string) => Promise<void>;
   onReorderItems: (itemIds: string[]) => Promise<void>;
   onOpenFile: (id: string) => Promise<void>;
+  scanRefreshFailed?: boolean;
+}
+
+export function WorkspacePrivateImage({ url, title, expanded = false }: { url: string; title: string; expanded?: boolean }) {
+  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [attempt, setAttempt] = useState(0);
+  return (
+    <div className="space-y-2">
+      <div className={`relative grid place-items-center overflow-hidden rounded-lg bg-black/25 ${expanded ? "min-h-48 max-h-[65vh]" : "h-24 w-36 max-w-full"}`}>
+        {status !== "error" && <img
+          key={attempt}
+          src={url}
+          alt={title}
+          loading={expanded ? "eager" : "lazy"}
+          decoding="async"
+          referrerPolicy="no-referrer"
+          onLoad={() => setStatus("ready")}
+          onError={() => setStatus("error")}
+          className={`${expanded ? "max-h-[65vh] max-w-full object-contain" : "h-24 w-36 object-contain"} ${status === "ready" ? "opacity-100" : "opacity-0"}`}
+        />}
+        {status === "loading" && <span role="status" className="absolute inset-0 flex items-center justify-center gap-2 text-xs text-muted-foreground"><Loader2 aria-hidden="true" className="h-4 w-4 animate-spin" />Loading Image…</span>}
+        {status === "error" && <span role="status" className="p-3 text-center text-xs text-muted-foreground"><FileImage aria-hidden="true" className="mx-auto mb-2 h-5 w-5" />Preview Unavailable</span>}
+      </div>
+      {expanded && status === "error" && <div className="text-center">
+        <p className="mb-2 text-xs text-muted-foreground">The image could not be loaded. Your session or file access may have changed.</p>
+        <Button variant="outline" size="sm" onClick={() => { setStatus("loading"); setAttempt((value) => value + 1); }}><RotateCw className="mr-2 h-3.5 w-3.5" />Try Again</Button>
+      </div>}
+    </div>
+  );
 }
 
 function formatBytes(bytes: number, decimals = 1) {
@@ -125,6 +137,7 @@ export function CharacterWorkspace({
   onRemoveItem,
   onReorderItems,
   onOpenFile,
+  scanRefreshFailed = false,
 }: CharacterWorkspaceProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   
@@ -138,8 +151,10 @@ export function CharacterWorkspace({
 
   const [linkKind, setLinkKind] = useState<"source" | "scene">("source");
   const [linkId, setLinkId] = useState("");
+  const [previewItemId, setPreviewItemId] = useState<string | null>(null);
 
   const sortedItems = [...items].sort((a, b) => a.sortOrder - b.sortOrder);
+  const previewItem = items.find((item) => item.id === previewItemId && workspaceFileAccess(item).previewable);
 
   const handleOpenNewNote = () => {
     setEditingNoteId(null);
@@ -188,7 +203,7 @@ export function CharacterWorkspace({
     const toastId = toast.loading("Uploading file...");
     try {
       await onAddFile(file);
-      toast.success("File attached.", { id: toastId });
+      toast.success("File attached. Its safety check is pending.", { id: toastId });
     } catch (err) {
       toast.error(errorMessage(err, "Could not attach file."), { id: toastId });
     } finally {
@@ -302,6 +317,8 @@ export function CharacterWorkspace({
         </div>
       </div>
 
+      {scanRefreshFailed && items.some((item) => workspaceFileAccess(item).pending) && <p role="status" className="rounded-lg border border-amber-400/20 bg-amber-400/5 p-3 text-xs text-muted-foreground">Safety-check updates are temporarily unavailable. We’ll try again automatically while this page is open.</p>}
+
       {sortedItems.length === 0 ? (
         <Card className="rounded-2xl border border-dashed border-white/10 bg-black/10 p-8 text-center transition-colors hover:border-primary/30 hover:bg-primary/[0.02]">
           <BookOpen className="mx-auto h-8 w-8 text-muted-foreground/40 mb-3" />
@@ -312,19 +329,21 @@ export function CharacterWorkspace({
         </Card>
       ) : (
         <div className="space-y-3">
-          {sortedItems.map((item, index) => (
+          {sortedItems.map((item, index) => {
+            const access = workspaceFileAccess(item);
+            return (
             <div
               key={item.id} 
               className="group relative flex items-start gap-4 rounded-xl border border-white/5 bg-black/15 p-4 shadow-sm transition-colors hover:border-primary/20 hover:bg-primary/[0.03]"
             >
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {item.kind === "note" && <FileText className="h-4 w-4 text-primary/70 shrink-0" />}
                   {item.kind === "file" && <FileIconForType type={item.file?.type || ""} className="h-4 w-4 text-emerald-500/70 shrink-0" />}
                   {item.kind === "source" && <BookOpen className="h-4 w-4 text-blue-400/70 shrink-0" />}
                   {item.kind === "scene" && <Map className="h-4 w-4 text-purple-400/70 shrink-0" />}
                   
-                    <h4 className="font-serif font-bold text-foreground/90 truncate">
+                    <h4 className="min-w-0 max-w-full break-words font-serif font-bold text-foreground/90">
                       {(item.kind === "source" || item.kind === "scene")
                         ? references.find((candidate) => candidate.id === item.referenceId && candidate.kind === item.kind)?.title ?? item.title
                         : item.title}
@@ -342,11 +361,22 @@ export function CharacterWorkspace({
                 )}
                 
                 {item.kind === "file" && item.file && (
-                  <p className="mt-2 text-xs text-muted-foreground flex items-center gap-3">
+                  <p className="mt-2 text-xs text-muted-foreground flex flex-wrap items-center gap-3 break-all">
                     <span className="font-mono">{formatBytes(item.file.size)}</span>
                     <span className="uppercase">{item.file.type.split('/')[1] || item.file.type}</span>
                   </p>
                 )}
+
+                {item.kind === "file" && item.file && <div className="mt-3 space-y-2">
+                  {access.available ? <span className="inline-flex items-center gap-1.5 text-[10px] text-muted-foreground"><ShieldCheck aria-hidden="true" className="h-3 w-3 text-emerald-400/80" />{access.label}</span> : <div role="status" className="rounded-lg border border-white/10 bg-black/15 p-3">
+                    <p className="flex items-center gap-2 text-xs font-medium">{access.pending ? <Loader2 aria-hidden="true" className="h-3.5 w-3.5 animate-spin" /> : <ShieldAlert aria-hidden="true" className="h-3.5 w-3.5 text-amber-400" />}{access.label}</p>
+                    <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{access.detail}</p>
+                  </div>}
+                  {access.previewable ? <button type="button" onClick={() => setPreviewItemId(item.id)} aria-label={`Preview ${item.title}`} className="block max-w-full rounded-lg border border-white/10 p-1 text-left transition-colors hover:border-primary/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary">
+                    <WorkspacePrivateImage key={`${item.id}:${item.file.scan?.checkedAt ?? "clean"}`} url={getCharacterWorkspacePreviewUrl({ worldId, characterId, itemId: item.id })} title={item.title} />
+                    <span className="mt-1 flex items-center justify-center gap-1.5 p-1 text-[10px] text-muted-foreground"><Expand aria-hidden="true" className="h-3 w-3" />Open Preview</span>
+                  </button> : access.available ? <Button variant="outline" size="sm" onClick={() => void onOpenFile(item.id).catch((error) => toast.error(errorMessage(error, "Could not open the file.")))}><Download className="mr-2 h-3.5 w-3.5" />Download</Button> : null}
+                </div>}
                 
                 {(item.kind === "source" || item.kind === "scene") && (() => {
                   const reference = references.find((candidate) => candidate.id === item.referenceId && candidate.kind === item.kind);
@@ -359,7 +389,7 @@ export function CharacterWorkspace({
                   );
                 })()}
                 
-                <div className="mt-3 flex items-center gap-3 text-[10px] text-muted-foreground/60 font-medium">
+                <div className="mt-3 flex flex-wrap items-center gap-3 text-[10px] text-muted-foreground/60 font-medium">
                   <span className="flex items-center gap-1.5">
                     <Clock className="h-3 w-3" />
                     {new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", year: "numeric" }).format(new Date(item.updatedAt))}
@@ -372,14 +402,15 @@ export function CharacterWorkspace({
               <div className="shrink-0 flex items-center">
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                    <Button variant="ghost" size="icon" aria-label={`Actions for ${item.title}`} className="h-8 w-8 text-muted-foreground hover:text-foreground">
                       <MoreVertical className="h-4 w-4" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-40 border-white/10 bg-black/90 backdrop-blur-xl">
+                    {access.previewable && <DropdownMenuItem onClick={() => setPreviewItemId(item.id)} className="cursor-pointer focus:bg-primary/15 focus:text-primary"><Expand className="mr-2 h-4 w-4" />Preview Image</DropdownMenuItem>}
                     {item.kind === "file" && (
-                      <DropdownMenuItem onClick={() => void onOpenFile(item.id).catch((error) => toast.error(errorMessage(error, "Could not open the file.")))} className="cursor-pointer focus:bg-primary/15 focus:text-primary">
-                        <Download className="mr-2 h-4 w-4" /> Open / Download
+                      <DropdownMenuItem disabled={!access.available} onClick={() => void onOpenFile(item.id).catch((error) => toast.error(errorMessage(error, "Could not open the file.")))} className="cursor-pointer focus:bg-primary/15 focus:text-primary">
+                        <Download className="mr-2 h-4 w-4" />Download
                       </DropdownMenuItem>
                     )}
                     {(item.kind === "note" || item.kind === "file" || item.kind === "source" || item.kind === "scene") && (
@@ -409,9 +440,19 @@ export function CharacterWorkspace({
                 </DropdownMenu>
               </div>
             </div>
-          ))}
+          ); })}
         </div>
       )}
+
+      <Dialog open={Boolean(previewItem)} onOpenChange={(open) => { if (!open) setPreviewItemId(null); }}>
+        <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle className="break-words pr-6">{previewItem?.title ?? "Image Preview"}</DialogTitle>
+            <DialogDescription>Private Reference Image</DialogDescription>
+          </DialogHeader>
+          {previewItem && <WorkspacePrivateImage key={previewItem.id} url={getCharacterWorkspacePreviewUrl({ worldId, characterId, itemId: previewItem.id })} title={previewItem.title} expanded />}
+        </DialogContent>
+      </Dialog>
 
       {/* Note Dialog */}
       <Dialog open={noteDialogOpen} onOpenChange={setNoteDialogOpen}>

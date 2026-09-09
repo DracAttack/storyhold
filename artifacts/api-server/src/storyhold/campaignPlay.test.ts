@@ -299,6 +299,76 @@ test("credit usage route keeps settled credits independent from mixed provider c
       { provider: "openrouter", costMicros: 220, creditsCharged: 0, failed: true },
     ],
   );
+
+  // Fixed dates exercise both inclusive boundaries and distinguish date,
+  // operation and account filtering from an unfiltered export.
+  await db.exec(`
+    SET TIME ZONE 'UTC';
+    UPDATE storyhold.ai_usage_ledger SET created_at = '2026-09-07T00:00:00Z';
+    UPDATE storyhold.metered_ai_result_journal SET completed_at = '2026-09-08T23:59:59Z';
+  `);
+  await db.query(`INSERT INTO storyhold.ai_usage_ledger
+    (id, player_id, operation, request_id, provider, model, cost_micros, credits_charged, created_at)
+    VALUES
+      ('00000000-0000-4000-8000-000000000241', $1, 'campaign_turn', 'too-late', 'excluded-date', 'model', 900, 0, '2026-09-09T00:00:00Z'),
+      ('00000000-0000-4000-8000-000000000242', $1, 'other_operation', 'other-operation', 'excluded-operation', 'model', 800, 0, '2026-09-08T12:00:00Z'),
+      ('00000000-0000-4000-8000-000000000243', '00000000-0000-4000-8000-000000000299', 'campaign_turn', 'other-player', 'excluded-player', 'model', 700, 0, '2026-09-08T12:00:00Z')`, [ids.player]);
+  await db.query(`INSERT INTO storyhold.metered_ai_result_journal
+    (id, player_id, world_id, campaign_id, operation, request_id, input_sha256, status, response_text, completed_at)
+    VALUES ('00000000-0000-4000-8000-000000000244', $1, $2, $3, 'campaign_turn', 'normal-usage', $4,
+      'applied', $5, '2026-09-08T12:00:00Z')`,
+    [ids.player, ids.world, ids.campaign, "b".repeat(64), failurePayload]);
+  const endpoint = `http://127.0.0.1:${address.port}/api/storyhold/admin/credit-usage`;
+  const query = "?from=2026-09-07&to=2026-09-08&operation=campaign_turn";
+  const filtered = await (await fetch(`${endpoint}${query}`)).json() as typeof report;
+  const exported = await fetch(`${endpoint}/export.csv${query}`);
+  assert.equal(exported.status, 200);
+  assert.match(exported.headers.get("content-type") ?? "", /^text\/csv; charset=utf-8/iu);
+  assert.equal(exported.headers.get("content-disposition"), 'attachment; filename="storyhold-provider-costs.csv"');
+  assert.equal(exported.headers.get("cache-control"), "private, no-store");
+  assert.equal(exported.headers.get("x-content-type-options"), "nosniff");
+  const csv = await exported.text();
+  assert.deepEqual(filtered.provider.groups, report.provider.groups, "filters exclude out-of-scope records and deduplicate journal usage");
+  assert.deepEqual(csv.trimEnd().split("\r\n").slice(1), [
+    '"openrouter","failed-model","0.000000","0.000220","0","1","1","0.000220"',
+    '"anthropic","normal-model","0.000110","0.000000","1","0","1","0.000110"',
+  ]);
+  const empty = await fetch(`${endpoint}/export.csv?operation=not_recorded`);
+  assert.equal(empty.status, 200);
+  assert.equal((await empty.text()).trimEnd().split("\r\n").length, 1);
+  for (const invalid of ["from=2026-02-30", "from=2026-09-09&to=2026-09-08", `operation=${"x".repeat(121)}`]) {
+    assert.equal((await fetch(`${endpoint}/export.csv?${invalid}`)).status, 400);
+  }
+});
+
+test("provider cost exports enforce authentication and owner/admin roles before querying", async (t) => {
+  let queries = 0;
+  const app = express();
+  registerCampaignPlayRoutes({ app, db: { query: async () => { queries += 1; return { rows: [] }; } } as never,
+    requireUser: (req, res, next) => {
+      const role = req.header("x-test-role");
+      if (!role) { res.status(401).json({ error: "Sign in required." }); return; }
+      (req as typeof req & { localUser: { id: string; role: string } }).localUser = { id: journalTestIds.playerId, role };
+      next();
+    },
+  });
+  const server = app.listen(0, "127.0.0.1");
+  await new Promise<void>((resolve) => server.once("listening", resolve));
+  t.after(async () => { server.closeAllConnections(); await new Promise<void>((resolve) => server.close(() => resolve())); });
+  const address = server.address();
+  assert.ok(address && typeof address === "object");
+  const endpoint = `http://127.0.0.1:${address.port}/api/storyhold/admin/credit-usage/export.csv`;
+  assert.equal((await fetch(endpoint)).status, 401);
+  for (const role of ["player", "author", "moderator"]) {
+    assert.equal((await fetch(endpoint, { headers: { "x-test-role": role } })).status, 403);
+  }
+  assert.equal(queries, 0, "unauthorized requests cannot inspect cost records");
+  for (const role of ["owner", "admin"]) {
+    const response = await fetch(endpoint, { headers: { "x-test-role": role } });
+    assert.equal(response.status, 200);
+    assert.match(await response.text(), /Completed Cost \(USD\)/u);
+  }
+  assert.equal(queries, 2);
 });
 
 test("unfinished campaign choices expose only the player's resumable input", () => {

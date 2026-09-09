@@ -63,13 +63,16 @@ function apiBase() {
   return `${(import.meta.env?.BASE_URL ?? "/").replace(/\/$/, "")}/api/storyhold`;
 }
 
-export async function getCreditUsage(filters: CreditUsageFilters = {}, signal?: AbortSignal): Promise<CreditUsageReport> {
+function creditUsageQuery(filters: CreditUsageFilters): string {
   const query = new URLSearchParams();
   if (filters.from) query.set("from", filters.from);
   if (filters.to) query.set("to", filters.to);
   if (filters.operation) query.set("operation", filters.operation);
-  const suffix = query.size ? `?${query.toString()}` : "";
-  const response = await fetch(`${apiBase()}/admin/credit-usage${suffix}`, {
+  return query.size ? `?${query.toString()}` : "";
+}
+
+export async function getCreditUsage(filters: CreditUsageFilters = {}, signal?: AbortSignal): Promise<CreditUsageReport> {
+  const response = await fetch(`${apiBase()}/admin/credit-usage${creditUsageQuery(filters)}`, {
     credentials: "include",
     headers: { Accept: "application/json" },
     signal,
@@ -80,4 +83,21 @@ export async function getCreditUsage(filters: CreditUsageFilters = {}, signal?: 
       : "Credit usage could not be loaded.");
   }
   return response.json() as Promise<CreditUsageReport>;
+}
+
+export async function getProviderCostCsv(filters: CreditUsageFilters = {}, signal?: AbortSignal): Promise<Blob> {
+  const response = await fetch(`${apiBase()}/admin/credit-usage/export.csv${creditUsageQuery(filters)}`, {
+    credentials: "include",
+    headers: { Accept: "text/csv" },
+    signal,
+  });
+  if (!response.ok) {
+    throw new Error(response.status === 401 || response.status === 403
+      ? "Provider cost exports are available to the signed-in owner and administrators only."
+      : "Provider costs could not be exported. Please try again.");
+  }
+  if (!response.headers.get("content-type")?.toLowerCase().startsWith("text/csv")) {
+    throw new Error("The provider cost export was not returned. Refresh the page and try again.");
+  }
+  return response.blob();
 }
