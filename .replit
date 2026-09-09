@@ -22,6 +22,10 @@ mode = "parallel"
 task = "shell.exec"
 args = "pnpm run storyhold:local"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "pglite-runtime"
+
 [[workflows.workflow]]
 name = "typecheck"
 author = "agent"
@@ -29,6 +33,17 @@ author = "agent"
 [[workflows.workflow.tasks]]
 task = "shell.exec"
 args = "pnpm run typecheck"
+
+[workflows.workflow.metadata]
+isValidation = true
+
+[[workflows.workflow]]
+name = "pglite-runtime"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm run storyhold:test:pglite-runtime"
 
 [workflows.workflow.metadata]
 isValidation = true
